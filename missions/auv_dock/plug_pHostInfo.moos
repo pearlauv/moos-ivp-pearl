@@ -1,0 +1,29 @@
+//--------------------------------------------------
+// pHostInfo config block
+
+ProcessConfig = pHostInfo
+{
+  AppTick 	= 1
+  CommsTick = 1
+
+#ifdef VNAME evan
+	default_hostip_force = 192.168.5.100
+#elseifdef VNAME felix
+	default_hostip_force = 192.168.6.100
+#elseifdef VNAME gus
+	default_hostip_force = 192.168.7.100
+#elseifdef VNAME hal
+	default_hostip_force = 192.168.8.100
+#elseifdef VNAME ida
+	default_hostip_force = 192.168.9.100
+#elseifdef VNAME jing
+	default_hostip_force = 192.168.10.100
+#elseifdef VNAME kirk
+	default_hostip_force = 192.168.11.100
+#elseifdef VNAME luke
+	default_hostip_force = 192.168.12.100
+#else
+  default_hostip_force = $(IP_ADDR)
+#endif
+}
+

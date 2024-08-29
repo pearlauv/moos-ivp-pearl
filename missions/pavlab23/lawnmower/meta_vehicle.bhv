@@ -1,0 +1,231 @@
+//---------------------------------------------------
+// Helm Behavior file 
+
+initialize   DEPLOY  = false
+initialize   RETURN  = false
+initialize   STATION_KEEP = false
+initialize   LOITER  = false
+initialize   AVOID   = true       
+initialize   DOCK   = true         //added for docking, currently not changing states
+
+set MODE = ACTIVE {
+  DEPLOY = true
+} INACTIVE
+
+set MODE = STATION-KEEPING {
+  MODE = ACTIVE
+  STATION_KEEP = true
+  DOCK = false
+}                       
+
+set MODE = RETURNING {
+  MODE = ACTIVE
+  RETURN = true
+} 
+
+set MODE = LOITERING {
+  MODE = ACTIVE
+  LOITER = true
+  DOCK = false
+} 
+
+set MODE = DOCKING {
+  MODE = ACTIVE
+  DOCK = true
+  STATION_KEEP = false
+}
+
+//set MODE = TRAVELLING {
+  //MODE = ACTIVE
+  //STATION_KEEP = false
+  //RETURN = false
+  //DOCK = false
+//}   
+
+//#ifdef VNAME pearl
+//initialize MODE = STATION_KEEPING
+//#else
+//initialize MODE = STATION-KEEPING
+//initialize   STATION_KEEP  = true
+//#endif
+
+
+//----------------------------------------------
+Behavior = BHV_Waypoint 
+{
+  name         = docking               // named docking
+  pwt          = 120                   // updated for higher priority
+  condition    = MODE==DOCKING      // example
+  runflag      = DOCKING_UNDERWAY = TRUE
+  updates      = DOCK_RNDV 
+
+      capture_radius = 0.5                     // small capture radius for docking in meters
+        capture_line = false                   // need capture to be the point
+           cycleflag = COMMS_NEEDED=true       // example
+                //lead = -1                      // default
+         //lead_damper = -1                      // default
+       //lead_to_start = false                   // default
+               order = normal                  // default 
+              points = 10,-30                    // changed to point for single destination
+         post_suffix = RNDV                   // example
+              repeat = 3                       // repeat 3 times
+         slip_radius = 0                      // updated to not allow slip capture
+               speed = 1                     // default is zero
+             wptflag = RNDV_REACHED = true      // Notification that asset arrived      
+
+        visual_hints = vertex_size  = 3             // default
+        visual_hints = edge_size    = 1             // default
+        visual_hints = vertex_color = dodger_blue   // default
+        visual_hints = edge_color   = white         // default
+        visual_hints = nextpt_color = yellow        // default
+        visual_hints = nextpt_lcolor = aqua         // default
+        visual_hints = nextpt_vertex_size = 5       // default
+}
+
+//----------------------------------------------
+Behavior = BHV_Loiter
+{
+  name      = loiter
+  pwt       = 100
+  condition = MODE==LOITERING
+  updates   = UP_LOITER
+  runflag   = VEHICLE_UNDERWAY = TRUE
+  endflag   = VEHICLE_UNDERWAY = FALSE
+
+  ipf_type = zaic_spd
+	
+   post_suffix = A
+         speed = 0.5
+     clockwise = false
+        radius = 8.0
+     //nm_radius = 15.0
+     nm_radius = 15.0
+       polygon = radial:: x=30, y= -15 , radius=12, pts=8, snap=1, label=$(VNAME)_LOITER
+  visual_hints = nextpt_color=white, nextpt_lcolor=khaki
+  visual_hints = edge_color=orange, vertex_color=white
+  visual_hints = edge_size=1, vertex_size=2
+  
+}
+
+//----------------------------------------------
+Behavior = BHV_AvdColregsV19
+{
+  name       = avdcol_
+  pwt        = 150
+  condition  = AVOID = true 
+  condition  = MODE==ACTIVE
+  updates    = CONTACT_INFO
+  templating = spawn
+
+
+             contact = to-be-set
+    on_no_contact_ok = true
+    #ifdef VNAME pearl
+         extrapolate = false
+         //ignore_name = abe
+         ignore_name = brian
+         ignore_name = julie
+         ignore_name = abe    //added remove contact avoid
+         
+      #else
+         
+          extrapolate = true
+         //ignore_name = brian
+         //ignore_name = julie
+         ignore_name = pearl
+         ignore_name = gilda
+         #endif
+         
+               decay = 30,60
+
+	
+
+	exit_on_filter_group = true
+	
+	post_per_contact_info = true
+	
+  use_refinery = false
+
+        pwt_outer_dist = 80
+        pwt_inner_dist = 50
+        completed_dist = 85
+     min_util_cpa_dist = 10
+     max_util_cpa_dist = 18
+             pwt_grade = linear
+   bearing_line_config = white:0, green:0.65, yellow:0.8, red:1.0
+}
+
+
+
+//----------------------------------------------
+Behavior = BHV_Waypoint
+{
+  name      = waypt_return
+  pwt       = 100
+  updates   = RETURN_UPDATES
+  condition = MODE==RETURNING
+  endflag   = STATION_KEEP = true
+  endflag   = AVOID = false
+
+      speed = 1.
+     radius = 3.0
+  nm_radius = 15.0
+  
+  #ifdef VNAME pearl || VNAME brian 
+     points = 0,0
+     
+    #else
+    points = 0,0
+     repeat = 10
+       lead = 8
+      #endif
+}
+
+//----------------------------------------------
+Behavior = BHV_Waypoint
+{
+  name      = travel
+  pwt       = 100
+  //updates   = RETURN_UPDATES
+  condition = MODE==TRAVELLING
+  endflag   = STATION_KEEP = true
+  endflag   = AVOID = false
+
+      speed = 0.6
+     radius = 3.0
+  nm_radius = 15.0
+  lead = 50
+  lead_to_start = true
+  
+  #ifdef VNAME pearl || VNAME brian 
+  
+     points = -65,-39 : 100,40 
+     
+    #else
+    //points =  -40,-70 : 70,20
+    points =  100,40  :-25,-20
+    #endif
+     //repeat = 10
+       
+      
+}
+
+//----------------------------------------------
+Behavior = BHV_StationKeep
+{
+  name         = station-keep
+  pwt          = 100
+  condition    = MODE==STATION-KEEPING
+  inactiveflag = STATIONING = false
+  activeflag   = STATIONING = true
+
+     center_activate = true
+        inner_radius = 5
+        outer_radius = 10 
+         outer_speed = 1.0
+
+       transit_speed = 1.3
+          swing_time = 7
+        visual_hints = vertex_size=0, edge_color=gray50
+}
+

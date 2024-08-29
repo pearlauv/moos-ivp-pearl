@@ -13,8 +13,8 @@ VNAME="pearl"
 REGION="charles_river"
 START_POS="0,0"  
 
-PEARL_IP="192.168.20.137"  #IP address of the RPi on PEARL
-SHORE_IP="192.168.20.158"  #IP address of the shoreside laptop
+PEARL_IP="localhost"  #IP address of the RPi on PEARL
+SHORE_IP="localhost"  #IP address of the shoreside laptop
 VEHICLE_PORT="9001"
 VEHICLE_LISTEN="9301"
 SHORE_LISTEN="9300"

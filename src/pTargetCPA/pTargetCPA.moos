@@ -1,0 +1,9 @@
+//------------------------------------------------
+// pTargetCPA config block
+
+ProcessConfig = pTargetCPA
+{
+   AppTick   = 4
+   CommsTick = 4
+}
+

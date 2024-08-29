@@ -1,0 +1,65 @@
+//--------------------------------------------------------
+// iM300 Config Block
+	
+ProcessConfig = iM300
+{
+  AppTick    = 10
+  CommsTick  = 10
+
+	// iM300 needs to know the IP address of the M300 front seat
+	// computer, from the perspective of the PABLO. This is different
+	// than the IP of the front seat computer for users logging in from
+	// outside the vehicle.
+#ifdef VNAME abe
+	ip_addr    = 192.168.1.173
+#elseifdef VNAME ben
+	ip_addr    = 192.168.1.174
+#elseifdef VNAME cal
+	ip_addr    = 192.168.1.169
+#elseifdef VNAME deb
+	ip_addr    = 192.168.1.168
+#elseifdef VNAME eve
+	ip_addr    = 192.168.1.167
+#elseifdef VNAME fin
+	ip_addr    = 192.168.1.149
+#elseifdef VNAME max
+	ip_addr    = 192.168.1.148
+#elseifdef VNAME ned
+	ip_addr    = 192.168.1.147
+#elseifdef VNAME oak
+	ip_addr    = 192.168.1.146
+#endif
+
+	comms_type = client
+  port       = 29500
+	ip_addr    = $(FSEAT_IP)
+
+  warn_bad_nmea_len  = false   
+  warn_bad_nmea_form = false   
+	
+	stale_thresh = 15
+	
+	max_rudder  = 50
+	max_thrust  = 100
+	drive_mode  = normal
+	ignore_msg  = $GPGLL, $GPGSV, $GPVTG, $GPZDA, $CPALT, $CPIMU, $CPNVR
+	ignore_msg  = $GPGST, $CPRCM, $GNGLL, $GNGSV, $GNVTG, $GNZDA, $GLGSV, 
+	ignore_msg  = $GNGSA, $GNTXT
+	ignore_checksum_errors = true
+
+	max_appcast_events       = 8
+  // max_appcast_run_warnings = 10
+
+	// heading_source options are gps, imu, or auto where auto uses imu
+	// when available and not timed out as defined in the
+	// stale_nave_msg_thresh parameter
+  heading_source = auto    
+
+	// threshold in seconds, default is 1.5
+	stale_gps_msg_thresh = 3
+	
+	nav_prefix 			= NAV
+	gps_prefix			= GPS
+	compass_prefix	= COMPASS
+}
+

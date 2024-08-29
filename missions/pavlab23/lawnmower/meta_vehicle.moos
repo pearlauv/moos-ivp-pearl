@@ -1,0 +1,286 @@
+ServerHost = localhost
+ServerPort = $(MOOS_PORT)
+Community  = $(VNAME)
+
+#include plug_origin_warp.moos
+
+#ifdef VNAME pearl
+#include plug_pEchoVar.moos
+#include plug_pPearlPID.moos
+//#include plug_iDualGPS.moos
+#include plug_iGPS.moos
+#include plug_iPEARL.moos
+#endif
+
+//------------------------------------------------------------
+ProcessConfig = ANTLER
+{
+  MSBetweenLaunches = 100
+
+  Run = MOOSDB             @ NewConsole = false
+  Run = uProcessWatch      @ NewConsole = false
+  Run = pShare             @ NewConsole = false
+  Run = pLogger            @ NewConsole = false
+  Run = pNodeReporter      @ NewConsole = false
+
+  
+  Run = pHelmIvP           @ NewConsole = false
+	
+  Run = pHostInfo          @ NewConsole = false
+  Run = uFldNodeBroker     @ NewConsole = false
+  Run = pRealm             @ NewConsole = false
+//  Run = iSay               @ NewConsole = false
+  Run = uFldMessageHandler @ NewConsole = false
+
+  #ifdef VNAME pearl
+  Run = pEchoVar            @ NewConsole = false
+  Run = pOdometry	@ NewConsole = false
+  Run = pTargetCPA          @ NewConsole = false
+  Run = uSimMarineV22       @ NewConsole = false  //to be kept only for gilda, and only for simulating. If not there, pearl doesn't show up and prediction doesnt work either
+  //Run = IMM_filterpy_Bu_imm.py @ NewConsole = false
+  Run = iGPS                @ NewConsole = false
+  Run = iPEARL              @ NewConsole = false
+  Run = pPearlPID   @ NewConsole = false
+  Run = pContactMgrV20      @ NewConsole = false
+  Run = pAUVdock            @ NewConsole = false    //added pAUVdock jmh
+
+
+#elseifdef XMODE SIM
+Run = pMarinePID         @ NewConsole = false
+  Run = uSimMarineV22      @ NewConsole = false
+#elseifdef XMODE M300
+Run = pMarinePID         @ NewConsole = false
+  Run = iM300              @ NewConsole = false
+  Run = iM300Health        @ NewConsole = false
+#endif
+}
+
+#ifdef XMODE SIM
+  #include plug_uSimMarineV22.moos
+#elseifdef XMODE M300
+  #include plug_iM300.moos
+  #include plug_iM300Health.moos
+#endif
+
+#include plug_pShare.moos
+#include plug_pHostInfo.moos
+#include plug_uProcessWatch.moos
+
+//---------------------------------------
+// pHelmIvP Config Block
+
+ProcessConfig = pHelmIvP
+{
+  AppTick    = 4
+  CommsTick  = 4
+
+	app_logging = true
+	
+  behaviors   = targ_$(VNAME).bhv
+  verbose     = false
+  domain      = course:0:359:360
+  domain      = speed:0:1:21
+
+	//hold_on_app = pContactMgrV20  //commenting out to see if cause of skew
+	//goals_mandatory = true        //commenting out to see if cause of skew
+
+}
+
+//-------------------------------------------------------- 
+// pContactMgrV20 config block
+	
+ProcessConfig = pContactMgrV20
+{
+  AppTick   = 2
+  CommsTick = 2
+
+  decay = 30,60
+
+  alert_verbose = true
+
+  post_all_ranges = true
+
+  contact_max_age = 35
+  display_radii_id = avd
+  display_radii = false
+  alert_range_color = gray70
+  cpa_range_color   = gray30
+}
+
+	//---------------------------------------
+// iSay Config Block
+
+ProcessConfig = iSay                                            
+{                                                               
+  AppTick   = 4                                                 
+  CommsTick = 4                                                 
+                                                                
+  //default_voice      = alex       // iSay --voices for others   
+  default_rate       = 200                                      
+  interval_policy    = from_end   // or from_start              
+  min_utter_interval = 1                                        
+                                                                
+  os_mode            = osx        // linux or [osx]
+}
+
+//--------------------------------------------------
+// pLogger Config Block
+	
+ProcessConfig = pLogger
+{
+  AppTick     = 10
+  CommsTick   = 10
+
+  File          = LOG_%(VNAME)
+  PATH          = ./
+  SyncLog       = true @ 0.2
+  AsyncLog      = true
+  FileTimeStamp = true
+
+  Log = IVPHELM_LIFE_EVENT @ 0 nosync
+
+  // Log it all!!!!!
+  LogAuxSrc = true
+  WildCardLogging = true
+  WildCardOmitPattern = *_STATUS
+  WildCardOmitPattern = *_ITER_GAP
+  WildCardOmitPattern = *_ITER_LEN
+  WildCardOmitPattern = *_OVER_GROUND
+  WildCardOmitPattern = DB_VARSUMMARY
+  WildCardOmitPattern = DB_RWSUMMARY
+  WildCardOmitPattern = APPCAST
+  WildCardOmitPattern = NAV_Z
+  WildCardOmitPattern = NAV_PITCH
+  WildCardOmitPattern = DB_QOS
+}
+
+//---------------------------------------
+// pNodeReporter Config Block
+	
+ProcessConfig = pNodeReporter
+{
+  #ifdef VNAME pearl
+  AppTick     = 2
+  CommsTick   = 2
+
+  vessel_type = usv         //updated from kayak to usv
+  #else 
+  AppTick     = 2   //Theo had set AppTick to .033 iaw 2.7.3 of his thesis. Changed to 2 for normal updates.
+  CommsTick   = 2   //Theo had set AppTick to .033 iaw 2.7.3 of his thesis. Changed to 2 for normal updates.
+  //AppTick     = 0.5
+  //CommsTick   = 0.5
+  vessel_type = uuv
+  #endif
+
+  
+
+}
+
+//--------------------------------------------------
+// uFldMessageHandler Config Block
+	
+ProcessConfig = uFldMessageHandler
+{
+  AppTick   = 3
+  CommsTick = 3
+
+  strict_addressing = false
+}
+
+//--------------------------------------------------
+// uFldNodeBroker Config Block
+
+ProcessConfig = uFldNodeBroker
+{
+  AppTick   = 1
+  CommsTick = 1
+
+	app_logging = true
+	
+  try_shore_host = pshare_route=$(SHORE_IP):$(SHORE_PSHARE)
+
+	// Common locations worth trying
+	//try_shore_host = pshare_route=192.168.1.37:9200
+
+  bridge = src=VIEW_POLYGON
+  bridge = src=VIEW_POINT
+  bridge = src=VIEW_SEGLIST
+  bridge = src=VIEW_CIRCLE
+  bridge = src=APPCAST
+  bridge = src=NODE_REPORT_LOCAL,  alias=NODE_REPORT
+  bridge = src=NODE_MESSAGE_LOCAL, alias=NODE_MESSAGE
+
+  bridge = src=LEG_SPDS_REP
+  bridge = src=FT_REPORT
+
+}
+
+//------------------------------------------------
+// pGenPath config block
+
+ProcessConfig = pAUVdock
+{
+   AppTick   = 4
+   CommsTick = 4
+}
+
+//---------------------------------------
+// pMarinePIDV22 Config Block
+	
+ProcessConfig = pMarinePID
+{
+  AppTick    = 10
+  CommsTick  = 10
+
+	app_logging = true
+
+	deprecated = true
+	
+	deprecated_ok = true
+	
+  verbose       = true
+  depth_control = false
+  active_start  = true
+
+#ifdef XMODE SIM
+  yaw_pid_kp     = 1.2
+  yaw_pid_kd     = 0.0
+  yaw_pid_ki     = 0.3
+  yaw_pid_integral_limit = 0.07
+#elseifdef XMODE M300
+  // Yaw PID controller (Set for M300)
+  yaw_pid_kp             = 0.9 
+  yaw_pid_kd             = 0.6 
+  yaw_pid_ki             = 0.3  
+  yaw_pid_integral_limit = 0.3 
+#endif
+
+  // Speed PID controller
+  speed_pid_kp           = 1.0
+  speed_pid_kd           = 0.0
+  speed_pid_ki           = 0.0
+  speed_pid_integral_limit = 0.07
+
+  // Maximums
+  maxrudder  = 100 // 100
+  maxthrust  = 100
+
+  // A non-zero SPEED_FACTOR overrides use of SPEED_PID
+  // Will set DESIRED_THRUST = DESIRED_SPEED * SPEED_FACTOR
+  //SPEED_FACTOR = 20
+}
+
+
+#ifdef VNAME pearl
+ProcessConfig = pOdometry
+{
+  AppTick    = 2
+  CommsTick  = 2	
+}
+
+ProcessConfig = pTargetCPA
+{
+  AppTick    = 2
+  CommsTick  = 2	
+}
+#endif

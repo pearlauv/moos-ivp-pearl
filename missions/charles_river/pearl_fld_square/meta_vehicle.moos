@@ -20,9 +20,10 @@ Processconfig = ANTLER
   Run = pNodeReporter     @ NewConsole = false
   Run = pPearlPID         @ NewConsole = false
   Run = uProcessWatch     @ NewConsole = false
-  Run = iDualGPS	        @ NewConsole = false
+  //Run = iDualGPS	        @ NewConsole = false
+  Run = iGPS	        @ NewConsole = false
   Run = iPEARL            @ NewConsole = false
-  Run = uSunTracking      @ NewConsole = false
+ // Run = uSunTracking      @ NewConsole = false
   Run = iRPISerial	      @ NewConsole = false
   
   Run = pShare            @ NewConsole = false
@@ -30,6 +31,8 @@ Processconfig = ANTLER
   Run = uFldNodeBroker    @ NewConsole = false
   
   Run = pHelmIvP          @ NewConsole = false
+  Run = pRealm		  @ NewConsole = false
+  Run = uFldMessageHandler @ NewConsole = false
 }
 
 #include plug_pLogger.moos
@@ -37,7 +40,8 @@ Processconfig = ANTLER
 #include plug_pNodeReporter.moos
 #include plug_pPearlPID.moos
 #include plug_uProcessWatch.moos
-#include plug_iDualGPS.moos
+//#include plug_iDualGPS.moos
+#include plug_iGPS.moos
 #include plug_iPEARL.moos
 #include plug_uSunTracking.moos
 #include plug_iRPISerial.moos
@@ -47,5 +51,29 @@ Processconfig = ANTLER
 #include plug_uFldNodeBroker.moos
 
 #include plug_pHelmIvP.moos
+//---------------------------------------------------------
+// uFldMessageHandler Config Block
+	
+ProcessConfig = uFldMessageHandler
+{
+  AppTick   = 3
+  CommsTick = 3
 
+  strict_addressing = false
+}
 
+//------------------------------------------------------------
+//pRealm config block
+ProcessConfig = pRealm                                          
+{                                                               
+  AppTick   = 4
+  CommsTick = 4
+  
+  relcast_interval = 0.8
+  summary_interval = 2.0
+  wrap_length = 90
+  trunc_length = 270
+  msg_max_hist = 30
+                                                                
+	app_logging = true
+}

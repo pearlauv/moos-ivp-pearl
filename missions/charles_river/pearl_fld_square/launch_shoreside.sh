@@ -10,7 +10,7 @@ TIME_WARP=1
 JUST_MAKE="no"
 AUTO=""
 REGION="charles_river"
-SHORE_IP="192.168.20.158"  #IP address of the shoreside laptop
+SHORE_IP="localhost"  #IP address of the shoreside laptop
 SHORESIDE_PORT="9000"
 SHORE_LISTEN="9300"
 

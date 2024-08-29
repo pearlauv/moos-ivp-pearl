@@ -1,0 +1,205 @@
+//*******************************************************
+// ShoreSide Configuration File
+
+ServerHost = localhost
+ServerPort = $(MOOS_PORT)
+Community  = shoreside
+
+#include plug_origin_warp.moos
+
+//--------------------------------------------------------
+Processconfig = ANTLER
+{
+  MSBetweenLaunches = 100
+
+  Run = MOOSDB          @ NewConsole = false
+  Run = pRealm          @ NewConsole = false
+  Run = pMarineViewer   @ NewConsole = false
+  Run = pLogger         @ NewConsole = false
+
+  Run = pShare          @ NewConsole = false
+  Run = pHostInfo       @ NewConsole = false
+  Run = uFldShoreBroker @ NewConsole = false
+
+  Run = uProcessWatch   @ NewConsole = false
+  Run = uFldNodeComms   @ NewConsole = false
+  
+}
+
+#include plug_pShare.moos
+#include plug_pHostInfo.moos
+#include plug_uProcessWatch.moos
+
+//--------------------------------------------------
+// uFldNodeComms Config Block
+
+ProcessConfig = uFldNodeComms
+{
+  AppTick   = 2
+  CommsTick = 2
+
+  comms_range      = 5000
+  critical_range   = 25
+
+  min_msg_interval = 0
+  max_msg_length   = 10000
+  groups           = false
+
+  view_node_rpt_pulses = false
+}
+
+//--------------------------------------------------
+// uFldShoreBroker Config Block
+
+ProcessConfig = uFldShoreBroker
+{
+  AppTick       = 1
+  CommsTick     = 1
+
+  auto_bridge_appcast = true
+
+  qbridge  = DEPLOY, RETURN, STATION_KEEP, NODE_REPORT, NODE_MESSAGE
+  qbridge  = MOOS_MANUAL_OVERRIDE, APPCAST_REQ, AVOID
+  qbridge  = SAY_MOOS, LEG_RUNNING, ZIGGING, LEG_UPDATE
+  qbridge  = ATURN, ATURN_ENGAGE, FSTOP_UPDATE, OPREGION_RESET
+
+	bridge   = src=HEARTBEAT
+	bridge   = src=DRIFT_VECTOR_ADD
+	bridge   = src=DRIFT_VECTOR
+
+  bridge   = src=NODE_REPORT_$V, alias=NODE_REPORT_TRUE
+  bridge = src=NODE_REPORT_$V, alias=NODE_REPORT
+	
+  bridge   = src=HELM_MAP_CLEAR, alias=HELM_MAP_CLEAR
+}
+
+//--------------------------------------------------
+// pLogger Config Block
+
+ProcessConfig = pLogger
+{
+  AppTick       = 10
+  CommsTick     = 10
+
+  File          = XLOG_SHORESIDE
+  PATH          = ./
+  AsyncLog      = true
+  FileTimeStamp = true
+  LogAuxSrc     = true
+
+	Log = VIEW_SEGLIST @ 0 NOSYNC
+	Log = VIEW_POINT @ 0 NOSYNC
+	
+  // Log it all!!!!!
+  WildCardLogging = true
+  WildCardOmitPattern = *_STATUS
+  WildCardOmitPattern = DB_VARSUMMARY
+  WildCardOmitPattern = DB_RWSUMMARY
+}
+
+//--------------------------------------------------
+// pMarineViewer Config Block
+
+ProcessConfig = pMarineViewer
+{
+  AppTick    = 4
+  CommsTick  = 4
+
+  set_pan_x  = 30
+  set_pan_y  = -290
+  zoom       = 1.5
+
+  
+  tiff_file            = MIT_SP.tif
+  
+  vehicles_shape_scale = 1.5
+  vehicles_name_mode   = names
+
+  circle_viewable_all = true
+	point_viewable_labels = false
+	
+	beat_flag = HEARTBEAT=true
+	
+  appcast_viewable = true
+  appcast_color_scheme = indigo
+
+  left_context[station] = STATION_KEEP_$[UP_VNAME_CLOSEST] = true 
+  left_context[return]  = RETURN_$[UP_VNAME_CLOSEST] = true 
+  left_context[move_ctr] = LEG_UPDATE_ALL = shift_pt = $[XPOS],$[YPOS]
+	
+  //scope  = LEG_SPDS_REP
+  scope  = FT_REPORT
+
+  action = STATION_KEEP_ALL = false
+  action = STATION_KEEP_ALL = true
+
+	action = RETURN_ABE="true"
+  action = RETURN_BEN="true"
+  action = RETURN_CAL="true"
+  action = RETURN_DEB="true"
+  action = RETURN_EVE="true"
+  action = RETURN_FIN="true"
+  action = RETURN_GIL="true"
+  action = RETURN_HAL="true"
+  action = RETURN_IKE="true"
+  action = RETURN_MAX="true"
+  action = RETURN_NED="true"
+  action = RETURN_OAK="true"
+
+	action = STATION_KEEP_ABE="true"
+  action = STATION_KEEP_BEN="true"
+  action = STATION_KEEP_CAL="true"
+  action = STATION_KEEP_DEB="true"
+  action = STATION_KEEP_EVE="true"
+  action = STATION_KEEP_FIN="true"
+  action = STATION_KEEP_GIL="true"
+  action = STATION_KEEP_HAL="true"
+  action = STATION_KEEP_IKE="true"
+  action = STATION_KEEP_MAX="true"
+  action = STATION_KEEP_NED="true"
+  action = STATION_KEEP_OAK="true"
+
+  button_1 = DEPLOY  # DEPLOY_ALL=true
+  button_1 = MOOS_MANUAL_OVERRIDE_ALL=false
+  button_1 = RETURN_ALL=false # STATION_KEEP_ALL=false
+  button_1 = LEG_RUNNING_ALL=true
+
+  button_2 = RETURN  # RETURN_ALL=true
+  button_2 = RETURN  # STATION_KEEP_ALL=false
+
+	button_3 = ALLSTOP # DEPLOY_ALL=false
+	button_4 = STATION # STATION_KEEP_ALL=true	
+
+	button_5 = LEN_MORE # LEG_UPDATE_ALL=leg_length_mod=5
+	button_6 = LEN_LESS # LEG_UPDATE_ALL=leg_length_mod=-5
+
+	button_7 = RAD_MORE # LEG_UPDATE_ALL=turn_rad_mod=2
+	button_8 = RAD_LESS # LEG_UPDATE_ALL=turn_rad_mod=-2
+
+	button_9  = ANG_MORE # LEG_UPDATE_ALL=leg_angle_mod=5
+	button_10 = ANG_LESS # LEG_UPDATE_ALL=leg_angle_mod=-5
+
+	button_11 = T1_TOG # LEG_UPDATE_ALL=turn1_dir=toggle
+	button_12 = T2_TOG # LEG_UPDATE_ALL=turn2_dir=toggle
+
+	button_14 = OPR_RESET # OPREGION_RESET_ALL=true
+
+	
+#ifdef XMODE SIM
+	button_15 = WND+ # DRIFT_VECTOR_ADD=150,0.2
+	button_16 = WND- # DRIFT_VECTOR_ADD=15,0.2
+	button_17 = WND_RST # DRIFT_VECTOR=0,0
+#endif
+
+  cmd = label=DEPLOY, var=DEPLOY,  sval=true, receivers=all:$(VNAMES)
+  cmd = label=DEPLOY, var=MOOS_MANUAL_OVERRIDE, sval=false,  receivers=all:$(VNAMES)
+  cmd = label=DEPLOY, var=AVOID,  sval=true, receivers=all:$(VNAMES)
+  cmd = label=DEPLOY, var=RETURN,  sval=false, receivers=all:$(VNAMES)
+  cmd = label=DEPLOY, var=STATION_KEEP, sval=false, receivers=all:$(VNAMES)
+  cmd = label=DEPLOY, var=LEG_RUNNING, sval=true, receivers=all:$(VNAMES)
+
+  cmd = label=RETURN, var=RETURN, sval=true, receivers=all:$(VNAMES)
+  cmd = label=RETURN, var=STATION_KEEP, sval=false, receivers=all:$(VNAMES)
+
+  cmd = label=STATION, var=STATION_KEEP,  sval=true,  receivers=all:$(VNAMES), color=pink
+	}

@@ -8,7 +8,7 @@ ProcessConfig = uFldNodeBroker
 
   try_shore_host = pshare_route=$(SHORE_IP):$(SHORE_LISTEN)
   
-  bridge  = src=MOOS_MANUAL_OVERRIDE, alias=MOOS_MANUAL_OVERRIDE
+  //bridge  = src=MOOS_MANUAL_OVERRIDE, alias=MOOS_MANUAL_OVERRIDE
   
   bridge  = src=VIEW_POLYGON
   bridge  = src=VIEW_POINT

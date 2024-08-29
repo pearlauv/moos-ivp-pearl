@@ -1,0 +1,6 @@
+x=-17,y=-18,heading=140
+x=0,y=-11,heading=130
+x=16,y=-2,heading=120
+x=-35,y=-27,heading=150
+x=-9,y=-14,heading=135
+

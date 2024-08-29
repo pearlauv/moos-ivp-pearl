@@ -1,0 +1,157 @@
+//*******************************************************
+// ShoreSide Configuration File
+
+ServerHost = localhost
+ServerPort = 9000
+Community  = shoreside
+
+#include plug_origin_warp.moos
+
+//--------------------------------------------------------
+Processconfig = ANTLER
+{
+  MSBetweenLaunches = 100
+
+  Run = MOOSDB          @ NewConsole = false
+  Run = pRealm          @ NewConsole = false
+  Run = pMarineViewer   @ NewConsole = false
+  Run = pLogger         @ NewConsole = false
+
+  Run = pShare          @ NewConsole = false
+  Run = pHostInfo       @ NewConsole = false
+  Run = uFldShoreBroker @ NewConsole = false
+
+  Run = uProcessWatch   @ NewConsole = false
+  Run = uFldNodeComms   @ NewConsole = false
+  
+}
+
+#include plug_pShare.moos
+#include plug_pHostInfo.moos
+#include plug_uProcessWatch.moos
+
+//--------------------------------------------------
+// uFldNodeComms Config Block
+
+ProcessConfig = uFldNodeComms
+{
+  AppTick   = 2
+  CommsTick = 2
+
+  comms_range      = 5000
+  critical_range   = 25
+
+  min_msg_interval = 0
+  max_msg_length   = 10000
+  groups           = false
+
+  view_node_rpt_pulses = false
+}
+
+//--------------------------------------------------
+// uFldShoreBroker Config Block
+
+ProcessConfig = uFldShoreBroker
+{
+  AppTick       = 1
+  CommsTick     = 1
+
+  auto_bridge_appcast = true
+
+  qbridge  = DEPLOY, RETURN, STATION_KEEP, NODE_REPORT, NODE_MESSAGE
+  qbridge  = MOOS_MANUAL_OVERRIDE, APPCAST_REQ, AVOID
+  qbridge  = SAY_MOOS, LEG_RUNNING, ZIGGING, LEG_UPDATE
+  qbridge  = ATURN, ATURN_ENGAGE, FSTOP_UPDATE, OPREGION_RESET
+  qbridge  = TRAVEL, LOITER     //added to troubleshoot no change in state
+
+	bridge   = src=HEARTBEAT
+	bridge   = src=DRIFT_VECTOR_ADD
+	bridge   = src=DRIFT_VECTOR
+
+  bridge   = src=NODE_REPORT_$V, alias=NODE_REPORT_TRUE
+  bridge = src=NODE_REPORT_$V, alias=NODE_REPORT
+	
+  bridge   = src=HELM_MAP_CLEAR, alias=HELM_MAP_CLEAR
+}
+
+//--------------------------------------------------
+// pLogger Config Block
+
+ProcessConfig = pLogger
+{
+  AppTick       = 10
+  CommsTick     = 10
+
+  File          = XLOG_SHORESIDE
+  PATH          = ./
+  AsyncLog      = true
+  FileTimeStamp = true
+  LogAuxSrc     = true
+
+	Log = VIEW_SEGLIST @ 0 NOSYNC
+	Log = VIEW_POINT @ 0 NOSYNC
+	
+  // Log it all!!!!!
+  WildCardLogging = true
+  WildCardOmitPattern = *_STATUS
+  WildCardOmitPattern = DB_VARSUMMARY
+  WildCardOmitPattern = DB_RWSUMMARY
+}
+
+//--------------------------------------------------
+// pMarineViewer Config Block
+
+ProcessConfig = pMarineViewer
+{
+  AppTick    = 4
+  CommsTick  = 4
+
+  set_pan_x  = 30
+  set_pan_y  = -290
+  zoom       = 1.5
+
+  
+  tiff_file            = MIT_BU_bridge.tif
+  tiff_file            = MIT_Bath.tif
+  
+  vehicles_shape_scale = 1.0
+  vehicles_name_mode   = names
+
+  circle_viewable_all = true
+	point_viewable_labels = false
+	
+	beat_flag = HEARTBEAT=true
+	
+  appcast_viewable = true
+  appcast_color_scheme = indigo
+
+  left_context[station] = STATION_KEEP_$[UP_VNAME_CLOSEST] = true 
+  left_context[return]  = RETURN_$[UP_VNAME_CLOSEST] = true 
+  left_context[move_ctr] = LEG_UPDATE_ALL = shift_pt = $[XPOS],$[YPOS]
+  left_context[travel] = TRAVEL_ALL= true    //added to troubleshoot change state
+	
+  //scope  = LEG_SPDS_REP
+  scope  = FT_REPORT
+
+  button_1 = DEPLOY  # DEPLOY_ALL=true
+  button_1 = MOOS_MANUAL_OVERRIDE_ALL=false
+  button_1 = RETURN_ALL=false # STATION_KEEP_ALL=false
+  button_1 = TRAVEL_ALL=true # LOITER_ALL=false
+
+  button_2 = RETURN  # RETURN_ALL=true
+  button_2 = RETURN  # STATION_KEEP_ALL=false # TRAVEL_ALL=false # LOITER_ALL=false
+
+	button_3 = ALLSTOP # DEPLOY_ALL=false
+	button_4 = STATION # STATION_KEEP_ALL=true
+  
+  button_5 = TRAVEL # TRAVEL_ALL=true # STATION_KEEP_ALL=false # LOITER_ALL=false
+  button_6 = LOITER # LOITER_ALL=true # STATION_KEEP_ALL=false
+
+	
+#ifdef XMODE SIM
+	button_15 = WND+ # DRIFT_VECTOR_ADD=150,0.2
+	button_16 = WND- # DRIFT_VECTOR_ADD=15,0.2
+	button_17 = WND_RST # DRIFT_VECTOR=0,0
+#endif
+
+	}

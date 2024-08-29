@@ -1,0 +1,15 @@
+//------------------------------------------------
+// pOdometry config block
+
+
+ProcessConfig = pOdometry
+{
+   AppTick   = 10
+   CommsTick = 4
+   
+   app_logging=log 
+   
+   INCOMING_VAR = NAV_X, NAV_Y
+   OUTGOING_VAR = ODOMETRY_DIST
+}
+

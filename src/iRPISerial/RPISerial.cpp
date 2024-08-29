@@ -20,7 +20,7 @@ RPISERIAL::RPISERIAL()
 
     //Serial Variables
     m_baudrate = 115200;
-    m_serial_port = "/dev/ttyUSB0";
+    m_serial_port = "/dev/tty";
     m_serial = NULL;
     m_bValidSerialConn = false;
 

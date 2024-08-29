@@ -10,7 +10,7 @@ TIME_WARP=1
 JUST_MAKE="no"
 AUTO=""
 REGION="deep_pond"
-SHORE_IP="192.168.0.102"  #IP address of the shoreside laptop
+SHORE_IP="192.168.128.150"  #IP address of the shoreside laptop
 SHORESIDE_PORT="9000"
 SHORE_LISTEN="9300"
 

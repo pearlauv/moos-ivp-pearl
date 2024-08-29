@@ -1,0 +1,9 @@
+//------------------------------------------------
+// pGenPath config block
+
+ProcessConfig = pAUVdock
+{
+   AppTick   = 4
+   CommsTick = 4
+}
+

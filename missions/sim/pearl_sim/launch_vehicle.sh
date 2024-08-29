@@ -13,8 +13,8 @@ VNAME="pearl"
 REGION="deep_pond"
 START_POS="0,0"  
 
-PEARL_IP="192.168.0.103"  #IP address of the RPi on PEARL
-SHORE_IP="192.168.0.102"  #IP address of the shoreside laptop
+PEARL_IP="192.168.128.43"  #IP address of the RPi on PEARL
+SHORE_IP="192.168.128.150"  #IP address of the shoreside laptop
 VEHICLE_PORT="9001"
 VEHICLE_LISTEN="9301"
 SHORE_LISTEN="9300"
