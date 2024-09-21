@@ -37,6 +37,7 @@ IF ( PEARL-OPTIONS STREQUAL all )
      ADD_SUBDIRECTORY(iM300)
      ADD_SUBDIRECTORY(iM300Health)
      ADD_SUBDIRECTORY(lib_sock_utils)
+     ADD_SUBDIRECTORY(iBlueRoboticsPing)		
      
 ELSEIF ( PEARL-OPTIONS STREQUAL mac )
      ADD_SUBDIRECTORY(lib_NMEAParse)
@@ -51,6 +52,7 @@ ELSEIF ( PEARL-OPTIONS STREQUAL mac )
      ADD_SUBDIRECTORY(uSunTracking)
      ADD_SUBDIRECTORY(pPearlPID)
      ADD_SUBDIRECTORY(iRPISerial)
+     ADD_SUBDIRECTORY(iBlueRoboticsPing)
 ENDIF ()
 
 ##############################################################################

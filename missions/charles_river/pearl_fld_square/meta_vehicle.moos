@@ -33,6 +33,7 @@ Processconfig = ANTLER
   Run = pHelmIvP          @ NewConsole = false
   Run = pRealm		  @ NewConsole = false
   Run = uFldMessageHandler @ NewConsole = false
+	Run = iBlueRoboticsPing @ NewConsole = false
 }
 
 #include plug_pLogger.moos
@@ -76,4 +77,13 @@ ProcessConfig = pRealm
   msg_max_hist = 30
                                                                 
 	app_logging = true
+	}
+
+//------------------------------------------------
+// iBlueRoboticsPing config block
+
+ProcessConfig = iBlueRoboticsPing
+{
+   AppTick   = 4
+   CommsTick = 4
 }
