@@ -1,0 +1,91 @@
+//----------FILE: meta_vehicle.bhv---------
+
+initialize  DEPLOY               = false
+initialize  RETURN               = false
+initialize  STATION_KEEP         = false
+initialize  MOOS_MANUAL_OVERRIDE = true
+
+//-----------------------------------------
+Behavior = BHV_StationKeep
+{
+  name      = station-keep
+  pwt       = 100
+  condition = DEPLOY=true
+  condition = RETURN=false
+  condition = STATION_KEEP=true
+  condition = MOOS_MANUAL_OVERRIDE=false
+
+	center_activate    = true
+	inner_radius       = 5
+	outer_radius       = 10
+	hibernation_radius = 10
+	outer_speed        = $(SPEED)   //meters per second
+	transit_speed      = $(SPEED)   //meters per second
+	swing_time         = 3
+	visual_hints       = vertex_size=0, edge_color=blue
+}
+//-----------------------------------------
+Behavior = BHV_Waypoint
+{
+  name      = waypt_square
+  pwt       = 100
+  condition = DEPLOY=true
+  condition = RETURN=false
+  condition = STATION_KEEP=false
+  condition = MOOS_MANUAL_OVERRIDE=false
+  endflag   = RETURN=true
+  UPDATES   = WPT_UPDATE
+  
+	//lead           = 8
+	//lead_damper    = 1
+	speed          = $(SPEED)   //meters per second
+	capture_line   = true
+	capture_radius = 3
+	slip_radius    = 10
+
+    //uncomment the "//points" line that you want to use below
+    //original for PID tuning
+	//points      = -70,-50 : -70,-80 : -30,-80 : -30,-50
+	//points      = 50,0 : 10,-460 : 140,-410 : 440,40 : 50,0
+	//points      = 20,0 : 20,-10 : 20,-20 : 10,-20 : 0,-10 : 20,0
+	//points      = 10,0 : 10,-50 : 30,-40 : 50,0 : 10,0
+	points 	      = 38.92,-16.28 : 19.48,-246.06 : 0,-475.84 : 105.55,-423.47 : 213.06,-371.11 : 310.37,-176.71 : 407.67,17.68 : 223.3,0.7 : 38.92,-16.28 : 38.92,-16.28
+	//points = 47.23,-9.14 : 24.13,-20.49 : 1.04,-31.85 : 34.51,-43.62 : 67.99,-55.4 : 57.61,-32.27 : 47.23,-9.14
+
+    //mapRRT trajectory
+    //points      = -77.8544,-18.3177 : -85.6389,-20.0595 : -94.7084,-25.9725 : -94.8791,-30.5142 : -94.184,-33.856 : -91.1517,-40.1208 : -87.5361,-45.6377 : -84.6989,-46.296 : -77.0544,-45.2743 : -60.1973,-37.3997 : -37.4952,-25.2342 : -19.0924,-15.8396 : 4.93207,-6.34103 : 20.6806,0.495709 : 40.7806,8.84517 : 58.1042,17.4342 : 58.0541,26.2802 : 56.9607,32.4213 : 54.6285,36.8538 : 53.086,37.4839 : 48.0952,37.726 : 39.3159,36.252
+	
+    //for testing in hangar
+    //points      = 0,10 : 50, 35: 100 ,55
+
+    //mapRRT as in screenshots
+    //points      = -76.0578,-18.606 : -90.3107,-21.675 : -94.9271,-26.2357 : -94.8451,-30.8841 : -93.182,-39.3038 : -88.5053,-42.2085 : -68.7403,-35.3634 : -53.6002,-27.9969 : -29.4834,-17.3374 : -6.0578,-6.68165 : 18.1792,4.44207 : 28.3553,9.13142 : 37.9796,13.5644 : 55.6695,21.1869 : 57.1392,23.6159 : 58.0702,27.6562 : 57.1324,33.1507 : 54.1992,37.8049 : 48.847,37.717 : 38.5867,35.4721
+
+	repeat         = 1
+	order          = $(ORDER)
+
+	visual_hints = nextpt_color=yellow
+	visual_hints = nextpt_vertex_size=8
+	visual_hints = nextpt_lcolor=gray70
+	visual_hints = vertex_color=dodger_blue, edge_color=white
+	visual_hints = vertex_size=5, edge_size=1
+}
+//-----------------------------------------
+Behavior = BHV_Waypoint
+{
+  name      = waypt_return
+  pwt       = 100
+  condition = DEPLOY=true
+  condition = RETURN=true
+  condition = STATION_KEEP=false
+  condition = MOOS_MANUAL_OVERRIDE=false
+  perpetual = true
+  endflag   = RETURN=false
+  endflag   = STATION_KEEP=true
+
+	speed          = $(SPEED)   //meters per second
+	capture_radius = 2
+	slip_radius    = 8
+
+	points = 10,9 //-37, -14 // 0,-5
+}
