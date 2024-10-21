@@ -15,7 +15,7 @@ using namespace std;
 
 //static Ping1d m_device;
 
-auto m_port = AbstractLink::openUrl("serial:/dev/ttyUSB0:115200");
+auto m_port = AbstractLink::openUrl("serial:/dev/ttyUSB1:115200");
 Ping1d m_device = Ping1d(*m_port.get());
 
 
