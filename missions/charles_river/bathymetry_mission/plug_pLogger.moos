@@ -6,7 +6,7 @@ ProcessConfig = pLogger
   AppTick 	= 10
   CommsTick 	= 10
   
-  File		= LOG_%(VNAME)_SQUARE
+  File		= LOG_%(VNAME)_BATHYMETRY
   PATH		= ./
   SyncLog 	= true @ 0.2
   AsyncLog 	= true
