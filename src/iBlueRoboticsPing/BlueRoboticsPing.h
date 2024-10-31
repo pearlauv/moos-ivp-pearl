@@ -45,6 +45,7 @@ class BlueRoboticsPing : public AppCastingMOOSApp
    //Ping1d m_device;
    uint32_t m_distance = -1;
    uint16_t m_confidence = -1;
+   uint16_t m_distance_feet = -1;
    //PingPort m_port = AbstractLink::openUrl("serial:/dev/ttyUSB0:115200");
 };
 

@@ -98,10 +98,13 @@ bool BlueRoboticsPing::Iterate()
       ptr++;
     }
 
-    //Charlie Edits - putting m_distance in meters
+    //Charlie Edits - putting m_distance in meters (currently in mm), then a separate variable in feet
+    //then added the extra NOTIFY for feet calculation
     m_distance = m_distance/1000;
+    m_distance_feet = m_distance*3.28084;
     
     Notify("PING_DISTANCE", m_distance);
+    Notify("PING_DISTANCE_FEET", m_distance_feet);
     Notify("PING_CONFIDENCE", m_confidence);
     Notify("PING_PROFILE", m_profile_str);
   } else {
