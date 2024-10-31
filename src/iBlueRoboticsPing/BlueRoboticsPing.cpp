@@ -97,6 +97,9 @@ bool BlueRoboticsPing::Iterate()
       m_profile_str += to_string(static_cast<unsigned>(*ptr)) + " ";
       ptr++;
     }
+
+    //Charlie Edits - putting m_distance in meters
+    m_distance = m_distance/1000;
     
     Notify("PING_DISTANCE", m_distance);
     Notify("PING_CONFIDENCE", m_confidence);
