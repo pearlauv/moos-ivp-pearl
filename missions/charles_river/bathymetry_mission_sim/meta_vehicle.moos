@@ -1,0 +1,158 @@
+//*******************************************************
+// Vehicle MOOS configuration file
+
+//ServerHost = $(PEARL_IP)
+ServerHost = localhost
+ServerPort = $(VPORT)
+
+// Community name IS the vehicle name
+Community  = $(VNAME)
+
+#include plug_origin_warp.moos
+  
+//------------------------------------------------------------
+Processconfig = ANTLER
+{
+  MSBetweenLaunches = 100
+   
+  Run = MOOSDB            @ NewConsole = false
+  Run = pLogger           @ NewConsole = false
+  Run = pEchoVar          @ NewConsole = false
+  Run = pNodeReporter     @ NewConsole = false
+  Run = uProcessWatch     @ NewConsole = false
+  //Run = iDualGPS	        @ NewConsole = false
+ // Run = uSunTracking      @ NewConsole = false
+  
+  Run = pShare            @ NewConsole = false
+  Run = pHostInfo         @ NewConsole = false
+  Run = uFldNodeBroker    @ NewConsole = false
+  
+  Run = pHelmIvP          @ NewConsole = false
+  Run = pRealm		        @ NewConsole = false
+  Run = uFldMessageHandler @ NewConsole = false
+	
+	
+#ifdef XMODE PEARL
+	Run = iGPS	            @ NewConsole = false
+  Run = iPEARL            @ NewConsole = false
+	Run = iRPISerial	      @ NewConsole = false
+	Run = pPearlPID         @ NewConsole = false
+	Run = iBlueRoboticsPing @ NewConsole = false
+#else
+	Run = uSimMarineV22     @ NewConsole = false
+	Run = pMarinePIDV22     @ NewConsole = false
+#endif
+	
+}
+
+#include plug_pLogger.moos
+#include plug_pEchoVar.moos
+#include plug_pNodeReporter.moos
+#include plug_pPearlPID.moos
+#include plug_uProcessWatch.moos
+//#include plug_iDualGPS.moos
+#include plug_iGPS.moos
+#include plug_iPEARL.moos
+#include plug_uSunTracking.moos
+#include plug_iRPISerial.moos
+
+#include plug_pShare.moos
+#include plug_pHostInfo.moos
+#include plug_uFldNodeBroker.moos
+
+#include plug_pHelmIvP.moos
+//---------------------------------------------------------
+// uFldMessageHandler Config Block
+	
+ProcessConfig = uFldMessageHandler
+{
+  AppTick   = 3
+  CommsTick = 3
+
+  strict_addressing = false
+}
+
+//------------------------------------------------------------
+//pRealm config block
+ProcessConfig = pRealm                                          
+{                                                               
+  AppTick   = 4
+  CommsTick = 4
+  
+  relcast_interval = 0.8
+  summary_interval = 2.0
+  wrap_length = 90
+  trunc_length = 270
+  msg_max_hist = 30
+                                                                
+	app_logging = true
+	}
+
+//------------------------------------------------
+// iBlueRoboticsPing config block
+
+ProcessConfig = iBlueRoboticsPing
+{
+   AppTick   = 4
+   CommsTick = 4
+}
+
+//------------------------------------------------------
+// uSimMarineV22 Config Block
+
+ProcessConfig = uSimMarineV22
+{
+  AppTick   = 10
+  CommsTick = 10
+
+  start_pos = 10, 10, 0
+  prefix    = NAV
+
+	//app_logging = true
+	//max_speed   = $(MAX_SPD)
+	
+	turn_rate = 95
+	turn_spd_loss = 0.6
+
+	post_des_thrust = DESIRED_THRUSTX
+	post_des_rudder = DESIRED_RUDDERX
+	
+  //rotate_speed = 0.012
+  //drift_x      = 0.0045
+
+  //thrust_map = -100:-2, 0:0, 20:1, 40:2, 60:3, 80:5, 100:5
+  //thrust_map = -100:-2, 0:0, 20:1, 40:2, 60:3, 80:5, 100:5
+}
+
+//-----------------------------------------------------
+// pMarinePIDV22 Config Block
+
+ProcessConfig = pMarinePIDV22
+{
+  AppTick    = 10
+  CommsTick  = 10
+
+  verbose       = true
+  depth_control = false
+  active_start  = true
+  
+  // Yaw PID controller
+  yaw_pid_kp             = 1.2
+  yaw_pid_kd             = 0.1
+  yaw_pid_ki             = 0.3
+  yaw_pid_integral_limit = 0.07
+  
+  // Speed PID controller
+  speed_pid_kp           = 1.0
+  speed_pid_kd           = 0.0
+  speed_pid_ki           = 0.0
+  speed_pid_integral_limit = 0.07
+  
+  // Maximums
+  maxrudder  = 100
+  maxthrust  = 100
+  
+  // A non-zero SPEED_FACTOR overrides use of SPEED_PID
+  // Will set DESIRED_THRUST = DESIRED_SPEED * SPEED_FACTOR
+  speed_factor = 20
+}
