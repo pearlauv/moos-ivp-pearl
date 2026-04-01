@@ -14,11 +14,9 @@ ADD_EXECUTABLE(iBlueRoboticsPing ${SRC})
 
 TARGET_LINK_LIBRARIES(iBlueRoboticsPing
    ${MOOS_LIBRARIES}
-   boost_system
-   DEVICE
-   HAL
+   ${PINGCPP_DEVICE_LIBRARY}
+   ${PINGCPP_HAL_LIBRARY}
    apputil
    mbutil
    m
    pthread)
-

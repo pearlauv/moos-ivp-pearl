@@ -10,5 +10,5 @@ TARGET_LINK_LIBRARIES(iChargeController
    ${MOOS_LIBRARIES}
    mbutil
    pthread
-   modbus
+   ${MODBUS_LIBRARY}
    ${SYSTEM_LIBS} )

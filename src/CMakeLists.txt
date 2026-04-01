@@ -12,6 +12,12 @@ FILE(GLOB LOCAL_LIBRARY_DIRS ./lib_* ../lib)
 INCLUDE_DIRECTORIES(${LOCAL_LIBRARY_DIRS})
 LINK_DIRECTORIES(${LOCAL_LIBRARY_DIRS})
 
+find_path(MODBUS_INCLUDE_DIR NAMES modbus/modbus.h)
+find_library(MODBUS_LIBRARY NAMES modbus)
+find_path(PINGCPP_INCLUDE_DIR NAMES ping-device-ping1d.h)
+find_library(PINGCPP_DEVICE_LIBRARY NAMES DEVICE)
+find_library(PINGCPP_HAL_LIBRARY NAMES HAL)
+
 SET (PEARL-OPTIONS $ENV{PEARLOPTIONS})
 
 #============================================================================
@@ -46,16 +52,24 @@ ELSEIF ( PEARL-OPTIONS STREQUAL mac )
      ADD_SUBDIRECTORY(iGPS)
      ADD_SUBDIRECTORY(iDualGPS)
      ADD_SUBDIRECTORY(iPEARL)
-     ADD_SUBDIRECTORY(iPEARL)
      ADD_SUBDIRECTORY(pAUVdock)
-     ADD_SUBDIRECTORY(iChargeController)
+     IF (MODBUS_INCLUDE_DIR AND MODBUS_LIBRARY)
+         INCLUDE_DIRECTORIES(${MODBUS_INCLUDE_DIR})
+         ADD_SUBDIRECTORY(iChargeController)
+     ELSE ()
+         MESSAGE(WARNING "Skipping iChargeController because libmodbus was not found.")
+     ENDIF ()
      ADD_SUBDIRECTORY(uSunTracking)
      ADD_SUBDIRECTORY(pPearlPID)
      ADD_SUBDIRECTORY(iRPISerial)
-     ADD_SUBDIRECTORY(iBlueRoboticsPing)
+     IF (PINGCPP_INCLUDE_DIR)
+         INCLUDE_DIRECTORIES(${PINGCPP_INCLUDE_DIR})
+         ADD_SUBDIRECTORY(iBlueRoboticsPing)
+     ELSE ()
+         MESSAGE(WARNING "Skipping iBlueRoboticsPing because ping-cpp headers were not found.")
+     ENDIF ()
 ENDIF ()
 
 ##############################################################################
 #                           END of CMakeLists.txt
 ##############################################################################
-
