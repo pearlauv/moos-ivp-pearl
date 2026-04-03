@@ -1,0 +1,9 @@
+MOOSTimeWarp = $(WARP)
+
+//Charles River/MIT Sailing Pavilion
+LatOrigin    = 42.358436
+LongOrigin   = -71.087448
+
+//Charles River/MIT- Hangar
+//LatOrigin    = 42.359918
+//LongOrigin   = -71.093158
