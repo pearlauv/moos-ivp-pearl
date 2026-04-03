@@ -20,8 +20,7 @@ Processconfig = ANTLER
   Run = pEchoVar          @ NewConsole = false
   Run = pNodeReporter     @ NewConsole = false
   Run = uProcessWatch     @ NewConsole = false
-  //Run = iDualGPS	        @ NewConsole = false
- // Run = uSunTracking      @ NewConsole = false
+   // Run = uSunTracking      @ NewConsole = false
   
   Run = pShare            @ NewConsole = false
   Run = pHostInfo         @ NewConsole = false
@@ -34,6 +33,7 @@ Processconfig = ANTLER
 	
 #ifdef XMODE PEARL
 	Run = iGPS	            @ NewConsole = false
+	//Run = iDualGPS	        @ NewConsole = false
   Run = iPEARL            @ NewConsole = false
 	Run = iRPISerial	      @ NewConsole = false
 	Run = pPearlPID         @ NewConsole = false
