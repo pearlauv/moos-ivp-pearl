@@ -1,0 +1,31 @@
+April test run mission for the Charles River setup.
+
+This is a PEARL-oriented mission that can also be launched in sim with
+`./launch.sh --sim`. In a real field run, the shoreside computer launches the
+shoreside community locally, then the vehicle community is launched separately
+by SSH on the vehicle computer. The specific IPs and ports need to be configured.
+
+The default vehicle path is a waypoint track with `pPearlPID` handling control,
+while the main onboard apps provide sensor and front-seat data:
+
+- `iGPS` - GPS position and speed
+- `iPEARL` - IMU and motor/front-seat bridge
+- `iRPISerial` - solar charge, light, and wind sensors
+- `iBlueRoboticsPing` - Ping sonar / bathymetry range
+- `pPearlPID` - helm controller
+
+Launch from the mission directory:
+
+```sh
+./launch.sh
+```
+
+Common options:
+
+- `--sim` to run the vehicle in simulation
+- `--pavlab` to switch to the MIT Pavlab map
+- `--startpos=X,Y[,H]` to override the simulated start position
+
+The shoreside side starts `pMarineViewer`, `pShare`, `uFldShoreBroker`,
+`pRealm`, and `uFldMessageHandler`. The vehicle side starts the sensor and
+control apps above plus the normal MOOS plumbing.
