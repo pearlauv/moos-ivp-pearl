@@ -1,7 +1,7 @@
 #!/bin/bash
 #------------------------------------------------------------
 #   Script: launch_shoreside.sh
-#  Mission: april_test_run
+#  Mission: may_test_run
 #   Author: Charles Benjamin
 #   LastEd: Apr 2026
 #------------------------------------------------------------

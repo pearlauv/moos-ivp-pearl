@@ -43,7 +43,7 @@ Behavior = BHV_Waypoint
 	capture_radius = 3
 	slip_radius    = 10
 
-	// Small zigzag for the April test run
+	// Small zigzag for the May test run
 	points = -90,-65 : -131,-85 : -79,-93
 
 	repeat         = 1

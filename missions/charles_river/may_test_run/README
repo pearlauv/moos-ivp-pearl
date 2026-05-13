@@ -1,4 +1,4 @@
-April test run mission for the Charles River setup.
+May test run mission for the Charles River setup.
 
 This is a PEARL-oriented mission that can also be launched in sim with
 `./launch.sh --sim`. In a real field run, the shoreside computer launches the
