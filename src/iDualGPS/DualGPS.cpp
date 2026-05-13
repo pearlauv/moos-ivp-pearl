@@ -73,7 +73,7 @@ bool DGPS::OnStartUp()
 		else if (param == "PREFIX")
 			bHandled = SetParam_PREFIX(value);
 		else if (param == "HEADING_OFFSET")
-			bHandled == SetParam_HEADING_OFFSET(value);
+			bHandled = SetParam_HEADING_OFFSET(value);
 		else if (param == "PUBLISH_RAW")
 			bHandled = SetParam_PUBLISH_RAW(value);
 		else if (param == "PUBLISH_HDOP")
@@ -183,8 +183,8 @@ void DGPS::IngestFromGPS()
   ------------------------------------------
   #BAD_SENTENCE
   #UNHANDLED
-  #GPGGA
-  #GPRMC
+  #GPGGA       GPGGA/GNGGA messages
+  #GPRMC       GPRMC/GNRMC messages
  */
 
 bool DGPS::OnNewMail(MOOSMSG_LIST &NewMail)
@@ -259,8 +259,15 @@ void DGPS::PublishMessage(gpsValueToPublish gVal)
 	else
 	  m_Comms.Notify(key, gVal.m_sVal);
 
-	if (m_dual_gps) {
-	  m_curHeadingDUAL = atan2((m_curY_R - m_curY_L),(m_curX_R - m_curX_L)) + 90;
+	if (m_dual_gps &&
+	    m_curX_L != BAD_DOUBLE && m_curY_L != BAD_DOUBLE &&
+	    m_curX_R != BAD_DOUBLE && m_curY_R != BAD_DOUBLE) {
+	  // PORT_1 is the port GPS and PORT_2 is the starboard GPS. The antenna
+	  // baseline points port-to-starboard, so the vessel heading is 90 deg CCW.
+	  double dx = m_curX_R - m_curX_L;
+	  double dy = m_curY_R - m_curY_L;
+	  double bearing_port_to_starboard = atan2(dx, dy) * 180.0 / M_PI;
+	  m_curHeadingDUAL = fmod(bearing_port_to_starboard - 90.0 + 360.0, 360.0);
 	  m_Comms.Notify(m_prefix + "HEADING_DUAL", m_curHeadingDUAL);
 	}
 }
@@ -291,9 +298,9 @@ bool DGPS::DualSerialSetup()
 		m_serial_R->Run();
 		return true; }
         if (!errMsgLeft.empty())
-	  reportConfigWarning("Unable to open left serial port: " + errMsgLeft);
+	  reportConfigWarning("Unable to open port GPS serial port: " + errMsgLeft);
 	else if (!errMsgRight.empty())
-	  reportConfigWarning("Unable to open right serial port: " + errMsgRight);
+	  reportConfigWarning("Unable to open starboard GPS serial port: " + errMsgRight);
 	else
 	  reportConfigWarning("Unable to start serial comms.");
 	return false;
@@ -352,7 +359,7 @@ bool DGPS::SetParam_PORT_LEFT(string sVal)
 {
   m_serial_port_left = sVal;
   if (m_serial_port_left.empty())
-    reportConfigWarning("Mission file parameter PORT_LEFT must not be blank.");
+    reportConfigWarning("Mission file parameter PORT_1 must not be blank.");
   return true;
 }
 
@@ -360,7 +367,7 @@ bool DGPS::SetParam_PORT_RIGHT(string sVal)
 {
   m_serial_port_right = sVal;
   if (m_serial_port_right.empty())
-    reportConfigWarning("Mission file parameter PORT_RIGHT must not be blank.");
+    reportConfigWarning("Mission file parameter PORT_2 must not be blank.");
   return true;
 }
 
@@ -466,8 +473,8 @@ bool DGPS::buildReport()
   m_msgs << "----------------------------------------" << endl;
   m_msgs <<   "   Dual GPS Mode Enabled:   " << sDualMode << endl;
   if (m_dual_gps) {
-    m_msgs << "   Left PORT (BAUDRATE):    " << m_serial_port_left << " (" << m_baudrate << ")" << endl;
-    m_msgs << "   Right PORT (BAUDRATE):   " << m_serial_port_right << " (" << m_baudrate << ")" << endl; }
+    m_msgs << "   Port GPS (PORT_1):       " << m_serial_port_left << " (" << m_baudrate << ")" << endl;
+    m_msgs << "   Starboard GPS (PORT_2):  " << m_serial_port_right << " (" << m_baudrate << ")" << endl; }
   else 
     m_msgs << "   PORT (BAUDRATE):         " << m_serial_port_left << " (" << m_baudrate << ")" << endl;
   m_msgs <<   "   Publish PREFIX:          " << m_prefix << endl;
@@ -478,13 +485,13 @@ bool DGPS::buildReport()
     return true; }
   if (m_dual_gps) {
     if (m_serial_L->IsGoodSerialComms())
-      m_msgs << "   Serial communicating properly on port " << m_serial_port_left << " at " << m_baudrate << " baud." << endl;
+      m_msgs << "   Port GPS serial communicating properly on " << m_serial_port_left << " at " << m_baudrate << " baud." << endl;
     else
-      m_msgs << "   Serial not connected to port " << m_serial_port_left << " at " << m_baudrate << " baud." << endl;
+      m_msgs << "   Port GPS serial not connected on " << m_serial_port_left << " at " << m_baudrate << " baud." << endl;
     if (m_serial_R->IsGoodSerialComms())
-      m_msgs << "   Serial communicating properly on port " << m_serial_port_right << " at " << m_baudrate << " baud." << endl;
+      m_msgs << "   Starboard GPS serial communicating properly on " << m_serial_port_right << " at " << m_baudrate << " baud." << endl;
     else
-      m_msgs << "   Serial not connected to port " << m_serial_port_right << " at " << m_baudrate << " baud." << endl;
+      m_msgs << "   Starboard GPS serial not connected on " << m_serial_port_right << " at " << m_baudrate << " baud." << endl;
   }
   else {
     if (m_serial_L->IsGoodSerialComms())

@@ -70,23 +70,23 @@ public:
 /*
 Key          type Pub by       Pub When                 Description
 
-LATITUDE       dbl GPGGA, GPRMC Always                   Latitude in decimal degrees
-LONGITUDE      dbl GPGGA, GPRMC Always                   Longitude in decimal degrees
-X              dbl GPGGA, GPRMC Always                   Longitude translated to meters on the x-axis of the local grid
-Y              dbl GPGGA, GPRMC Always                   Latitude translated to meters on the y-axis of the local grid
-UTC_TIME       dbl GPGGA, GPRMC Always                   UTC time in seconds (including fractional if available) since GPS epoch
-UTC_DATE       dbl GPRMC        Always                   UTC date
-QUALITY        str GPGGA        On value change          "0" = no fix, "1" non-differential fix, "2" differential fix, "6" = estimated fix
-SAT            dbl GPGGA        On value change          Number of satellites used to determine fix
-HDOP           dbl GPGGA        (m_pub_hdop)             Horizontal dilution of precision in meters, 0.5 to 99.9
-SPEED          dbl GPRMC        Always                   Speed over ground in meters per second
-MAGVAR         dbl GPRMC        On value change          Degrees from true north (+ is clockwise) of magnetic variation from true north
-HEADING_GPRMC  dbl GPRMC        m_heading_source == HEADING_SOURCE_GPRMC Deg. cw from true N in direction of travel, per GPRMC
+LATITUDE       dbl GGA, RMC Always                       Latitude in decimal degrees
+LONGITUDE      dbl GGA, RMC Always                       Longitude in decimal degrees
+X              dbl GGA, RMC Always                       Longitude translated to meters on the x-axis of the local grid
+Y              dbl GGA, RMC Always                       Latitude translated to meters on the y-axis of the local grid
+UTC_TIME       dbl GGA, RMC Always                       UTC time in seconds (including fractional if available) since GPS epoch
+UTC_DATE       dbl RMC        Always                      UTC date
+QUALITY        str GGA        On value change             "0" = no fix, "1" non-differential fix, "2" differential fix, "6" = estimated fix
+SAT            dbl GGA        On value change             Number of satellites used to determine fix
+HDOP           dbl GGA        (m_pub_hdop)                Horizontal dilution of precision in meters, 0.5 to 99.9
+SPEED          dbl RMC        Always                      Speed over ground in meters per second
+MAGVAR         dbl RMC        On value change             Degrees from true north (+ is clockwise) of magnetic variation from true north
+HEADING_GPRMC  dbl RMC        m_heading_source == HEADING_SOURCE_GPRMC Deg. cw from true N in direction of travel, per RMC
 
 #UNHANDLED     dbl Bad keys     (m_bReportUnhandledNMEA) Number of sentences that could not be parsed due to unfamiliar nmea key
 #BAD_SENTENCES dbl All          Always                   Number of sentences with familiar nmea key but failed parsing for some reason
-#GPGGA         dbl GPGGA        Number of GPGGA messages successfully parsed to date
-#GPRMC         dbl GPRMC        Number of GPRMC messages successfully parsed to date
+#GPGGA         dbl GPGGA/GNGGA  Number of GGA messages successfully parsed to date
+#GPRMC         dbl GPRMC/GNRMC  Number of RMC messages successfully parsed to date
 
 */
 

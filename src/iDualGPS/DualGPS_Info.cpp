@@ -26,8 +26,8 @@ void showSynopsis()
   blk("  that the GPS was configured beforehand, and that the GPS retains the      ");
   blk("  configuration data when not powered.                                      ");
   blk("  Sentences currently parsed:                                               ");
-  grn("    GPGGA  Time, position and fix related data                              ");
-  grn("    GPRMC  Recommended minimum navigation info                              ");
+  grn("    GPGGA/GNGGA  Time, position and fix related data                        ");
+  grn("    GPRMC/GNRMC  Recommended minimum navigation info                        ");
   blk("                                                                            ");
 }
 
@@ -68,8 +68,8 @@ void showExampleConfigAndExit()
   blk("                                                                            ");
   blk("  DUAL_GPS        = true       // If true, reads GPS data from the two ports");
   blk("                               // below. If false, reads from PORT_1 only   ");
-  blk("  PORT_1          = /dev/ttyUSB0  // Serial port address for PORT GPS       ");
-  blk("  PORT_2          = /dev/ttyUSB1  // Serial port address for STARBOARD GPS  ");
+  blk("  PORT_1          = /dev/ttyAMA5  // Serial port address for PORT GPS       ");
+  blk("  PORT_2          = /dev/ttyAMA4  // Serial port address for STARBOARD GPS  ");
   blk("  BAUDRATE        = 9600       // Serial port baud rate                     ");
   blk("  PREFIX          = GPS        // Prepends this to all GPS publications     ");
   blk("                                                                            ");
@@ -78,7 +78,7 @@ void showExampleConfigAndExit()
   blk("  PUBLISH_HDOP    = false      // If true, publishes HDOP                   ");
   blk("  PUBLISH_RAW     = false      // If true, publish all nmea sentences to    ");
   blk("                               //   MOOS message NMEA_FROM_GPS              ");
-  blk("  TRIGGER_MSG     = ""         // Accumulates data from all incoming        ");
+  blk("  TRIGGER_MSG     = GNGGA      // Accumulates data from all incoming        ");
   blk("                               //   NMEA_MSGs but only publishes when the   ");
   blk("                               //   trigger is received.                    ");
   blk("                               //   No trigger when not defined, blank, or  ");

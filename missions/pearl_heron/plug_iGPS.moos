@@ -6,7 +6,8 @@ ProcessConfig = iGPS
   AppTick     = 10
   CommsTick   = 10
   
-  Port              = /dev/ttyUSB0
+  // Use /dev/ttyAMA4 or /dev/ttyAMA5 depending on which GPS is connected.
+  Port              = /dev/ttyAMA4
   BaudRate          = 9600
   PREFIX            = GPS
   
@@ -16,5 +17,5 @@ ProcessConfig = iGPS
   PUBLISH_HDOP      = true
   PUBLISH_RAW       = true
   
-  TRIGGER_MSG       = GPGGA
+  TRIGGER_MSG       = GNGGA
 }

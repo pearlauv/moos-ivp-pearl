@@ -26,8 +26,8 @@ void showSynopsis()
   blk("  that the GPS was configured beforehand, and that the GPS retains the      ");
   blk("  configuration data when not powered.                                      ");
   blk("  Sentences currently parsed:                                               ");
-  grn("    GPGGA  Time, position and fix related data                              ");
-  grn("    GPRMC  Recommended minimum navigation info                              ");
+  grn("    GPGGA/GNGGA  Time, position and fix related data                        ");
+  grn("    GPRMC/GNRMC  Recommended minimum navigation info                        ");
   blk("                                                                            ");
 }
 
@@ -78,7 +78,7 @@ void showExampleConfigAndExit()
   blk("  PUBLISH_HDOP    = false      // If true, publishes HDOP                   ");
   blk("  PUBLISH_RAW     = false      // If true, publish all nmea sentences to    ");
   blk("                               //   MOOS message NMEA_FROM_GPS              ");
-  blk("  TRIGGER_MSG     = gpgga      // Accumulates data from all incoming        ");
+  blk("  TRIGGER_MSG     = GNGGA      // Accumulates data from all incoming        ");
   blk("                               //   NMEA_MSGs but only publishes when the   ");
   blk("                               //   trigger is received.                    ");
   blk("                               //   No trigger when not defined, blank, or  ");

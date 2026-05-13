@@ -167,8 +167,8 @@ void GPS::IngestFromGPS()
   ------------------------------------------
   #BAD_SENTENCE
   #UNHANDLED
-  #GPGGA
-  #GPRMC
+  #GPGGA       GPGGA/GNGGA messages
+  #GPRMC       GPRMC/GNRMC messages
  */
 
 bool GPS::RegisterForMOOSMessages()
@@ -422,4 +422,3 @@ bool GPS::buildReport()
   
   return true;
 }
-

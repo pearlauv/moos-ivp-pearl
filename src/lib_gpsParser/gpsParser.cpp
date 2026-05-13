@@ -71,8 +71,10 @@ bool gpsParser::NMEASentenceIngest(string nmea)
 
   bool bProcessedOK = false;
   string key = NMEAbase::GetKeyFromSentence(nmea);
-  if      (MOOSStrCmp(key, "GPGGA"))  bProcessedOK = HandleGPGGA(nmea);
-  else if (MOOSStrCmp(key, "GPRMC"))  bProcessedOK = HandleGPRMC(nmea);
+  if (MOOSStrCmp(key, "GPGGA") || MOOSStrCmp(key, "GNGGA"))
+    bProcessedOK = HandleGPGGA(nmea);
+  else if (MOOSStrCmp(key, "GPRMC") || MOOSStrCmp(key, "GNRMC"))
+    bProcessedOK = HandleGPRMC(nmea);
   else {
     m_totalUnhandled++;
     if (m_bReportUnhandledNMEA) {
@@ -380,4 +382,3 @@ bool gpsParser::SetParam_HEADING_OFFSET(string sVal)
 {
   return true;
 }
-
