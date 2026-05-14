@@ -243,12 +243,21 @@ bool SerialComms::SerialIncoming(string& errMsg)
     int n = read(fd, b, 1);             // Read one character at a time, accessed with b[0]
     switch (n) {
 
-      // Failure to read from the serial port
-      case -1:
-        errMsg = strerror(errno);
-        bGoodSerialComms = false;
-        return false;
-        break;
+	      // Failure to read from the serial port
+	      case -1:
+	        if (errno == EAGAIN || errno == EWOULDBLOCK) {
+	          usleep(1 * 1000);
+	          timeout--;
+	          break;
+	        }
+	        // Old behavior, kept here for easy rollback:
+	        // errMsg = strerror(errno);
+	        // bGoodSerialComms = false;
+	        // return false;
+	        errMsg = strerror(errno);
+	        bGoodSerialComms = false;
+	        return false;
+	        break;
 
       // No bytes to read
       case 0:
