@@ -80,6 +80,14 @@ const float RIGHT_BACKWARD_MAX = LEFT_BACKWARD_MIN - LIMIT;
 const float TURN_SPEED = 10;
 
 //RC variables
+const byte RC_REPORT_CHANNELS = 8;
+const uint16_t RC_VALID_MIN_US = 800;
+const uint16_t RC_VALID_MAX_US = 2200;
+const unsigned long RC_STALE_TIMEOUT_MS = 500;
+uint16_t rcRaw[RC_REPORT_CHANNELS] = {0};
+bool rcSignalValid = false;
+unsigned long rcLastValidMs = 0;
+
 int rotateCH = 0;
 int rotateVal = 0;
 
@@ -146,6 +154,7 @@ const String PREFIX    = "PL";   // Device prefix: PL = PEARL
 const String ID_EULER  = "IMU";  // Sentence ID for Euler angles generated from sensor fusion filter
 const String ID_RAW    = "RAW";  // Sentence ID for raw IMU readings
 const String ID_MOTOR  = "MOT";  // Sentence ID for notifying MOOS-IvP of current motor commands
+const String ID_RC     = "RC";   // Sentence ID for RC receiver channel telemetry
 
 void loop(void)
 {
@@ -234,6 +243,10 @@ void loop(void)
   String PAYLOAD_MOTOR = String(leftSend) + "," + String(rightSend);
   String NMEA_MOTOR = generateNMEAString(PAYLOAD_MOTOR, PREFIX, ID_MOTOR);
 
+  //RC receiver NMEA string
+  String PAYLOAD_RC = buildRCPayload();
+  String NMEA_RC = generateNMEAString(PAYLOAD_RC, PREFIX, ID_RC);
+
 
   if (DEBUG_MODE) {
     if (strcmp(debug_type,"euler")==0)
@@ -249,6 +262,7 @@ void loop(void)
     moos.println(NMEA_EULER);
     moos.println(NMEA_RAW);
     moos.println(NMEA_MOTOR);
+    moos.println(NMEA_RC);
   }
 }
 
@@ -311,6 +325,8 @@ float mapFloat(float x, float in_min, float in_max, float out_min, float out_max
 }
 
 void handleRC() {
+  updateRCChannels();
+
   MANUAL = readSwitch(manualCH, false);
   if (MANUAL) {
     manualControl = 1;
@@ -380,11 +396,61 @@ void handleRC() {
   }
 }
 
+bool isValidRCValue(uint16_t ch) {
+  return ch >= RC_VALID_MIN_US && ch <= RC_VALID_MAX_US;
+}
+
+void updateRCChannels() {
+  bool sawValidChannel = false;
+
+  for (byte i = 0; i < RC_REPORT_CHANNELS; i++) {
+    rcRaw[i] = ibusRC.readChannel(i);
+    if (isValidRCValue(rcRaw[i])) {
+      sawValidChannel = true;
+    }
+  }
+
+  if (sawValidChannel) {
+    rcSignalValid = true;
+    rcLastValidMs = millis();
+  }
+  else if ((millis() - rcLastValidMs) > RC_STALE_TIMEOUT_MS) {
+    rcSignalValid = false;
+  }
+}
+
+uint16_t getCachedRCChannel(byte channelInput) {
+  if (channelInput < RC_REPORT_CHANNELS) {
+    return rcRaw[channelInput];
+  }
+  return ibusRC.readChannel(channelInput);
+}
+
+String buildRCPayload() {
+  unsigned long rcAgeMs = millis() - rcLastValidMs;
+  bool rcConnected = rcSignalValid && (rcAgeMs <= RC_STALE_TIMEOUT_MS);
+  String payload;
+  payload.reserve(96);
+  payload = String(rcConnected ? 1 : 0) + "," + String(rcAgeMs);
+
+  for (byte i = 0; i < RC_REPORT_CHANNELS; i++) {
+    payload += "," + String(rcRaw[i]);
+  }
+
+  payload += "," + String(rotateVal);
+  payload += "," + String(throttleVal);
+  payload += "," + String(turnVal);
+  payload += "," + String(manualControl);
+  payload += "," + String(BACKWARD ? 1 : 0);
+
+  return payload;
+}
+
 int readChannel(byte channelInput, int minLimit, int maxLimit, int defaultValue) {
   // Read the number of a given channel and convert to the range provided.
   // If the channel is off, return the default value
-  uint16_t ch = ibusRC.readChannel(channelInput);
-  if (ch < 100) return defaultValue;
+  uint16_t ch = getCachedRCChannel(channelInput);
+  if (!isValidRCValue(ch)) return defaultValue;
   return map(ch, 1000, 2000, minLimit, maxLimit);
 }
 
