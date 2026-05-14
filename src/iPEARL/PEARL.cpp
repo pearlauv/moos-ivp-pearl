@@ -15,6 +15,13 @@
 
 using namespace std;
 
+static string SharedArduinoStreamForPort(const string& port)
+{
+  if (port == "/dev/ttyACM0")
+    return "tcp://127.0.0.1:9423";
+  return port;
+}
+
 //Procedure: clamp()
 //Purpose: clamps the value of v between minv and maxv
 double clamp(double v, double minv, double maxv)
@@ -235,12 +242,17 @@ bool PEARL::Iterate()
 bool PEARL::SerialSetup()
 {
   string errMsg = "";
-  m_serial = new SerialComms(m_serial_port, m_baudrate, errMsg);
+  string serial_endpoint = SharedArduinoStreamForPort(m_serial_port);
+  // Old direct path, kept for easy manual rollback:
+  // m_serial = new SerialComms(m_serial_port, m_baudrate, errMsg);
+  m_serial = new SerialComms(serial_endpoint, m_baudrate, errMsg);
   if (m_serial->IsGoodSerialComms()) {
     m_serial->Run();
     string msg = "Serial port opened. ";
     msg       += "Communicating on port ";
-    msg       += m_serial_port;
+    msg       += serial_endpoint;
+    if (serial_endpoint != m_serial_port)
+      msg     += " from configured port " + m_serial_port;
     reportEvent(msg);
     return true; }
   reportConfigWarning("Unable to open serial port: " + errMsg);

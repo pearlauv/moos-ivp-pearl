@@ -8,10 +8,14 @@
 #ifndef BlueRoboticsPing_HEADER
 #define BlueRoboticsPing_HEADER
 
+#include <cstdint>
+#include <string>
+
 #include "MOOS/libMOOS/Thirdparty/AppCasting/AppCastingMOOSApp.h"
-//#include "/home/student2680/ping-cpp/src/device/ping-device-ping1d.h"
-#include "ping-device-ping1d.h"
-#include "abstract-link/abstract-link.h"
+// Old direct Ping1D serial includes, kept for easy manual rollback:
+// #include "/home/student2680/ping-cpp/src/device/ping-device-ping1d.h"
+// #include "ping-device-ping1d.h"
+// #include "abstract-link/abstract-link.h"
 
 class BlueRoboticsPing : public AppCastingMOOSApp
 {
@@ -37,15 +41,22 @@ class BlueRoboticsPing : public AppCastingMOOSApp
    int m_speed_of_sound = 1500000; // water
    bool m_profile = false;
    std::string m_profile_str = "";
+   std::string m_state_url = "http://127.0.0.1:9324/state";
    uint32_t m_scan_start = 10;
    uint32_t m_scan_length = 1250;
    int m_auto = 1;
 
  private: // State variables
    //Ping1d m_device;
-   uint32_t m_distance = -1;
-   uint16_t m_confidence = -1;
-   uint16_t m_distance_feet = -1;
+   bool FetchState();
+   bool ParseStateBody(const std::string& body);
+
+   double m_distance_mm = -1;
+   double m_distance_meters = -1;
+   double m_distance_feet = -1;
+   double m_confidence = -1;
+   double m_sample_age_seconds = -1;
+   int m_connected = 0;
    //PingPort m_port = AbstractLink::openUrl("serial:/dev/ttyUSB0:115200");
 };
 

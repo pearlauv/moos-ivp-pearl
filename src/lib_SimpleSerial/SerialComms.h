@@ -39,6 +39,7 @@ public:
     int         serialport_flush();
 
 private:
+    bool        tcpport_init(const char* endpoint, std::string& errMsg);
     bool        serialport_init(const char* serialport, int baud, std::string& errMsg);
     int         serialport_close();
     int         serialport_writebyte(uint8_t b, std::string& errMsg);

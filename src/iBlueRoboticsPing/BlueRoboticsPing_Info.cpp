@@ -76,6 +76,7 @@ void showExampleConfigAndExit()
   blk("                                                                ");
   blk("    ping_interval = 50                                          "); 
   blk("   speed_of_sound = 1500000                                     ");
+  blk("       state_url = http://127.0.0.1:9324/state                  ");
   blk("          profile = 1   // 1 to publish profile publication     ");
   blk("}                                                               ");
   blk("                                                                ");
@@ -104,9 +105,12 @@ void showInterfaceAndExit()
   blk("                                                                ");
   blk("PUBLICATIONS:                                                   ");
   blk("------------------------------------                            ");
-  blk("    PING_DISTANCE = measured distance from sensor (double)      ");
-  blk("  PING_CONFIDENCE = measured confidence from sensor (double)    ");
-  blk("     PING_PROFILE = measured profile from sensor (double)       ");
+  blk("       PING_DISTANCE = measured distance in millimeters         ");
+  blk("    PING_DISTANCE_MM = measured distance in millimeters         ");
+  blk("PING_DISTANCE_METERS = measured distance in meters              ");
+  blk("  PING_DISTANCE_FEET = measured distance in feet                ");
+  blk("     PING_CONFIDENCE = measured confidence from sensor          ");
+  blk("      PING_CONNECTED = daemon/device connection state           ");
   blk("                                                                ");
   exit(0);
 }
@@ -119,4 +123,3 @@ void showReleaseInfoAndExit()
   showReleaseInfo("iBlueRoboticsPing", "gpl");
   exit(0);
 }
-

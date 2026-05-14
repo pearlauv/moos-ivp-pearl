@@ -13,6 +13,15 @@
 
 using namespace std;
 
+static string SharedGPSStreamForPort(const string& port)
+{
+  if (port == "/dev/ttyAMA5")
+    return "tcp://127.0.0.1:9421";
+  if (port == "/dev/ttyAMA4")
+    return "tcp://127.0.0.1:9422";
+  return port;
+}
+
 DGPS::DGPS()
 {
 	m_bValidSerialConn  = false;
@@ -291,8 +300,13 @@ bool DGPS::DualSerialSetup()
 {
 	string errMsgLeft = "";
 	string errMsgRight = "";
-	m_serial_L = new SerialComms(m_serial_port_left, m_baudrate, errMsgLeft);
-	m_serial_R = new SerialComms(m_serial_port_right, m_baudrate, errMsgRight);
+	string serial_endpoint_left = SharedGPSStreamForPort(m_serial_port_left);
+	string serial_endpoint_right = SharedGPSStreamForPort(m_serial_port_right);
+	// Old direct paths, kept for easy manual rollback:
+	// m_serial_L = new SerialComms(m_serial_port_left, m_baudrate, errMsgLeft);
+	// m_serial_R = new SerialComms(m_serial_port_right, m_baudrate, errMsgRight);
+	m_serial_L = new SerialComms(serial_endpoint_left, m_baudrate, errMsgLeft);
+	m_serial_R = new SerialComms(serial_endpoint_right, m_baudrate, errMsgRight);
 	if (m_serial_L->IsGoodSerialComms() && m_serial_R->IsGoodSerialComms()) {
 		m_serial_L->Run();
 		m_serial_R->Run();
@@ -309,7 +323,10 @@ bool DGPS::DualSerialSetup()
 bool DGPS::SerialSetup()
 {
   	string errMsg = "";
-	m_serial_L = new SerialComms(m_serial_port_left, m_baudrate, errMsg);
+	string serial_endpoint_left = SharedGPSStreamForPort(m_serial_port_left);
+	// Old direct path, kept for easy manual rollback:
+	// m_serial_L = new SerialComms(m_serial_port_left, m_baudrate, errMsg);
+	m_serial_L = new SerialComms(serial_endpoint_left, m_baudrate, errMsg);
 	if (m_serial_L->IsGoodSerialComms()) {
 		m_serial_L->Run();
 		return true; }

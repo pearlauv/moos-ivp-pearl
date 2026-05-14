@@ -12,6 +12,15 @@
 
 using namespace std;
 
+static string SharedGPSStreamForPort(const string& port)
+{
+  if (port == "/dev/ttyAMA5")
+    return "tcp://127.0.0.1:9421";
+  if (port == "/dev/ttyAMA4")
+    return "tcp://127.0.0.1:9422";
+  return port;
+}
+
 GPS::GPS()
 {
   m_bValidSerialConn  = false;
@@ -235,12 +244,17 @@ bool GPS::ParserSetup()
 bool GPS::SerialSetup()
 {
   string errMsg = "";
-  m_serial = new SerialComms(m_serial_port, m_baudrate, errMsg);
+  string serial_endpoint = SharedGPSStreamForPort(m_serial_port);
+  // Old direct path, kept for easy manual rollback:
+  // m_serial = new SerialComms(m_serial_port, m_baudrate, errMsg);
+  m_serial = new SerialComms(serial_endpoint, m_baudrate, errMsg);
   if (m_serial->IsGoodSerialComms()) {
     m_serial->Run();
     string msg = "Serial port opened. ";
     msg       += "Communicating over port ";
-    msg       += m_serial_port;
+    msg       += serial_endpoint;
+    if (serial_endpoint != m_serial_port)
+      msg     += " from configured port " + m_serial_port;
     reportEvent(msg);
     return true; }
   reportConfigWarning("Unable to open serial port: " + errMsg);

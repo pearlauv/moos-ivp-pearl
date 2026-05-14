@@ -14,8 +14,9 @@ ADD_EXECUTABLE(iBlueRoboticsPing ${SRC})
 
 TARGET_LINK_LIBRARIES(iBlueRoboticsPing
    ${MOOS_LIBRARIES}
-   ${PINGCPP_DEVICE_LIBRARY}
-   ${PINGCPP_HAL_LIBRARY}
+   # Old direct Ping1D serial dependencies, kept for easy manual rollback:
+   # ${PINGCPP_DEVICE_LIBRARY}
+   # ${PINGCPP_HAL_LIBRARY}
    apputil
    mbutil
    m

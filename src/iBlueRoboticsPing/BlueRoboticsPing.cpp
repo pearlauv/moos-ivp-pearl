@@ -5,18 +5,134 @@
 /*    DATE: December 29th, 1963                             */
 /************************************************************/
 
+#include <cerrno>
+#include <cctype>
+#include <cstdlib>
+#include <cstring>
 #include <iterator>
+#include <netdb.h>
+#include <sys/socket.h>
+#include <unistd.h>
+
 #include "MBUtils.h"
 #include "ACTable.h"
 #include "BlueRoboticsPing.h"
-#include "abstract-link/abstract-link.h"
+// Old direct Ping1D serial include, kept for easy manual rollback:
+// #include "abstract-link/abstract-link.h"
 
 using namespace std;
 
 //static Ping1d m_device;
 
-auto m_port = AbstractLink::openUrl("serial:/dev/ttyUSB1:115200");
-Ping1d m_device = Ping1d(*m_port.get());
+// Old direct Ping1D serial ownership, kept for easy manual rollback:
+// auto m_port = AbstractLink::openUrl("serial:/dev/ttyUSB1:115200");
+// Ping1d m_device = Ping1d(*m_port.get());
+
+static bool ParseHttpUrl(const string& url, string& host, string& port, string& path)
+{
+  string rest = url;
+  if (strBegins(rest, "http://"))
+    rest = rest.substr(7);
+  else
+    return false;
+
+  size_t slash = rest.find('/');
+  string authority = (slash == string::npos) ? rest : rest.substr(0, slash);
+  path = (slash == string::npos) ? "/" : rest.substr(slash);
+
+  size_t colon = authority.rfind(':');
+  if (colon == string::npos) {
+    host = authority;
+    port = "80";
+  } else {
+    host = authority.substr(0, colon);
+    port = authority.substr(colon + 1);
+  }
+
+  return !host.empty() && !port.empty();
+}
+
+static bool FetchHttpBody(const string& url, string& body, string& err)
+{
+  string host;
+  string port;
+  string path;
+  if (!ParseHttpUrl(url, host, port, path)) {
+    err = "Only http://host[:port]/path URLs are supported.";
+    return false;
+  }
+
+  struct addrinfo hints;
+  memset(&hints, 0, sizeof(hints));
+  hints.ai_family = AF_UNSPEC;
+  hints.ai_socktype = SOCK_STREAM;
+
+  struct addrinfo* result = NULL;
+  int gai = getaddrinfo(host.c_str(), port.c_str(), &hints, &result);
+  if (gai != 0) {
+    err = gai_strerror(gai);
+    return false;
+  }
+
+  int fd = -1;
+  for (struct addrinfo* rp = result; rp != NULL; rp = rp->ai_next) {
+    fd = socket(rp->ai_family, rp->ai_socktype, rp->ai_protocol);
+    if (fd == -1)
+      continue;
+    if (connect(fd, rp->ai_addr, rp->ai_addrlen) == 0)
+      break;
+    close(fd);
+    fd = -1;
+  }
+  freeaddrinfo(result);
+
+  if (fd == -1) {
+    err = strerror(errno);
+    return false;
+  }
+
+  string request = "GET " + path + " HTTP/1.0\r\nHost: " + host + "\r\n\r\n";
+  if (write(fd, request.c_str(), request.size()) < 0) {
+    err = strerror(errno);
+    close(fd);
+    return false;
+  }
+
+  char buffer[1024];
+  string response;
+  ssize_t n = 0;
+  while ((n = read(fd, buffer, sizeof(buffer))) > 0)
+    response.append(buffer, n);
+  close(fd);
+
+  size_t split = response.find("\r\n\r\n");
+  if (split == string::npos) {
+    err = "HTTP response did not contain headers.";
+    return false;
+  }
+
+  body = response.substr(split + 4);
+  return true;
+}
+
+static bool ExtractJsonNumber(const string& body, const string& key, double& value)
+{
+  string needle = "\"" + key + "\":";
+  size_t start = body.find(needle);
+  if (start == string::npos)
+    return false;
+  start += needle.size();
+  while (start < body.size() && body[start] == ' ')
+    start++;
+  size_t end = start;
+  while (end < body.size() &&
+         (isdigit(body[end]) || body[end] == '-' || body[end] == '.'))
+    end++;
+  if (end == start)
+    return false;
+  value = strtod(body.substr(start, end - start).c_str(), NULL);
+  return true;
+}
 
 
 //---------------------------------------------------------
@@ -57,7 +173,7 @@ bool BlueRoboticsPing::OnNewMail(MOOSMSG_LIST &NewMail)
     bool   mstr  = msg.IsString();
 
     if(key == "SPEED_OF_SOUND")
-      m_device.set_speed_of_sound(dval);
+      reportRunWarning("SPEED_OF_SOUND is owned by the Ping1D telemetry daemon.");
     else if(key != "APPCAST_REQ") // handled by AppCastingMOOSApp
       reportRunWarning("Unhandled Mail: " + key);
    }
@@ -83,36 +199,16 @@ bool BlueRoboticsPing::Iterate()
   AppCastingMOOSApp::Iterate();
 
 
-  if (m_profile) {
-    m_device.request(1300);
-    m_distance = m_device.profile_data.distance;
-    m_confidence = m_device.profile_data.confidence;
-
-    int profile_length = m_device.profile_data.profile_data_length;
-    uint8_t *ptr = m_device.profile_data.profile_data;
-
-    m_profile_str = "";
-
-    for (int i=0; i < profile_length; i++) {
-      m_profile_str += to_string(static_cast<unsigned>(*ptr)) + " ";
-      ptr++;
-    }
-
-    //Charlie Edits - putting m_distance in meters (currently in mm), then a separate variable in feet
-    //then added the extra NOTIFY for feet calculation
-    m_distance = m_distance/1000;
-    m_distance_feet = m_distance*3.28084;
-    
-    Notify("PING_DISTANCE", m_distance);
+  if (FetchState()) {
+    // Old direct Ping1D serial request path is intentionally replaced by the
+    // daemon state endpoint so MOOS and Telegraf do not compete for sonar.
+    Notify("PING_CONNECTED", m_connected);
+    Notify("PING_DISTANCE", m_distance_mm);
+    Notify("PING_DISTANCE_MM", m_distance_mm);
+    Notify("PING_DISTANCE_METERS", m_distance_meters);
     Notify("PING_DISTANCE_FEET", m_distance_feet);
     Notify("PING_CONFIDENCE", m_confidence);
-    Notify("PING_PROFILE", m_profile_str);
-  } else {
-    m_device.request(1212);
-    m_distance = m_device.distance_data.distance;
-    m_confidence = m_device.distance_data.confidence;
-    Notify("PING_DISTANCE", m_distance);
-    Notify("PING_CONFIDENCE", m_confidence);
+    Notify("PING_SAMPLE_AGE_SECONDS", m_sample_age_seconds);
   }
     
   AppCastingMOOSApp::PostReport();
@@ -158,6 +254,10 @@ bool BlueRoboticsPing::OnStartUp()
 	m_profile = true;
       handled = true;
     }
+    else if(param == "state_url") {
+      m_state_url = value;
+      handled = true;
+    }
     else if(param == "scan_start") {
       m_scan_start = stoi(value);
       handled = true;
@@ -177,11 +277,12 @@ bool BlueRoboticsPing::OnStartUp()
 
   }
 
-  m_device.initialize(m_ping_interval);
-  m_device.set_mode_auto(m_auto);
-  m_device.set_ping_enable(1);
-  m_device.set_speed_of_sound(m_speed_of_sound);
-  m_device.set_range(m_scan_start, m_scan_length);
+  // Old direct Ping1D serial initialization, kept for easy manual rollback:
+  // m_device.initialize(m_ping_interval);
+  // m_device.set_mode_auto(m_auto);
+  // m_device.set_ping_enable(1);
+  // m_device.set_speed_of_sound(m_speed_of_sound);
+  // m_device.set_range(m_scan_start, m_scan_length);
 
   registerVariables();
   return(true);
@@ -206,13 +307,53 @@ bool BlueRoboticsPing::buildReport()
   m_msgs << "File:                                       " << endl;
   m_msgs << "============================================" << endl;
 
-  m_msgs << "DISTANCE: " << m_distance << endl;
+  m_msgs << "STATE_URL: " << m_state_url << endl;
+  m_msgs << "CONNECTED: " << m_connected << endl;
+  m_msgs << "DISTANCE_MM: " << m_distance_mm << endl;
+  m_msgs << "DISTANCE_METERS: " << m_distance_meters << endl;
+  m_msgs << "DISTANCE_FEET: " << m_distance_feet << endl;
   m_msgs << "CONFIDENCE: " << m_confidence << endl;
+  m_msgs << "SAMPLE AGE: " << m_sample_age_seconds << endl;
   m_msgs << "PROFILE: " << m_profile_str << endl;
 
   return(true);
 }
 
+bool BlueRoboticsPing::FetchState()
+{
+  string body;
+  string err;
+  if (!FetchHttpBody(m_state_url, body, err)) {
+    reportRunWarning("Unable to fetch Ping1D state: " + err);
+    return false;
+  }
+  return ParseStateBody(body);
+}
 
+bool BlueRoboticsPing::ParseStateBody(const string& body)
+{
+  double connected = 0;
+  double distance = -1;
+  double confidence = -1;
+  double age = -1;
+
+  bool ok = true;
+  ok &= ExtractJsonNumber(body, "connected", connected);
+  ok &= ExtractJsonNumber(body, "distance_mm", distance);
+  ok &= ExtractJsonNumber(body, "confidence_pct", confidence);
+  ok &= ExtractJsonNumber(body, "last_sample_age_seconds", age);
+  if (!ok) {
+    reportRunWarning("Ping1D state response is missing expected fields.");
+    return false;
+  }
+
+  m_connected = static_cast<int>(connected);
+  m_distance_mm = distance;
+  m_distance_meters = distance / 1000.0;
+  m_distance_feet = m_distance_meters * 3.28084;
+  m_confidence = confidence;
+  m_sample_age_seconds = age;
+  return true;
+}
 
 

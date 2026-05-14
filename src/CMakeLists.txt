@@ -43,7 +43,9 @@ IF ( PEARL-OPTIONS STREQUAL all )
 #     ADD_SUBDIRECTORY(iM300)
      ADD_SUBDIRECTORY(iM300Health)
 #     ADD_SUBDIRECTORY(lib_sock_utils)
-#     ADD_SUBDIRECTORY(iBlueRoboticsPing)		
+     # Old behavior skipped iBlueRoboticsPing in the all build.
+     # ADD_SUBDIRECTORY(iBlueRoboticsPing)
+     ADD_SUBDIRECTORY(iBlueRoboticsPing)
      
 ELSEIF ( PEARL-OPTIONS STREQUAL mac )
      ADD_SUBDIRECTORY(lib_NMEAParse)
@@ -62,12 +64,15 @@ ELSEIF ( PEARL-OPTIONS STREQUAL mac )
      ADD_SUBDIRECTORY(uSunTracking)
      ADD_SUBDIRECTORY(pPearlPID)
      ADD_SUBDIRECTORY(iRPISerial)
-     IF (PINGCPP_INCLUDE_DIR)
-         INCLUDE_DIRECTORIES(${PINGCPP_INCLUDE_DIR})
-         ADD_SUBDIRECTORY(iBlueRoboticsPing)
-     ELSE ()
-         MESSAGE(WARNING "Skipping iBlueRoboticsPing because ping-cpp headers were not found.")
-     ENDIF ()
+     # Old behavior required ping-cpp headers. The app now reads the local
+     # Ping1D daemon state endpoint instead of opening sonar serial directly.
+     # IF (PINGCPP_INCLUDE_DIR)
+     #     INCLUDE_DIRECTORIES(${PINGCPP_INCLUDE_DIR})
+     #     ADD_SUBDIRECTORY(iBlueRoboticsPing)
+     # ELSE ()
+     #     MESSAGE(WARNING "Skipping iBlueRoboticsPing because ping-cpp headers were not found.")
+     # ENDIF ()
+     ADD_SUBDIRECTORY(iBlueRoboticsPing)
 ENDIF ()
 
 ##############################################################################

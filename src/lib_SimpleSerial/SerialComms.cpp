@@ -13,6 +13,8 @@
 
 #include <cstring>    // Needed for strerror
 #include <iostream>    // Standard input/output definitions
+#include <netdb.h>
+#include <sys/socket.h>
 #include <unistd.h>   // UNIX standard function definitions
 #include <fcntl.h>    // File control definitions
 #include <errno.h>    // Error number definitions
@@ -82,6 +84,10 @@ void SerialComms::Set_Delims(char beg, char end, string ignore)
 // returns valid fd, or -1 on error
 bool SerialComms::serialport_init(const char* serialport, int baud, string& errMsg)
 {
+  string requested_port(serialport);
+  if (requested_port.compare(0, 6, "tcp://") == 0)
+    return tcpport_init(requested_port.substr(6).c_str(), errMsg);
+
   struct termios toptions;
 
   //fd = open(serialport, O_RDWR | O_NOCTTY | O_NDELAY);
@@ -137,6 +143,51 @@ bool SerialComms::serialport_init(const char* serialport, int baud, string& errM
 
   errMsg = "";
   return true;
+}
+
+bool SerialComms::tcpport_init(const char* endpoint, string& errMsg)
+{
+  string endpoint_str(endpoint);
+  size_t split = endpoint_str.rfind(':');
+  if (split == string::npos) {
+    errMsg = "TCP endpoint must be host:port.";
+    return false;
+  }
+
+  string host = endpoint_str.substr(0, split);
+  string port = endpoint_str.substr(split + 1);
+
+  struct addrinfo hints;
+  memset(&hints, 0, sizeof(hints));
+  hints.ai_family = AF_UNSPEC;
+  hints.ai_socktype = SOCK_STREAM;
+
+  struct addrinfo* result = NULL;
+  int gai = getaddrinfo(host.c_str(), port.c_str(), &hints, &result);
+  if (gai != 0) {
+    errMsg = gai_strerror(gai);
+    return false;
+  }
+
+  for (struct addrinfo* rp = result; rp != NULL; rp = rp->ai_next) {
+    fd = socket(rp->ai_family, rp->ai_socktype, rp->ai_protocol);
+    if (fd == -1)
+      continue;
+    if (connect(fd, rp->ai_addr, rp->ai_addrlen) == 0) {
+      int flags = fcntl(fd, F_GETFL, 0);
+      if (flags >= 0)
+        fcntl(fd, F_SETFL, flags | O_NONBLOCK);
+      freeaddrinfo(result);
+      errMsg = "";
+      return true;
+    }
+    close(fd);
+    fd = -1;
+  }
+
+  freeaddrinfo(result);
+  errMsg = strerror(errno);
+  return false;
 }
 
 int SerialComms::serialport_close()

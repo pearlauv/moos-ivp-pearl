@@ -35,7 +35,7 @@ Processconfig = ANTLER
 	//Run = iGPS	            @ NewConsole = false
 	Run = iDualGPS	        @ NewConsole = false
   Run = iPEARL            @ NewConsole = false
-	Run = iRPISerial	      @ NewConsole = false
+	//Run = iRPISerial	      @ NewConsole = false
 	Run = pPearlPID         @ NewConsole = false
 	Run = iBlueRoboticsPing @ NewConsole = false
 #else
