@@ -31,10 +31,10 @@ using namespace std;
 
 static bool ParseHttpUrl(const string& url, string& host, string& port, string& path)
 {
-  string rest = url;
+  string rest = stripBlankEnds(url);
   if (strBegins(rest, "http://"))
     rest = rest.substr(7);
-  else
+  else if (rest.find("://") != string::npos)
     return false;
 
   size_t slash = rest.find('/');
@@ -362,4 +362,3 @@ bool BlueRoboticsPing::ParseStateBody(const string& body)
   m_sample_age_seconds = age;
   return true;
 }
-
