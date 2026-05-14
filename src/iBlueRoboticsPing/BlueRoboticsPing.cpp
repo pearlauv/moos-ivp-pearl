@@ -12,6 +12,7 @@
 #include <iterator>
 #include <netdb.h>
 #include <sys/socket.h>
+#include <sys/time.h>
 #include <unistd.h>
 
 #include "MBUtils.h"
@@ -91,7 +92,13 @@ static bool FetchHttpBody(const string& url, string& body, string& err)
     return false;
   }
 
-  string request = "GET " + path + " HTTP/1.0\r\nHost: " + host + "\r\n\r\n";
+  struct timeval receive_timeout;
+  receive_timeout.tv_sec = 2;
+  receive_timeout.tv_usec = 0;
+  setsockopt(fd, SOL_SOCKET, SO_RCVTIMEO, &receive_timeout, sizeof(receive_timeout));
+
+  string request = "GET " + path + " HTTP/1.0\r\nHost: " + host;
+  request += "\r\nConnection: close\r\n\r\n";
   if (write(fd, request.c_str(), request.size()) < 0) {
     err = strerror(errno);
     close(fd);
@@ -255,7 +262,7 @@ bool BlueRoboticsPing::OnStartUp()
       handled = true;
     }
     else if(param == "state_url") {
-      m_state_url = value;
+      m_state_url = stripBlankEnds(value);
       handled = true;
     }
     else if(param == "scan_start") {
@@ -355,5 +362,4 @@ bool BlueRoboticsPing::ParseStateBody(const string& body)
   m_sample_age_seconds = age;
   return true;
 }
-
 
