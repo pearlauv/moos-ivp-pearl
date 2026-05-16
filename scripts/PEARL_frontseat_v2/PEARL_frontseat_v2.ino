@@ -9,14 +9,17 @@
 bool TEST_MODE = false;
 //If true sends data output to Serial port for use with Python real-time plotting scripts
 bool DEBUG_MODE = false;
+const bool USE_IMU = true;
+const uint32_t IMU_I2C_TIMEOUT_US = 3000;
+const unsigned long IMU_RETRY_INTERVAL_MS = 2000;
 //Values to plot in Python, valid options are "euler","accelerometer","gyroscope","magnetometer"
 char debug_type[] = "euler";   
 
 //Pin assignments
-const int anchorMotorPin = 7;
+const int anchorMotorPin = 9;
 
-const int rightMotorPin = 8;
-const int leftMotorPin = 9;
+const int rightMotorPin = 6;
+const int leftMotorPin = 7;
 
 const int rightForwardLED = 10;
 const int leftForwardLED = 11;
@@ -30,6 +33,9 @@ HardwareSerial& moos = Serial;   //comms with navigation RPi/MOOS-IvP
 
 /*----------Setup IMU and sensor fusion----------*/
 Adafruit_Sensor *accelerometer, *gyroscope, *magnetometer;
+bool imuReady = false;
+bool imuCalibrationLoaded = false;
+unsigned long imuLastAttemptMs = 0;
 
 #include "NXP_FXOS_FXAS.h"  // NXP 9-DoF breakout
 
@@ -97,7 +103,7 @@ int throttleVal = 0;
 int turnCH = 3;
 int turnVal = 0;
 
-int manualCH = 4;
+int manualCH = 6;
 bool MANUAL;
 
 int drivemodeCH = 5;
@@ -139,14 +145,8 @@ void setup(void)
     delay(1);
   }
 
-  /*------Setup for IMU--------*/
-  cal.begin();
-  cal.loadCalibration();
-  init_sensors();
-  setup_sensors();
-  filter.begin(FILTER_UPDATE_RATE_HZ);
+  configureIMUBus();
   timestamp = millis();
-  Wire.setClock(400000); // 400KHz
 
 }
 
@@ -161,56 +161,25 @@ void loop(void)
   static uint8_t counter = 0;
 
   /*------Read IMU data and package in NMEA sentence--------*/
-  float roll, pitch, heading, new_heading;
-  float ax, ay, az;
-  float gx, gy, gz;
-  float mx, my, mz;
+  float roll = 0.0;
+  float pitch = 0.0;
+  float heading = 0.0;
+  float new_heading = 0.0;
+  float ax = 0.0;
+  float ay = 0.0;
+  float az = 0.0;
+  float gx = 0.0;
+  float gy = 0.0;
+  float gz = 0.0;
+  float mx = 0.0;
+  float my = 0.0;
+  float mz = 0.0;
 
   if ((millis() - timestamp) < (1000 / FILTER_UPDATE_RATE_HZ)) {
     return;
   }
 
   timestamp = millis();
-  // Read the motion sensors
-  sensors_event_t accel, gyro, mag;
-  accelerometer->getEvent(&accel);
-  gyroscope->getEvent(&gyro);
-  magnetometer->getEvent(&mag);
-
-  cal.calibrate(mag);
-  cal.calibrate(accel);
-  cal.calibrate(gyro);
-
-  ax = accel.acceleration.x;
-  ay = accel.acceleration.y;
-  az = accel.acceleration.z;
-
-  // Gyroscope needs to be converted from Rad/s to Degree/s
-  gx = gyro.gyro.x * SENSORS_RADS_TO_DPS;
-  gy = gyro.gyro.y * SENSORS_RADS_TO_DPS;
-  gz = gyro.gyro.z * SENSORS_RADS_TO_DPS;
-
-  mx = mag.magnetic.x;
-  my = mag.magnetic.y;
-  mz = mag.magnetic.z;
-
-  // Update the SensorFusion filter
-  filter.update(gx, gy, gz,
-                ax, ay, az,
-                mx, my, mz);
-
-  roll = filter.getRoll();
-  pitch = filter.getPitch();
-  heading = filter.getYaw();
-
-  // fixes error with how IMU heading angle is reported
-  new_heading = mapFloat(heading, 0, 360, 360, 0);
-  new_heading += 180;
-  if (new_heading > 360.0)
-    new_heading -= 360.0;
-  if (new_heading < 0.0)
-    new_heading += 360.0;
-
   /*--------Handle manual control inputs from RC--------*/
   handleRC();
   /*--------Read NMEA sentence from serial port--------*/
@@ -219,6 +188,55 @@ void loop(void)
   commandThrust();
   /*--------Convert back to thrust percentage for report to MOOS-IvP--------*/
   reportThrust();     // if TEST_MODE is true then also commands LED brightness
+
+  tryStartIMU();
+  if (imuReady) {
+    // Read the motion sensors
+    clearIMUTimeout();
+    sensors_event_t accel, gyro, mag;
+    accelerometer->getEvent(&accel);
+    gyroscope->getEvent(&gyro);
+    magnetometer->getEvent(&mag);
+
+    if (imuBusTimedOut()) {
+      imuReady = false;
+    }
+    else {
+      cal.calibrate(mag);
+      cal.calibrate(accel);
+      cal.calibrate(gyro);
+
+      ax = accel.acceleration.x;
+      ay = accel.acceleration.y;
+      az = accel.acceleration.z;
+
+      // Gyroscope needs to be converted from Rad/s to Degree/s
+      gx = gyro.gyro.x * SENSORS_RADS_TO_DPS;
+      gy = gyro.gyro.y * SENSORS_RADS_TO_DPS;
+      gz = gyro.gyro.z * SENSORS_RADS_TO_DPS;
+
+      mx = mag.magnetic.x;
+      my = mag.magnetic.y;
+      mz = mag.magnetic.z;
+
+      // Update the SensorFusion filter
+      filter.update(gx, gy, gz,
+                    ax, ay, az,
+                    mx, my, mz);
+
+      roll = filter.getRoll();
+      pitch = filter.getPitch();
+      heading = filter.getYaw();
+
+      // fixes error with how IMU heading angle is reported
+      new_heading = mapFloat(heading, 0, 360, 360, 0);
+      new_heading += 180;
+      if (new_heading > 360.0)
+        new_heading -= 360.0;
+      if (new_heading < 0.0)
+        new_heading += 360.0;
+    }
+  }
 
 
   // only send data to serial port once in a while
@@ -230,14 +248,20 @@ void loop(void)
 
   /*--------Generate NMEA strings for MOOS-IvP--------*/
   //Euler angle NMEA string
-  String PAYLOAD_EULER = String(manualControl) + "," + String(new_heading) + "," + String(pitch) + "," + String(roll);
-  String NMEA_EULER = generateNMEAString(PAYLOAD_EULER, PREFIX, ID_EULER);
+  String NMEA_EULER = "";
+  if (imuReady) {
+    String PAYLOAD_EULER = String(manualControl) + "," + String(new_heading) + "," + String(pitch) + "," + String(roll);
+    NMEA_EULER = generateNMEAString(PAYLOAD_EULER, PREFIX, ID_EULER);
+  }
 
   //Raw IMU data NMEA string
-  String PAYLOAD_RAW = String(ax) + "," + String(ay) + "," + String(az) + "," +
-                       String(gx) + "," + String(gy) + "," + String(gz) + "," +
-                       String(mx) + "," + String(my) + "," + String(mz);
-  String NMEA_RAW = generateNMEAString(PAYLOAD_RAW, PREFIX, ID_RAW);
+  String NMEA_RAW = "";
+  if (imuReady) {
+    String PAYLOAD_RAW = String(ax) + "," + String(ay) + "," + String(az) + "," +
+                         String(gx) + "," + String(gy) + "," + String(gz) + "," +
+                         String(mx) + "," + String(my) + "," + String(mz);
+    NMEA_RAW = generateNMEAString(PAYLOAD_RAW, PREFIX, ID_RAW);
+  }
 
   //Last motor commands NMEA string
   String PAYLOAD_MOTOR = String(leftSend) + "," + String(rightSend);
@@ -249,6 +273,9 @@ void loop(void)
 
 
   if (DEBUG_MODE) {
+    if (!imuReady) {
+      return;
+    }
     if (strcmp(debug_type,"euler")==0)
       sendToPython(&new_heading, &pitch, &roll);
     else if (strcmp(debug_type,"accelerometer")==0)
@@ -259,8 +286,10 @@ void loop(void)
       sendToPython(&mx, &my, &mz);
   }
   else {
-    moos.println(NMEA_EULER);
-    moos.println(NMEA_RAW);
+    if (imuReady) {
+      moos.println(NMEA_EULER);
+      moos.println(NMEA_RAW);
+    }
     moos.println(NMEA_MOTOR);
     moos.println(NMEA_RC);
   }
@@ -270,6 +299,54 @@ String generateNMEAString(String payload, String prefix, String id) {
   String nmea = "";
   nmea = prefix + id + "," + payload;
   return "$" + nmea + "*";    // Prefixed with $
+}
+
+void configureIMUBus() {
+  Wire.begin();
+  Wire.setWireTimeout(IMU_I2C_TIMEOUT_US, true);
+  Wire.setClock(400000); // 400KHz
+}
+
+void clearIMUTimeout() {
+  Wire.clearWireTimeoutFlag();
+}
+
+bool imuBusTimedOut() {
+  bool timedOut = Wire.getWireTimeoutFlag();
+  if (timedOut) {
+    Wire.clearWireTimeoutFlag();
+  }
+  return timedOut;
+}
+
+void tryStartIMU() {
+  if (!USE_IMU || imuReady) {
+    return;
+  }
+
+  unsigned long now = millis();
+  if (imuLastAttemptMs != 0 && (now - imuLastAttemptMs) < IMU_RETRY_INTERVAL_MS) {
+    return;
+  }
+  imuLastAttemptMs = now;
+
+  configureIMUBus();
+  clearIMUTimeout();
+  if (!imuCalibrationLoaded) {
+    cal.begin();
+    cal.loadCalibration();
+    imuCalibrationLoaded = true;
+  }
+
+  clearIMUTimeout();
+  imuReady = init_sensors();
+  if (!imuReady || imuBusTimedOut()) {
+    imuReady = false;
+    return;
+  }
+
+  setup_sensors();
+  filter.begin(FILTER_UPDATE_RATE_HZ);
 }
 
 void readFromMOOS() {
