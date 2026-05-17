@@ -57,6 +57,7 @@ class PEARL : public AppCastingMOOSApp
    bool HandlePLIMU(std::string toParse);
    bool HandlePLRAW(std::string toParse);
    bool HandlePLMOT(std::string toParse);
+   bool HandlePLRC(std::string toParse);
 
    //MOOS file parameters
    std::string   m_serial_port;
@@ -98,6 +99,8 @@ class PEARL : public AppCastingMOOSApp
    
    double        arduinoThrustLeft;
    double        arduinoThrustRight;
+   bool          m_rc_connected;
+   bool          m_rc_manual_control;
 
    //Appcast details
    unsigned int  m_msgs_from_front;       //Number of messages received from front seat
@@ -105,6 +108,7 @@ class PEARL : public AppCastingMOOSApp
    std::string   m_last_PLIMU_from_front; //Last raw PLIMU message received from front seat
    std::string   m_last_PLRAW_from_front; //Last raw PLRAW message received from front seat
    std::string   m_last_PLMOT_from_front; //Last raw PLMOT message received from front seat
+   std::string   m_last_PLRC_from_front;  //Last raw PLRC message received from front seat
    std::string   m_last_msg_to_front;     //Last raw message sent to front seat
    
    //Motor related

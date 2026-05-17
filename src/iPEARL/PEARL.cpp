@@ -71,6 +71,8 @@ PEARL::PEARL()
   
   arduinoThrustLeft       = 0.0;
   arduinoThrustRight      = 0.0;
+  m_rc_connected          = false;
+  m_rc_manual_control     = false;
 
   //Appcast details
   m_msgs_from_front       = 0;
@@ -78,6 +80,7 @@ PEARL::PEARL()
   m_last_PLIMU_from_front = "Nothing received yet";
   m_last_PLRAW_from_front = "Nothing received yet";
   m_last_PLMOT_from_front = "Nothing received yet";
+  m_last_PLRC_from_front  = "Nothing received yet";
   m_last_msg_to_front     = "Nothing sent yet";
   
   //Motor related
@@ -567,6 +570,9 @@ bool PEARL::ParseNMEAString(string nmea)
   else if (nmeaHeader == "$PLMOT") {
     m_last_PLMOT_from_front = nmea; 
     HandlePLMOT(toParse); }
+  else if (nmeaHeader == "$PLRC") {
+    m_last_PLRC_from_front = nmea;
+    HandlePLRC(toParse); }
   else {
     reportRunWarning("Line from front seat has improper header: " + nmea);
     return false; }
@@ -805,6 +811,37 @@ bool PEARL::HandlePLMOT(string toParse)
   return true;
 }
 
+bool PEARL::HandlePLRC(string toParse)
+{
+  vector<string> parts = parseString(toParse, ',');
+  if (parts.size() < 15) {
+    reportRunWarning("PLRC message does not contain enough parts: " + toParse);
+    return false;
+  }
+
+  string connectedValStr = parts[1];
+  string manualValStr    = parts[14];
+
+  try {
+    int connectedVal = stoi(connectedValStr);
+    int manualVal    = stoi(manualValStr);
+
+    m_rc_connected      = (connectedVal == 1);
+    m_rc_manual_control = (manualVal == 1);
+
+    m_Comms.Notify("RC_CONNECTED", m_rc_connected);
+    m_Comms.Notify("RC_MANUAL_CONTROL", m_rc_manual_control);
+  } catch (const invalid_argument& e) {
+    reportRunWarning("Conversion error in PLRC message: " + string(e.what()));
+    return false;
+  } catch (const out_of_range& e) {
+    reportRunWarning("Value out of range in PLRC message: " + string(e.what()));
+    return false;
+  }
+
+  return true;
+}
+
 bool PEARL::StaleShoreCheck(string node_msg)
 {
   if (node_msg.length() > 0) {
@@ -945,6 +982,9 @@ bool PEARL::buildReport()
   m_msgs << "   Last PLIMU message from front: " << m_last_PLIMU_from_front << endl;
   m_msgs << "   Last PLRAW message from front: " << m_last_PLRAW_from_front << endl;
   m_msgs << "   Last PLMOT message from front: " << m_last_PLMOT_from_front << endl;
+  m_msgs << "   Last PLRC message from front:  " << m_last_PLRC_from_front << endl;
+  m_msgs << "   RC connected:                  " << boolToString(m_rc_connected) << endl;
+  m_msgs << "   RC manual control:             " << boolToString(m_rc_manual_control) << endl;
   m_msgs << "   Last message to front seat:    " << m_last_msg_to_front << endl;
   m_msgs << endl;
   
