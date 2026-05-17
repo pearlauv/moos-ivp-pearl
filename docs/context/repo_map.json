@@ -1,6 +1,6 @@
 {
   "file_extension_counts": {
-    ".bhv": 39,
+    ".bhv": 29,
     ".bhv#": 1,
     ".cpp": 120,
     ".csv": 28,
@@ -10,7 +10,7 @@
     ".json": 1,
     ".m": 1,
     ".md": 3,
-    ".moos": 420,
+    ".moos": 410,
     ".ods": 3,
     ".py": 16,
     ".sh": 125,
@@ -120,6 +120,7 @@
     },
     "build_profiles": {
       "iBlueRoboticsPing": [
+        "all",
         "mac"
       ],
       "iChargeController": [
@@ -181,6 +182,7 @@
     "components": {
       "iBlueRoboticsPing": {
         "build_profiles": [
+          "all",
           "mac"
         ],
         "cmake": "src/iBlueRoboticsPing/CMakeLists.txt",
@@ -1390,8 +1392,7 @@
           "uSimMarineV22"
         ],
         "behavior_files": [
-          "targ_$(VNAME).bhv",
-          "targ_abe.bhv"
+          "targ_$(VNAME).bhv"
         ],
         "behavior_types": [
           "BHV_AvdColregsV19",
@@ -1400,8 +1401,7 @@
           "BHV_Waypoint"
         ],
         "bhv_files": [
-          "missions/auv_dock/meta_vehicle.bhv",
-          "missions/auv_dock/targ_abe.bhv"
+          "missions/auv_dock/meta_vehicle.bhv"
         ],
         "includes": [
           "plug_iGPS.moos",
@@ -1438,8 +1438,7 @@
           "missions/auv_dock/plug_pPearlPID.moos",
           "missions/auv_dock/plug_pShare.moos",
           "missions/auv_dock/plug_uProcessWatch.moos",
-          "missions/auv_dock/plug_uSimMarineV22.moos",
-          "missions/auv_dock/targ_abe.moos"
+          "missions/auv_dock/plug_uSimMarineV22.moos"
         ],
         "name": "missions/auv_dock",
         "path": "missions/auv_dock",
@@ -1679,7 +1678,6 @@
           "iBlueRoboticsPing",
           "iDualGPS",
           "iPEARL",
-          "iRPISerial",
           "pEchoVar",
           "pHelmIvP",
           "pHostInfo",
@@ -1746,8 +1744,7 @@
           "missions/charles_river/may_test_run/plug_pShare.moos",
           "missions/charles_river/may_test_run/plug_uFldNodeBroker.moos",
           "missions/charles_river/may_test_run/plug_uProcessWatch.moos",
-          "missions/charles_river/may_test_run/plug_uSunTracking.moos",
-          "missions/charles_river/may_test_run/targ_shoreside.moos"
+          "missions/charles_river/may_test_run/plug_uSunTracking.moos"
         ],
         "name": "missions/charles_river/may_test_run",
         "path": "missions/charles_river/may_test_run",
@@ -3005,8 +3002,7 @@
           "uSimMarineV22"
         ],
         "behavior_files": [
-          "targ_$(VNAME).bhv",
-          "targ_abe.bhv"
+          "targ_$(VNAME).bhv"
         ],
         "behavior_types": [
           "BHV_AvdColregsV19",
@@ -3015,8 +3011,7 @@
           "BHV_Waypoint"
         ],
         "bhv_files": [
-          "missions/pearl_heron/meta_vehicle.bhv",
-          "missions/pearl_heron/targ_abe.bhv"
+          "missions/pearl_heron/meta_vehicle.bhv"
         ],
         "includes": [
           "plug_iGPS.moos",
@@ -3053,8 +3048,7 @@
           "missions/pearl_heron/plug_pPearlPID.moos",
           "missions/pearl_heron/plug_pShare.moos",
           "missions/pearl_heron/plug_uProcessWatch.moos",
-          "missions/pearl_heron/plug_uSimMarineV22.moos",
-          "missions/pearl_heron/targ_abe.moos"
+          "missions/pearl_heron/plug_uSimMarineV22.moos"
         ],
         "name": "missions/pearl_heron",
         "path": "missions/pearl_heron",
@@ -3593,11 +3587,7 @@
           "uXMS"
         ],
         "behavior_files": [
-          "targ_$(VNAME).bhv",
-          "targ_brian.bhv",
-          "targ_gilda.bhv",
-          "targ_henry.bhv",
-          "targ_julie.bhv"
+          "targ_$(VNAME).bhv"
         ],
         "behavior_types": [
           "BHV_AvdColregsV19",
@@ -3606,11 +3596,7 @@
           "BHV_Waypoint"
         ],
         "bhv_files": [
-          "missions/sim/ais_sim/prediction_avoidance_charles_headon_circle/meta_vehicle.bhv",
-          "missions/sim/ais_sim/prediction_avoidance_charles_headon_circle/targ_brian.bhv",
-          "missions/sim/ais_sim/prediction_avoidance_charles_headon_circle/targ_gilda.bhv",
-          "missions/sim/ais_sim/prediction_avoidance_charles_headon_circle/targ_henry.bhv",
-          "missions/sim/ais_sim/prediction_avoidance_charles_headon_circle/targ_julie.bhv"
+          "missions/sim/ais_sim/prediction_avoidance_charles_headon_circle/meta_vehicle.bhv"
         ],
         "includes": [
           "plug_iSay.moos",
@@ -3646,11 +3632,7 @@
           "missions/sim/ais_sim/prediction_avoidance_charles_headon_circle/plug_uMemWatch.moos",
           "missions/sim/ais_sim/prediction_avoidance_charles_headon_circle/plug_uProcessWatch.moos",
           "missions/sim/ais_sim/prediction_avoidance_charles_headon_circle/plug_uSimMarineV22.moos",
-          "missions/sim/ais_sim/prediction_avoidance_charles_headon_circle/plug_uTimerScript.moos",
-          "missions/sim/ais_sim/prediction_avoidance_charles_headon_circle/targ_brian.moos",
-          "missions/sim/ais_sim/prediction_avoidance_charles_headon_circle/targ_gilda.moos",
-          "missions/sim/ais_sim/prediction_avoidance_charles_headon_circle/targ_henry.moos",
-          "missions/sim/ais_sim/prediction_avoidance_charles_headon_circle/targ_julie.moos"
+          "missions/sim/ais_sim/prediction_avoidance_charles_headon_circle/plug_uTimerScript.moos"
         ],
         "name": "missions/sim/ais_sim/prediction_avoidance_charles_headon_circle",
         "path": "missions/sim/ais_sim/prediction_avoidance_charles_headon_circle",
@@ -3813,11 +3795,7 @@
           "uXMS"
         ],
         "behavior_files": [
-          "targ_$(VNAME).bhv",
-          "targ_brian.bhv",
-          "targ_gilda.bhv",
-          "targ_henry.bhv",
-          "targ_julie.bhv"
+          "targ_$(VNAME).bhv"
         ],
         "behavior_types": [
           "BHV_AvdColregsV19",
@@ -3826,11 +3804,7 @@
           "BHV_Waypoint"
         ],
         "bhv_files": [
-          "missions/sim/ais_sim/prediction_avoidance_charles_headon_straight/meta_vehicle.bhv",
-          "missions/sim/ais_sim/prediction_avoidance_charles_headon_straight/targ_brian.bhv",
-          "missions/sim/ais_sim/prediction_avoidance_charles_headon_straight/targ_gilda.bhv",
-          "missions/sim/ais_sim/prediction_avoidance_charles_headon_straight/targ_henry.bhv",
-          "missions/sim/ais_sim/prediction_avoidance_charles_headon_straight/targ_julie.bhv"
+          "missions/sim/ais_sim/prediction_avoidance_charles_headon_straight/meta_vehicle.bhv"
         ],
         "includes": [
           "plug_iSay.moos",
@@ -3866,11 +3840,7 @@
           "missions/sim/ais_sim/prediction_avoidance_charles_headon_straight/plug_uMemWatch.moos",
           "missions/sim/ais_sim/prediction_avoidance_charles_headon_straight/plug_uProcessWatch.moos",
           "missions/sim/ais_sim/prediction_avoidance_charles_headon_straight/plug_uSimMarineV22.moos",
-          "missions/sim/ais_sim/prediction_avoidance_charles_headon_straight/plug_uTimerScript.moos",
-          "missions/sim/ais_sim/prediction_avoidance_charles_headon_straight/targ_brian.moos",
-          "missions/sim/ais_sim/prediction_avoidance_charles_headon_straight/targ_gilda.moos",
-          "missions/sim/ais_sim/prediction_avoidance_charles_headon_straight/targ_henry.moos",
-          "missions/sim/ais_sim/prediction_avoidance_charles_headon_straight/targ_julie.moos"
+          "missions/sim/ais_sim/prediction_avoidance_charles_headon_straight/plug_uTimerScript.moos"
         ],
         "name": "missions/sim/ais_sim/prediction_avoidance_charles_headon_straight",
         "path": "missions/sim/ais_sim/prediction_avoidance_charles_headon_straight",
@@ -4413,9 +4383,9 @@
     "build.sh"
   ],
   "summary": {
-    "indexed_files": 1023,
-    "mission_bhv_files": 39,
-    "mission_moos_files": 414,
+    "indexed_files": 1003,
+    "mission_bhv_files": 29,
+    "mission_moos_files": 403,
     "missions": 29,
     "src_components": 20
   },

@@ -217,15 +217,24 @@ def mission_dirs(files: list[str]) -> list[Path]:
     return sorted(dirs, key=rel)
 
 
-def parse_mission(path: Path) -> dict[str, Any]:
-    moos_paths = sorted(path.glob("*.moos"))
-    bhv_paths = sorted(path.glob("*.bhv"))
-    launch_scripts = sorted(path.glob("launch*.sh"))
-    readmes = sorted(child for child in path.iterdir() if child.is_file() and child.name == "README")
+def parse_mission(path: Path, repo_files: set[str]) -> dict[str, Any]:
+    def is_repo_file(child: Path) -> bool:
+        return rel(child) in repo_files
+
+    moos_paths = sorted(child for child in path.glob("*.moos") if is_repo_file(child))
+    bhv_paths = sorted(child for child in path.glob("*.bhv") if is_repo_file(child))
+    launch_scripts = sorted(child for child in path.glob("launch*.sh") if is_repo_file(child))
+    readmes = sorted(
+        child
+        for child in path.iterdir()
+        if child.is_file() and child.name == "README" and is_repo_file(child)
+    )
     map_assets = sorted(
         child
         for child in path.iterdir()
-        if child.is_file() and child.suffix.lower() in {".info", ".tif", ".tiff"}
+        if child.is_file()
+        and child.suffix.lower() in {".info", ".tif", ".tiff"}
+        and is_repo_file(child)
     )
 
     moos = [parse_moos_file(child) for child in moos_paths]
@@ -286,6 +295,7 @@ def parse_script_dirs(files: list[str]) -> dict[str, dict[str, Any]]:
 
 def build_map() -> dict[str, Any]:
     files = git_files()
+    repo_files = set(files)
     build_profiles = parse_build_profiles(ROOT / "src/CMakeLists.txt")
     component_dirs = sorted(
         path.parent
@@ -293,7 +303,7 @@ def build_map() -> dict[str, Any]:
         if path.parent.name != "attic"
     )
     components = [parse_component(path, build_profiles) for path in component_dirs]
-    missions = [parse_mission(path) for path in mission_dirs(files)]
+    missions = [parse_mission(path, repo_files) for path in mission_dirs(files)]
 
     component_by_target = {component["target"]: component for component in components}
     local_targets = set(component_by_target)

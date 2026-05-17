@@ -6,11 +6,11 @@ This is a generated first-hop traversal map for `moos-ivp-pearl`. Use it to choo
 
 ## Summary
 
-- Repository files indexed: `1023`
+- Repository files indexed: `1003`
 - Source components: `20`
 - Mission directories: `29`
-- Mission `.moos` files: `414`
-- Mission `.bhv` files: `39`
+- Mission `.moos` files: `403`
+- Mission `.bhv` files: `29`
 
 ## Source Inputs
 
@@ -46,7 +46,7 @@ This is a generated first-hop traversal map for `moos-ivp-pearl`. Use it to choo
 
 | Component | Path | Kind | Target | Build profiles | Links |
 | --- | --- | --- | --- | --- | --- |
-| `iBlueRoboticsPing` | `src/iBlueRoboticsPing` | executable | `iBlueRoboticsPing` | `mac` | `apputil`, `m`, `mbutil`, `pthread` |
+| `iBlueRoboticsPing` | `src/iBlueRoboticsPing` | executable | `iBlueRoboticsPing` | `all`, `mac` | `apputil`, `m`, `mbutil`, `pthread` |
 | `iChargeController` | `src/iChargeController` | executable | `iChargeController` | `mac` | `mbutil`, `pthread` |
 | `iDualGPS` | `src/iDualGPS` | executable | `iDualGPS` | `all`, `mac` | `SimpleSerial`, `gpsParser`, `m`, `mbutil`, `pthread` |
 | `iGPS` | `src/iGPS` | executable | `iGPS` | `all`, `mac` | `SimpleSerial`, `gpsParser`, `m`, `mbutil`, `pthread` |
@@ -100,10 +100,10 @@ This is a generated first-hop traversal map for `moos-ivp-pearl`. Use it to choo
 
 | Mission | MOOS | BHV | Launch | ProcessConfig | Behaviors |
 | --- | --- | --- | --- | --- | --- |
-| `missions/auv_dock` | 15 | 2 | `missions/auv_dock/launch.sh`, `missions/auv_dock/launch_heron.sh`, `missions/auv_dock/launch_pearl.sh`, +2 more | `ANTLER`, `iDualGPS`, `iGPS`, `iM300`, `iM300Health`, `iPEARL`, `iSay`, +19 more | `BHV_AvdColregsV19`, `BHV_Loiter`, `BHV_StationKeep`, `BHV_Waypoint` |
+| `missions/auv_dock` | 14 | 1 | `missions/auv_dock/launch.sh`, `missions/auv_dock/launch_heron.sh`, `missions/auv_dock/launch_pearl.sh`, +2 more | `ANTLER`, `iDualGPS`, `iGPS`, `iM300`, `iM300Health`, `iPEARL`, `iSay`, +19 more | `BHV_AvdColregsV19`, `BHV_Loiter`, `BHV_StationKeep`, `BHV_Waypoint` |
 | `missions/charles_river/bathymetry_mission` | 17 | 1 | `missions/charles_river/bathymetry_mission/launch.sh`, `missions/charles_river/bathymetry_mission/launch_shoreside.sh`, `missions/charles_river/bathymetry_mission/launch_vehicle.sh` | `ANTLER`, `iBlueRoboticsPing`, `iDualGPS`, `iGPS`, `iPEARL`, `iRPISerial`, `pEchoVar`, +13 more | `BHV_StationKeep`, `BHV_Waypoint` |
 | `missions/charles_river/bathymetry_mission_sim` | 17 | 1 | `missions/charles_river/bathymetry_mission_sim/launch.sh`, `missions/charles_river/bathymetry_mission_sim/launch_shoreside.sh`, `missions/charles_river/bathymetry_mission_sim/launch_vehicle.sh` | `ANTLER`, `iBlueRoboticsPing`, `iDualGPS`, `iGPS`, `iPEARL`, `iRPISerial`, `pEchoVar`, +15 more | `BHV_StationKeep`, `BHV_Waypoint` |
-| `missions/charles_river/may_test_run` | 18 | 1 | `missions/charles_river/may_test_run/launch.sh`, `missions/charles_river/may_test_run/launch_shoreside.sh`, `missions/charles_river/may_test_run/launch_vehicle.sh` | `ANTLER`, `iBlueRoboticsPing`, `iDualGPS`, `iGPS`, `iPEARL`, `iRPISerial`, `pEchoVar`, +15 more | `BHV_StationKeep`, `BHV_Waypoint` |
+| `missions/charles_river/may_test_run` | 17 | 1 | `missions/charles_river/may_test_run/launch.sh`, `missions/charles_river/may_test_run/launch_shoreside.sh`, `missions/charles_river/may_test_run/launch_vehicle.sh` | `ANTLER`, `iBlueRoboticsPing`, `iDualGPS`, `iGPS`, `iPEARL`, `iRPISerial`, `pEchoVar`, +15 more | `BHV_StationKeep`, `BHV_Waypoint` |
 | `missions/charles_river/pearl_fld_square` | 17 | 1 | `missions/charles_river/pearl_fld_square/launch.sh`, `missions/charles_river/pearl_fld_square/launch_shoreside.sh`, `missions/charles_river/pearl_fld_square/launch_vehicle.sh` | `ANTLER`, `iBlueRoboticsPing`, `iDualGPS`, `iGPS`, `iPEARL`, `iRPISerial`, `pEchoVar`, +13 more | `BHV_StationKeep`, `BHV_Waypoint` |
 | `missions/deep_pond/pearl_fld_lawnmower` | 16 | 1 | `missions/deep_pond/pearl_fld_lawnmower/launch.sh`, `missions/deep_pond/pearl_fld_lawnmower/launch_shoreside.sh`, `missions/deep_pond/pearl_fld_lawnmower/launch_vehicle.sh` | `ANTLER`, `iChargeController`, `iGPS`, `iPEARL`, `pEchoVar`, `pHelmIvP`, `pHostInfo`, +9 more | `BHV_StationKeep`, `BHV_Waypoint` |
 | `missions/deep_pond/pearl_fld_long` | 17 | 1 | `missions/deep_pond/pearl_fld_long/launch.sh`, `missions/deep_pond/pearl_fld_long/launch_shoreside.sh`, `missions/deep_pond/pearl_fld_long/launch_vehicle.sh` | `ANTLER`, `iChargeController`, `iGPS`, `iPEARL`, `pEchoVar`, `pHelmIvP`, `pHostInfo`, +10 more | `BHV_StationKeep`, `BHV_Waypoint` |
@@ -116,15 +116,15 @@ This is a generated first-hop traversal map for `moos-ivp-pearl`. Use it to choo
 | `missions/pavlab23/lawnmower` | 14 | 1 | `missions/pavlab23/lawnmower/launch.sh`, `missions/pavlab23/lawnmower/launch_heron.sh`, `missions/pavlab23/lawnmower/launch_pearl.sh`, +2 more | `ANTLER`, `iDualGPS`, `iGPS`, `iM300`, `iM300Health`, `iPEARL`, `iSay`, +19 more | `BHV_AvdColregsV19`, `BHV_Loiter`, `BHV_StationKeep`, `BHV_Waypoint` |
 | `missions/pavlab23/othwaypoint` | 14 | 1 | `missions/pavlab23/othwaypoint/launch.sh`, `missions/pavlab23/othwaypoint/launch_heron.sh`, `missions/pavlab23/othwaypoint/launch_pearl.sh`, +2 more | `ANTLER`, `iDualGPS`, `iGPS`, `iM300`, `iM300Health`, `iPEARL`, `iSay`, +19 more | `BHV_AvdColregsV19`, `BHV_Loiter`, `BHV_StationKeep`, `BHV_Waypoint` |
 | `missions/pavlab23/simplewaypoint` | 14 | 1 | `missions/pavlab23/simplewaypoint/launch.sh`, `missions/pavlab23/simplewaypoint/launch_heron.sh`, `missions/pavlab23/simplewaypoint/launch_pearl.sh`, +2 more | `ANTLER`, `iDualGPS`, `iGPS`, `iM300`, `iM300Health`, `iPEARL`, `iSay`, +19 more | `BHV_AvdColregsV19`, `BHV_Loiter`, `BHV_StationKeep`, `BHV_Waypoint` |
-| `missions/pearl_heron` | 15 | 2 | `missions/pearl_heron/launch.sh`, `missions/pearl_heron/launch_heron.sh`, `missions/pearl_heron/launch_pearl.sh`, +2 more | `ANTLER`, `iDualGPS`, `iGPS`, `iM300`, `iM300Health`, `iPEARL`, `iSay`, +18 more | `BHV_AvdColregsV19`, `BHV_Loiter`, `BHV_StationKeep`, `BHV_Waypoint` |
+| `missions/pearl_heron` | 14 | 1 | `missions/pearl_heron/launch.sh`, `missions/pearl_heron/launch_heron.sh`, `missions/pearl_heron/launch_pearl.sh`, +2 more | `ANTLER`, `iDualGPS`, `iGPS`, `iM300`, `iM300Health`, `iPEARL`, `iSay`, +18 more | `BHV_AvdColregsV19`, `BHV_Loiter`, `BHV_StationKeep`, `BHV_Waypoint` |
 | `missions/pleasant_bay/pearl_fld_line` | 16 | 1 | `missions/pleasant_bay/pearl_fld_line/launch.sh`, `missions/pleasant_bay/pearl_fld_line/launch_shoreside.sh`, `missions/pleasant_bay/pearl_fld_line/launch_vehicle.sh` | `ANTLER`, `iDualGPS`, `iPEARL`, `iRPISerial`, `pEchoVar`, `pHelmIvP`, `pHostInfo`, +9 more | `BHV_StationKeep`, `BHV_Waypoint` |
 | `missions/pleasant_bay/pearl_fld_simple` | 16 | 1 | `missions/pleasant_bay/pearl_fld_simple/launch.sh`, `missions/pleasant_bay/pearl_fld_simple/launch_shoreside.sh`, `missions/pleasant_bay/pearl_fld_simple/launch_vehicle.sh` | `ANTLER`, `iChargeController`, `iGPS`, `iPEARL`, `pEchoVar`, `pHelmIvP`, `pHostInfo`, +9 more | `BHV_StationKeep`, `BHV_Waypoint` |
 | `missions/sim/ais_sim/m2_berta_original` | 14 | 1 | `missions/sim/ais_sim/m2_berta_original/launch.sh`, `missions/sim/ais_sim/m2_berta_original/launch_shadow.sh` | `ANTLER`, `iSay`, `pContactMgrV20`, `pHelmIvP`, `pHostInfo`, `pLogger`, `pMarinePID`, +15 more | `BHV_AvdColregsV19`, `BHV_Loiter`, `BHV_StationKeep`, `BHV_Waypoint` |
 | `missions/sim/ais_sim/m2_berta_original_headon_circle` | 14 | 1 | `missions/sim/ais_sim/m2_berta_original_headon_circle/launch.sh`, `missions/sim/ais_sim/m2_berta_original_headon_circle/launch_shadow.sh` | `ANTLER`, `iSay`, `pContactMgrV20`, `pHelmIvP`, `pHostInfo`, `pLogger`, `pMarinePID`, +15 more | `BHV_AvdColregsV19`, `BHV_Loiter`, `BHV_StationKeep`, `BHV_Waypoint` |
 | `missions/sim/ais_sim/prediction_avoidance_charles_crossing_straight` | 14 | 1 | `missions/sim/ais_sim/prediction_avoidance_charles_crossing_straight/launch.sh`, `missions/sim/ais_sim/prediction_avoidance_charles_crossing_straight/launch_shadow.sh` | `ANTLER`, `iSay`, `pContactMgrV20`, `pHelmIvP`, `pHostInfo`, `pLogger`, `pMarinePID`, +15 more | `BHV_AvdColregsV19`, `BHV_Loiter`, `BHV_StationKeep`, `BHV_Waypoint` |
-| `missions/sim/ais_sim/prediction_avoidance_charles_headon_circle` | 18 | 5 | `missions/sim/ais_sim/prediction_avoidance_charles_headon_circle/launch.sh`, `missions/sim/ais_sim/prediction_avoidance_charles_headon_circle/launch_shadow.sh` | `ANTLER`, `iSay`, `pContactMgrV20`, `pHelmIvP`, `pHostInfo`, `pLogger`, `pMarinePID`, +17 more | `BHV_AvdColregsV19`, `BHV_Loiter`, `BHV_StationKeep`, `BHV_Waypoint` |
+| `missions/sim/ais_sim/prediction_avoidance_charles_headon_circle` | 14 | 1 | `missions/sim/ais_sim/prediction_avoidance_charles_headon_circle/launch.sh`, `missions/sim/ais_sim/prediction_avoidance_charles_headon_circle/launch_shadow.sh` | `ANTLER`, `iSay`, `pContactMgrV20`, `pHelmIvP`, `pHostInfo`, `pLogger`, `pMarinePID`, +17 more | `BHV_AvdColregsV19`, `BHV_Loiter`, `BHV_StationKeep`, `BHV_Waypoint` |
 | `missions/sim/ais_sim/prediction_avoidance_charles_headon_circle_giveway` | 14 | 1 | `missions/sim/ais_sim/prediction_avoidance_charles_headon_circle_giveway/launch.sh`, `missions/sim/ais_sim/prediction_avoidance_charles_headon_circle_giveway/launch_shadow.sh` | `ANTLER`, `iSay`, `pContactMgrV20`, `pHelmIvP`, `pHostInfo`, `pLogger`, `pMarinePID`, +17 more | `BHV_AvdColregsV19`, `BHV_Loiter`, `BHV_StationKeep`, `BHV_Waypoint` |
-| `missions/sim/ais_sim/prediction_avoidance_charles_headon_straight` | 18 | 5 | `missions/sim/ais_sim/prediction_avoidance_charles_headon_straight/launch.sh`, `missions/sim/ais_sim/prediction_avoidance_charles_headon_straight/launch_shadow.sh` | `ANTLER`, `iSay`, `pContactMgrV20`, `pHelmIvP`, `pHostInfo`, `pLogger`, `pMarinePID`, +17 more | `BHV_AvdColregsV19`, `BHV_Loiter`, `BHV_StationKeep`, `BHV_Waypoint` |
+| `missions/sim/ais_sim/prediction_avoidance_charles_headon_straight` | 14 | 1 | `missions/sim/ais_sim/prediction_avoidance_charles_headon_straight/launch.sh`, `missions/sim/ais_sim/prediction_avoidance_charles_headon_straight/launch_shadow.sh` | `ANTLER`, `iSay`, `pContactMgrV20`, `pHelmIvP`, `pHostInfo`, `pLogger`, `pMarinePID`, +17 more | `BHV_AvdColregsV19`, `BHV_Loiter`, `BHV_StationKeep`, `BHV_Waypoint` |
 | `missions/sim/laptop_sim` | 1 | 1 | `missions/sim/laptop_sim/launch.sh` | `ANTLER`, `pHelmIvP`, `pLogger`, `pMarinePID`, `pMarineViewer`, `pNodeReporter`, `uProcessWatch`, +2 more | `BHV_StationKeep`, `BHV_Waypoint` |
 | `missions/sim/pearl_sim` | 18 | 1 | `missions/sim/pearl_sim/launch.sh`, `missions/sim/pearl_sim/launch_shoreside.sh`, `missions/sim/pearl_sim/launch_vehicle.sh` | `ANTLER`, `iChargeController`, `iGPS`, `iPEARL`, `pEchoVar`, `pHelmIvP`, `pHostInfo`, +11 more | `BHV_StationKeep`, `BHV_Waypoint` |
 | `missions/sim/pearl_sim/Attic` | 2 | 1 | - | `iRemote`, `uTimerScript` | `BHV_StationKeep`, `BHV_Waypoint` |
