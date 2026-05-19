@@ -46,10 +46,10 @@ Behavior = BHV_Waypoint
 	// Small zigzag for the May test run
 	//points = -90,-65 : -131,-85 : -79,-93
 
-	// Test zig
-	points = 60,6 : 27,-9 : 70,-13
+	// Test for straight path following
+	points = 22,-9 : 32,-35 : 14,-44
 
-	repeat         = 1
+	repeat         = 2
 	order          = $(ORDER)
 
 	visual_hints = nextpt_color=yellow

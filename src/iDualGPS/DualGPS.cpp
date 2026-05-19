@@ -276,7 +276,7 @@ void DGPS::PublishMessage(gpsValueToPublish gVal)
 	  double dx = m_curX_R - m_curX_L;
 	  double dy = m_curY_R - m_curY_L;
 	  double bearing_port_to_starboard = atan2(dx, dy) * 180.0 / M_PI;
-	  m_curHeadingDUAL = fmod(bearing_port_to_starboard - 45.0 + 360.0, 360.0);
+	  m_curHeadingDUAL = fmod(bearing_port_to_starboard + 45.0 + 360.0, 360.0);
 	  m_Comms.Notify(m_prefix + "HEADING_DUAL", m_curHeadingDUAL);
 	}
 }
