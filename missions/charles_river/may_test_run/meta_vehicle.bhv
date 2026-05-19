@@ -36,8 +36,8 @@ Behavior = BHV_Waypoint
   endflag   = RETURN=true
   UPDATES   = WPT_UPDATE
   
-	//lead           = 8
-	//lead_damper    = 1
+	lead           = 8
+	lead_damper    = 1
 	speed          = $(SPEED)   //meters per second
 	capture_line   = true
 	capture_radius = 3
@@ -46,8 +46,8 @@ Behavior = BHV_Waypoint
 	// Small zigzag for the May test run
 	//points = -90,-65 : -131,-85 : -79,-93
 
-	// Test square
-	points = 60,-5 : 27,-9 : 50,-46 : 95,-26
+	// Test zig
+	points = 60,6 : 27,-9 : 70,-13
 
 	repeat         = 1
 	order          = $(ORDER)
