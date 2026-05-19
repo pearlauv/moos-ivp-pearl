@@ -6,10 +6,10 @@ This is a generated first-hop traversal map for `moos-ivp-pearl`. Use it to choo
 
 ## Summary
 
-- Repository files indexed: `1003`
+- Repository files indexed: `1001`
 - Source components: `20`
 - Mission directories: `29`
-- Mission `.moos` files: `403`
+- Mission `.moos` files: `402`
 - Mission `.bhv` files: `29`
 
 ## Source Inputs
@@ -103,7 +103,7 @@ This is a generated first-hop traversal map for `moos-ivp-pearl`. Use it to choo
 | `missions/auv_dock` | 14 | 1 | `missions/auv_dock/launch.sh`, `missions/auv_dock/launch_heron.sh`, `missions/auv_dock/launch_pearl.sh`, +2 more | `ANTLER`, `iDualGPS`, `iGPS`, `iM300`, `iM300Health`, `iPEARL`, `iSay`, +19 more | `BHV_AvdColregsV19`, `BHV_Loiter`, `BHV_StationKeep`, `BHV_Waypoint` |
 | `missions/charles_river/bathymetry_mission` | 17 | 1 | `missions/charles_river/bathymetry_mission/launch.sh`, `missions/charles_river/bathymetry_mission/launch_shoreside.sh`, `missions/charles_river/bathymetry_mission/launch_vehicle.sh` | `ANTLER`, `iBlueRoboticsPing`, `iDualGPS`, `iGPS`, `iPEARL`, `iRPISerial`, `pEchoVar`, +13 more | `BHV_StationKeep`, `BHV_Waypoint` |
 | `missions/charles_river/bathymetry_mission_sim` | 17 | 1 | `missions/charles_river/bathymetry_mission_sim/launch.sh`, `missions/charles_river/bathymetry_mission_sim/launch_shoreside.sh`, `missions/charles_river/bathymetry_mission_sim/launch_vehicle.sh` | `ANTLER`, `iBlueRoboticsPing`, `iDualGPS`, `iGPS`, `iPEARL`, `iRPISerial`, `pEchoVar`, +15 more | `BHV_StationKeep`, `BHV_Waypoint` |
-| `missions/charles_river/may_test_run` | 17 | 1 | `missions/charles_river/may_test_run/launch.sh`, `missions/charles_river/may_test_run/launch_shoreside.sh`, `missions/charles_river/may_test_run/launch_vehicle.sh` | `ANTLER`, `iBlueRoboticsPing`, `iDualGPS`, `iGPS`, `iPEARL`, `iRPISerial`, `pEchoVar`, +15 more | `BHV_StationKeep`, `BHV_Waypoint` |
+| `missions/charles_river/may_test_run` | 16 | 1 | `missions/charles_river/may_test_run/launch.sh`, `missions/charles_river/may_test_run/launch_shoreside.sh`, `missions/charles_river/may_test_run/launch_vehicle.sh` | `ANTLER`, `iBlueRoboticsPing`, `iDualGPS`, `iGPS`, `iPEARL`, `iRPISerial`, `pEchoVar`, +15 more | `BHV_StationKeep`, `BHV_Waypoint` |
 | `missions/charles_river/pearl_fld_square` | 17 | 1 | `missions/charles_river/pearl_fld_square/launch.sh`, `missions/charles_river/pearl_fld_square/launch_shoreside.sh`, `missions/charles_river/pearl_fld_square/launch_vehicle.sh` | `ANTLER`, `iBlueRoboticsPing`, `iDualGPS`, `iGPS`, `iPEARL`, `iRPISerial`, `pEchoVar`, +13 more | `BHV_StationKeep`, `BHV_Waypoint` |
 | `missions/deep_pond/pearl_fld_lawnmower` | 16 | 1 | `missions/deep_pond/pearl_fld_lawnmower/launch.sh`, `missions/deep_pond/pearl_fld_lawnmower/launch_shoreside.sh`, `missions/deep_pond/pearl_fld_lawnmower/launch_vehicle.sh` | `ANTLER`, `iChargeController`, `iGPS`, `iPEARL`, `pEchoVar`, `pHelmIvP`, `pHostInfo`, +9 more | `BHV_StationKeep`, `BHV_Waypoint` |
 | `missions/deep_pond/pearl_fld_long` | 17 | 1 | `missions/deep_pond/pearl_fld_long/launch.sh`, `missions/deep_pond/pearl_fld_long/launch_shoreside.sh`, `missions/deep_pond/pearl_fld_long/launch_vehicle.sh` | `ANTLER`, `iChargeController`, `iGPS`, `iPEARL`, `pEchoVar`, `pHelmIvP`, `pHostInfo`, +10 more | `BHV_StationKeep`, `BHV_Waypoint` |

@@ -45,7 +45,45 @@ Processconfig = ANTLER
 	
 }
 
-#include plug_pLogger.moos
+//--------------------------------------------------
+// pLogger Config Block
+
+ProcessConfig = pLogger
+{
+  AppTick   = 10
+  CommsTick = 10
+
+  File          = LOG_%(VNAME)
+  PATH          = ./
+  //SyncLog     = true @ 0.2
+  AsyncLog      = true
+  FileTimeStamp = true
+
+  Log = IVPHELM_LIFE_EVENT @ 0 nosync
+  Log = DB_CLIENTS          @ 0 nosync
+
+  LogAuxSrc = true
+
+  WildCardLogging = true
+  WildCardOmitPattern = *_STATUS
+  WildCardOmitPattern = APPCAST
+  WildCardOmitPattern = DB_VARSUMMARY
+  //WildCardOmitPattern = DB_RWSUMMARY
+  //WildCardOmitPattern = NAV_LAT, NAV_LONG
+  WildCardOmitPattern = NAV_PITCH, NAV_YAW, NAV_Z
+  WildCardOmitPattern = SIMULATION_MODE, TRUE_X, TRUE_Y
+  WildCardOmitPattern = NAV_DEPTH, NAV_SPEED_OVER_GROUND, DB_QOS
+  //WildCardOmitPattern = NODE_BROKER_PING_0, PSHARE*
+  WildCardOmitPattern = IVPHELM_ALLSTOP_DEBUG
+  //WildCardOmitPattern = *ITER_GAP, *ITER_LEN
+  WildCardOmitPattern = PHI_HOST*
+
+  //WildCardOmitPattern = DB_CLIENTS
+  //WildCardOmitPattern = PHI_HOST*, NODE_REPORT_LOCAL
+
+  //CompressAlogs = false
+}
+
 #include plug_pEchoVar.moos
 #include plug_pNodeReporter.moos
 #include plug_pPearlPID.moos

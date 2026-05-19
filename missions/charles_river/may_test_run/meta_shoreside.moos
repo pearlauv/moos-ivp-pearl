@@ -14,6 +14,7 @@ Processconfig = ANTLER
 
   Run = MOOSDB          @ NewConsole = false
   Run = pMarineViewer   @ NewConsole = false
+  Run = pLogger         @ NewConsole = false
 
   Run = pShare          @ NewConsole = false
   Run = pHostInfo       @ NewConsole = false
@@ -42,6 +43,30 @@ ProcessConfig = pHostInfo
   CommsTick = 1
   
   default_hostip_force = $(SHORE_IP)
+}
+
+//--------------------------------------------------
+// pLogger Config Block
+
+ProcessConfig = pLogger
+{
+  AppTick       = 10
+  CommsTick     = 10
+
+  File          = XLOG_SHORESIDE
+  PATH          = ./
+  SyncLog       = true @ 0.2
+  AsyncLog      = true
+  FileTimeStamp = true
+
+  LogAuxSrc     = true
+
+  WildCardLogging = true
+  WildCardOmitPattern = *_STATUS
+  WildCardOmitPattern = DB_VARSUMMARY
+  WildCardOmitPattern = DB_RWSUMMARY
+  WildCardOmitPattern = *_ITER_GAP
+  WildCardOmitPattern = *_ITER_LEN
 }
 
 //--------------------------------------------------

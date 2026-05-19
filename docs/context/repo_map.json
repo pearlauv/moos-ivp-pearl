@@ -1,7 +1,6 @@
 {
   "file_extension_counts": {
     ".bhv": 29,
-    ".bhv#": 1,
     ".cpp": 120,
     ".csv": 28,
     ".h": 119,
@@ -14,7 +13,6 @@
     ".ods": 3,
     ".py": 16,
     ".sh": 125,
-    ".sh#": 1,
     ".tif": 31,
     ".tpp": 1,
     ".txt": 45,
@@ -1713,7 +1711,6 @@
           "plug_pEchoVar.moos",
           "plug_pHelmIvP.moos",
           "plug_pHostInfo.moos",
-          "plug_pLogger.moos",
           "plug_pNodeReporter.moos",
           "plug_pPearlPID.moos",
           "plug_pShare.moos",
@@ -1738,7 +1735,6 @@
           "missions/charles_river/may_test_run/plug_pEchoVar.moos",
           "missions/charles_river/may_test_run/plug_pHelmIvP.moos",
           "missions/charles_river/may_test_run/plug_pHostInfo.moos",
-          "missions/charles_river/may_test_run/plug_pLogger.moos",
           "missions/charles_river/may_test_run/plug_pNodeReporter.moos",
           "missions/charles_river/may_test_run/plug_pPearlPID.moos",
           "missions/charles_river/may_test_run/plug_pShare.moos",
@@ -4383,9 +4379,9 @@
     "build.sh"
   ],
   "summary": {
-    "indexed_files": 1003,
+    "indexed_files": 1001,
     "mission_bhv_files": 29,
-    "mission_moos_files": 403,
+    "mission_moos_files": 402,
     "missions": 29,
     "src_components": 20
   },
