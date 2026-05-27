@@ -149,7 +149,7 @@ ProcessConfig = uSimMarineV22
 	//app_logging = true
 	//max_speed   = $(MAX_SPD)
 	
-	turn_rate = 95
+	turn_rate = 100
 	turn_spd_loss = 0.6
 
 	post_des_thrust = DESIRED_THRUSTX

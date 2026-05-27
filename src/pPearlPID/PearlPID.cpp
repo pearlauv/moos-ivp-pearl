@@ -55,6 +55,11 @@ PearlPID::PearlPID()
   m_deadband        = 0;
   m_solar_desired   = false;
   m_within_deadband = false;
+  m_holonomic_turn  = false;
+  m_holonomic_turn_active = false;
+  m_holonomic_turn_on_error = 30;
+  m_holonomic_turn_off_error = 10;
+  m_holonomic_heading_error = 0;
 
   m_desired_heading = 0;
   m_desired_speed   = 0;
@@ -281,6 +286,20 @@ bool PearlPID::Iterate()
   if((m_desired_speed <= 0.001) && (m_desired_speed >= -0.001))
     thrust = 0;
 
+  m_holonomic_heading_error = angle180(m_current_heading - m_desired_heading);
+  double abs_heading_error = fabs(m_holonomic_heading_error);
+  if(m_holonomic_turn) {
+    if(m_holonomic_turn_active) {
+      if(abs_heading_error <= m_holonomic_turn_off_error)
+        m_holonomic_turn_active = false;
+    }
+    else if(abs_heading_error >= m_holonomic_turn_on_error)
+      m_holonomic_turn_active = true;
+
+    if(m_holonomic_turn_active)
+      thrust = 0;
+  }
+
   vector<string> pid_report;
   if(m_verbose == "verbose") {
     pid_report = m_pengine.getPIDReport();
@@ -294,7 +313,7 @@ bool PearlPID::Iterate()
 
   m_paused = false;
 
-  if(thrust == 0) {
+  if((thrust == 0) && !m_holonomic_turn_active) {
     if(!m_use_solar) {
       rudder = 0; }
     else if(m_use_solar && !m_station_keep) {
@@ -464,11 +483,23 @@ bool PearlPID::OnStartUp()
     else if(param == "HEADING_DEADBAND") {
       m_deadband = dval;
     }
+    else if(param == "HOLONOMIC_TURN") {
+      handled = setBooleanOnString(m_holonomic_turn, value);
+    }
+    else if(param == "HOLONOMIC_TURN_ON_ERROR") {
+      m_holonomic_turn_on_error = vclip(dval, 0, 180);
+    }
+    else if(param == "HOLONOMIC_TURN_OFF_ERROR") {
+      m_holonomic_turn_off_error = vclip(dval, 0, 180);
+    }
 
     if(!handled)
       reportUnhandledConfigWarning(orig);
 
   }
+
+  if(m_holonomic_turn_off_error > m_holonomic_turn_on_error)
+    m_holonomic_turn_off_error = m_holonomic_turn_on_error;
 
   bool ok_yaw = handleYawSettings();
   bool ok_spd = handleSpeedSettings();
@@ -689,6 +720,15 @@ double PearlPID::angle360(double degval)
   return(degval);
 }
 
+double PearlPID::angle180(double degval)
+{
+  while(degval > 180)
+    degval -= 360.0;
+  while(degval <= -180)
+    degval += 360.0;
+  return(degval);
+}
+
 bool PearlPID::buildReport()
 {
   // Format variables ahead of time
@@ -707,12 +747,18 @@ bool PearlPID::buildReport()
   string sCurSpeed     = doubleToString(m_current_speed, 1);
   string sWithinDead   = boolToString(m_within_deadband);
   string sSolarDesired = boolToString(m_solar_desired);
+  string sHolonomicTurn = boolToString(m_holonomic_turn);
+  string sHolonomicActive = boolToString(m_holonomic_turn_active);
+  string sHolonomicErr = doubleToString(m_holonomic_heading_error, 1);
   
   m_msgs << endl << "pPearlPID Variables and Status" << endl << "-------------------------" << endl;
   
   m_msgs << "   pPearlPID Control On:   " << sControl << endl;
   m_msgs << "   ALLSTOP Commanded:      " << sAllstop << endl;
   m_msgs << "   Speed Factor:           " << sSpeedFactor << endl;
+  m_msgs << "   Holonomic Turn Mode:    " << sHolonomicTurn << endl;
+  m_msgs << "   Holonomic Turn Active:  " << sHolonomicActive << endl;
+  m_msgs << "   Holonomic Heading Err:  " << sHolonomicErr << endl;
   m_msgs << endl;
   m_msgs << "   STATION-KEEPING:        " << sStation << endl;
   m_msgs << "   Sun-tracking Mode ON:   " << sUseSolar << endl;
@@ -735,4 +781,3 @@ bool PearlPID::buildReport()
   
   return(true);
 }
-

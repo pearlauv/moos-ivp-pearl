@@ -12,6 +12,9 @@ ProcessConfig = pPearlPID
   
   SUN_TRACKING = false
   HEADING_DEADBAND = 5    // +/- degrees
+  HOLONOMIC_TURN = true
+  HOLONOMIC_TURN_ON_ERROR  = 30  // degrees
+  HOLONOMIC_TURN_OFF_ERROR = 10  // degrees
   
   // Yaw PID controller
   YAW_PID_KP             = 0.25

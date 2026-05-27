@@ -9,7 +9,7 @@
     ".json": 1,
     ".m": 1,
     ".md": 3,
-    ".moos": 410,
+    ".moos": 409,
     ".ods": 3,
     ".py": 16,
     ".sh": 125,
@@ -4379,7 +4379,7 @@
     "build.sh"
   ],
   "summary": {
-    "indexed_files": 1001,
+    "indexed_files": 1000,
     "mission_bhv_files": 29,
     "mission_moos_files": 402,
     "missions": 29,

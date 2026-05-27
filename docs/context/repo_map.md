@@ -6,7 +6,7 @@ This is a generated first-hop traversal map for `moos-ivp-pearl`. Use it to choo
 
 ## Summary
 
-- Repository files indexed: `1001`
+- Repository files indexed: `1000`
 - Source components: `20`
 - Mission directories: `29`
 - Mission `.moos` files: `402`

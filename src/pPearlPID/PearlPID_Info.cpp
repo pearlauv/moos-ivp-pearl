@@ -100,6 +100,9 @@ void showExampleConfigAndExit()
   blu("  sim_instability = 0    "," // Range [0,inf)                   ");
   blk("                                                                ");
   blu("  sun_tracking = false                                          ");
+  blu("  holonomic_turn = false                                        ");
+  blu("  holonomic_turn_on_error  = 30   "," // degrees                ");
+  blu("  holonomic_turn_off_error = 10   "," // degrees                ");
   blk("                                                                ");
   blu("  max_sat_hdg_debug = false                                     ");
   blu("  max_sat_spd_debug = false                                     ");
@@ -202,7 +205,6 @@ void showReleaseInfoAndExit()
   showReleaseInfo("pMarinePID", "gpl");
   exit(0);
 }
-
 
 
 

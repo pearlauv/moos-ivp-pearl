@@ -46,6 +46,7 @@ public:
   bool handleSpeedSettings();
   bool handleDepthSettings();
   double angle360(double degval);
+  double angle180(double degval);
 
   bool  buildReport();
   
@@ -61,6 +62,11 @@ protected:
   double   m_deadband;
   bool     m_solar_desired;
   bool     m_within_deadband;
+  bool     m_holonomic_turn;
+  bool     m_holonomic_turn_active;
+  double   m_holonomic_turn_on_error;
+  double   m_holonomic_turn_off_error;
+  double   m_holonomic_heading_error;
 
   double   m_current_heading;
   double   m_current_speed;
@@ -105,7 +111,6 @@ protected:
   bool    m_ignore_nav_yaw;
 };
 #endif 
-
 
 
 
