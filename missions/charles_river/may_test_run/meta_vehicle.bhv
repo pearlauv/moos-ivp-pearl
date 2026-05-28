@@ -44,10 +44,11 @@ Behavior = BHV_Waypoint
 	slip_radius    = 10
 
 	// Small zigzag for the May test run
-	points = 0,-14 : 32,-1 : 7,-26 : 39,-15 : 13,-38
+	//points = 0,-14 : 32,-1 : 7,-26 : 39,-15 : 13,-38
+	//points = 76,18 : 113,35	: 81,4 : 122,22	: 108,-2
 
 	// Test for straight path following
-	//points = 22,-9 : 32,-35 : 14,-44
+	points = 22,-9 : 32,-35 : 14,-44
 
 	repeat         = 2
 	order          = $(ORDER)
