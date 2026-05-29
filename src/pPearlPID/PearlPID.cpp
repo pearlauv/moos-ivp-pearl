@@ -58,8 +58,7 @@ PearlPID::PearlPID()
   m_holonomic_turn  = false;
   m_holonomic_turn_active = false;
   m_holonomic_turn_on_error = 30;
-  m_holonomic_turn_off_error = 10;
-  m_holonomic_turn_max_speed = 0.05;
+  m_holonomic_turn_off_error = 20;
   m_holonomic_heading_error = 0;
 
   m_desired_heading = 0;
@@ -289,9 +288,7 @@ bool PearlPID::Iterate()
 
   m_holonomic_heading_error = angle180(m_current_heading - m_desired_heading);
   double abs_heading_error = fabs(m_holonomic_heading_error);
-  bool allow_holonomic_turn = m_holonomic_turn &&
-    (fabs(m_desired_speed) <= m_holonomic_turn_max_speed);
-  if(allow_holonomic_turn) {
+  if(m_holonomic_turn) {
     if(m_holonomic_turn_active) {
       if(abs_heading_error <= m_holonomic_turn_off_error)
         m_holonomic_turn_active = false;
@@ -496,9 +493,6 @@ bool PearlPID::OnStartUp()
     }
     else if(param == "HOLONOMIC_TURN_OFF_ERROR") {
       m_holonomic_turn_off_error = vclip(dval, 0, 180);
-    }
-    else if(param == "HOLONOMIC_TURN_MAX_SPEED") {
-      m_holonomic_turn_max_speed = vclip_min(dval, 0);
     }
 
     if(!handled)
@@ -757,7 +751,6 @@ bool PearlPID::buildReport()
   string sSolarDesired = boolToString(m_solar_desired);
   string sHolonomicTurn = boolToString(m_holonomic_turn);
   string sHolonomicActive = boolToString(m_holonomic_turn_active);
-  string sHolonomicMaxSpd = doubleToString(m_holonomic_turn_max_speed, 2);
   string sHolonomicErr = doubleToString(m_holonomic_heading_error, 1);
   
   m_msgs << endl << "pPearlPID Variables and Status" << endl << "-------------------------" << endl;
@@ -767,7 +760,6 @@ bool PearlPID::buildReport()
   m_msgs << "   Speed Factor:           " << sSpeedFactor << endl;
   m_msgs << "   Holonomic Turn Mode:    " << sHolonomicTurn << endl;
   m_msgs << "   Holonomic Turn Active:  " << sHolonomicActive << endl;
-  m_msgs << "   Holonomic Max Speed:   " << sHolonomicMaxSpd << endl;
   m_msgs << "   Holonomic Heading Err:  " << sHolonomicErr << endl;
   m_msgs << endl;
   m_msgs << "   STATION-KEEPING:        " << sStation << endl;

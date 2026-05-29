@@ -66,7 +66,6 @@ protected:
   bool     m_holonomic_turn_active;
   double   m_holonomic_turn_on_error;
   double   m_holonomic_turn_off_error;
-  double   m_holonomic_turn_max_speed;
   double   m_holonomic_heading_error;
 
   double   m_current_heading;
@@ -112,7 +111,6 @@ protected:
   bool    m_ignore_nav_yaw;
 };
 #endif 
-
 
 
 
