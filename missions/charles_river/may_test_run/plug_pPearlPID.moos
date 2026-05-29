@@ -15,7 +15,7 @@ ProcessConfig = pPearlPID
   HOLONOMIC_TURN = true
   HOLONOMIC_TURN_ON_ERROR  = 30  // degrees
   HOLONOMIC_TURN_OFF_ERROR = 10  // degrees
-  HOLONOMIC_TURN_MAX_SPEED = 0.05 // m/s; only pivot-turn when nearly stopped
+  HOLONOMIC_TURN_MAX_SPEED = 0.6 // m/s; only pivot-turn when nearly stopped
   
   // Yaw PID controller
   YAW_PID_KP             = 0.25
