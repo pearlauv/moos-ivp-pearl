@@ -62,6 +62,8 @@ char tempChars[numChars];
 char nmeaHeader[numChars] = {0};
 float thrustLeft = 0.0;
 float thrustRight = 0.0;
+const unsigned long CONTROL_LOST_TIMEOUT_MS = 3000;
+unsigned long moosLastCommandMs = 0;
 int curLeft = 188.0;
 int curRight = 188.0;
 float leftSend = 0.0;
@@ -381,18 +383,24 @@ void readFromMOOS() {
   }
 }
 
-void parseNMEA() {
+bool parseNMEA() {
   // split the data into its parts
   char * strtokIndx; // this is used by strtok() as an index
 
   strtokIndx = strtok(tempChars, ",");     // get the first part - the string
+  if (strtokIndx == NULL) return false;
   strcpy(nmeaHeader, strtokIndx); // copy it to nmeaHeader
+  if (strcmp(nmeaHeader, "PICOM") != 0) return false;
 
   strtokIndx = strtok(NULL, ",");
+  if (strtokIndx == NULL) return false;
   thrustLeft = atof(strtokIndx);     // convert the second entry to the left thrust percentage command
 
   strtokIndx = strtok(NULL, ",");
+  if (strtokIndx == NULL) return false;
   thrustRight = atof(strtokIndx);     // convert the third entry to the right thrust percentage command
+
+  return true;
 }
 
 float mapFloat(float x, float in_min, float in_max, float out_min, float out_max) {
@@ -401,8 +409,40 @@ float mapFloat(float x, float in_min, float in_max, float out_min, float out_max
   return (x - in_min) * (out_max - out_min) / (in_max - in_min) + out_min;
 }
 
+bool isRCControlFresh() {
+  unsigned long rcAgeMs = millis() - rcLastValidMs;
+  return rcLastValidMs != 0 && rcAgeMs <= CONTROL_LOST_TIMEOUT_MS;
+}
+
+bool isMOOSCommandFresh() {
+  return moosLastCommandMs != 0 &&
+         (millis() - moosLastCommandMs) <= CONTROL_LOST_TIMEOUT_MS;
+}
+
+bool isControlAvailable() {
+  return isRCControlFresh() || isMOOSCommandFresh();
+}
+
+void stopMotors() {
+  curLeft = STILL;
+  curRight = STILL;
+  if (!TEST_MODE) {
+    analogWrite(leftMotorPin, curLeft);
+    analogWrite(rightMotorPin, curRight);
+  }
+}
+
 void handleRC() {
   updateRCChannels();
+
+  if (!isRCControlFresh()) {
+    manualControl = 0;
+    rotateVal = 0;
+    throttleVal = 0;
+    turnVal = 0;
+    BACKWARD = false;
+    return;
+  }
 
   MANUAL = readSwitch(manualCH, false);
   if (MANUAL) {
@@ -550,9 +590,12 @@ void sendToPython(float* x, float* y, float* z) {
 void commandThrust() {
   if (newData == true) {
     strcpy(tempChars, receivedChars);
-    parseNMEA();
+    bool validMOOSCommand = parseNMEA();
     newData = false;
-    if (manualControl == 0) {
+    if (validMOOSCommand) {
+      moosLastCommandMs = millis();
+    }
+    if (validMOOSCommand && manualControl == 0) {
       float leftVal, rightVal;
       // Map left thrust value to PWM
       if (thrustLeft > 0.05) {
@@ -582,6 +625,10 @@ void commandThrust() {
         analogWrite(rightMotorPin, curRight);
       }
     }
+  }
+
+  if (!isControlAvailable()) {
+    stopMotors();
   }
 }
 

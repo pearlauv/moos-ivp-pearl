@@ -27,6 +27,9 @@ $PLMOT,<last commanded left thrust percentage>,<last commanded right thrust perc
 NMEA sentences sent over serial port from RPi to Arduino:
 $PICOM,<desired left motor thrust percentage>,<desired right motor thrust percentage>*
 
+The frontseat stops motor output only if both control sources are unavailable
+for more than 3 seconds: no valid RC receiver input and no valid PICOM commands.
+
 #========================================================================
 # PEARL_imu_calibration
 #========================================================================
