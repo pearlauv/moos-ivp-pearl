@@ -419,8 +419,12 @@ bool isMOOSCommandFresh() {
          (millis() - moosLastCommandMs) <= CONTROL_LOST_TIMEOUT_MS;
 }
 
+bool isRCManualControlAvailable() {
+  return manualControl == 1 && isRCControlFresh();
+}
+
 bool isControlAvailable() {
-  return isRCControlFresh() || isMOOSCommandFresh();
+  return isRCManualControlAvailable() || isMOOSCommandFresh();
 }
 
 void stopMotors() {

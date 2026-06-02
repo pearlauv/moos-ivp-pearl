@@ -29,6 +29,10 @@ $PICOM,<desired left motor thrust percentage>,<desired right motor thrust percen
 
 The frontseat stops motor output only if both control sources are unavailable
 for more than 3 seconds: no valid RC receiver input and no valid PICOM commands.
+Configure the RC receiver/transmitter failsafe so transmitter loss does not
+hold manual mode on with nonzero throttle; the frontseat can only classify RC
+as unavailable when the received channels indicate manual control is off or the
+receiver stops sending valid channel data.
 
 #========================================================================
 # PEARL_imu_calibration
