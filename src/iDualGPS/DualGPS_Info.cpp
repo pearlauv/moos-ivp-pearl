@@ -68,8 +68,8 @@ void showExampleConfigAndExit()
   blk("                                                                            ");
   blk("  DUAL_GPS        = true       // If true, reads GPS data from the two ports");
   blk("                               // below. If false, reads from PORT_1 only   ");
-  blk("  PORT_1          = /dev/ttyAMA5  // Serial port address for PORT GPS       ");
-  blk("  PORT_2          = /dev/ttyAMA4  // Serial port address for STARBOARD GPS  ");
+  blk("  PORT_1          = /dev/ttyAMA5  // Serial port for stern GPS             ");
+  blk("  PORT_2          = /dev/ttyAMA4  // Serial port for bow GPS               ");
   blk("  BAUDRATE        = 9600       // Serial port baud rate                     ");
   blk("  PREFIX          = GPS        // Prepends this to all GPS publications     ");
   blk("                                                                            ");
