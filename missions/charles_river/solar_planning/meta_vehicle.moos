@@ -70,7 +70,7 @@ ProcessConfig = pPearlSunPlan
   max_irradiance_w_m2 = 1000
 
   forecast_mode       = file
-  forecast_file       = forecast_24h.csv
+  forecast_file       = demo_forecast_2026-06-12.csv
   irradiance_24h      = 0,0,0,0,30,120,310,520,680,760,720,620,430,230,80,10,0,0,0,0,0,0,0,0
 
   // Example panel/controller charge model. This is deliberately below the

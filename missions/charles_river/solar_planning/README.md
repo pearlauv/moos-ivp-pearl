@@ -36,8 +36,10 @@ Run the mission:
 ./launch.sh --nogui 10
 ```
 
-The mission uses `forecast_mode = file` and reads `forecast_24h.csv`. To refresh
-that file from Open-Meteo for tomorrow:
+The mission uses `forecast_mode = file` and reads
+`demo_forecast_2026-06-12.csv`, a committed Open-Meteo snapshot used to keep
+the demo deterministic. To refresh a local forecast from Open-Meteo for
+tomorrow:
 
 ```sh
 ../../../scripts/fetch_solar_forecast.py \
@@ -45,14 +47,16 @@ that file from Open-Meteo for tomorrow:
   --lon -71.087448 \
   --day-offset 1 \
   --timezone America/New_York \
-  --output forecast_24h.csv
+  --output local_forecast_24h.csv
 ```
 
 `pPearlSunPlan` uses `forecast_start_hour = 0`, so mission hour 0 maps to
-midnight in the Open-Meteo forecast file. The planner and SOC simulator use
-MOOS time directly; use MOOS launch warp `60` for validation runs so each
-planned survey window is long enough for the vehicle dynamics to settle while
-still compressing a full-day scenario into a practical run.
+midnight in the configured forecast file. If you generate a fresh local
+forecast, update `forecast_file` in `meta_vehicle.moos` before launching. The
+planner and SOC simulator use MOOS time directly; use MOOS launch warp `60` for
+validation runs so each planned survey window is long enough for the vehicle
+dynamics to settle while still compressing a full-day scenario into a practical
+run.
 
 After running the mission, graph the actual MOOS log:
 

@@ -2,7 +2,7 @@
   "file_extension_counts": {
     ".bhv": 30,
     ".cpp": 126,
-    ".csv": 29,
+    ".csv": 30,
     ".h": 123,
     ".info": 31,
     ".ino": 9,
@@ -4581,7 +4581,7 @@
     "build.sh"
   ],
   "summary": {
-    "indexed_files": 1039,
+    "indexed_files": 1040,
     "mission_bhv_files": 30,
     "mission_moos_files": 418,
     "missions": 30,

@@ -39,7 +39,7 @@ PearlSunPlan::PearlSunPlan()
   m_wpt_update_var = "WPT_UPDATE";
   m_forecast_update_var = "SUN_FORECAST_24H";
   m_forecast_mode = "fixture";
-  m_forecast_file = "forecast_24h.csv";
+  m_forecast_file = "forecast_example.csv";
   m_giveup_action = "return";
   m_battery_capacity_wh = 400.0;
   m_reserve_soc = 25.0;
