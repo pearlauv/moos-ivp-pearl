@@ -6,11 +6,11 @@ This is a generated first-hop traversal map for `moos-ivp-pearl`. Use it to choo
 
 ## Summary
 
-- Repository files indexed: `1000`
-- Source components: `20`
-- Mission directories: `29`
-- Mission `.moos` files: `402`
-- Mission `.bhv` files: `29`
+- Repository files indexed: `1039`
+- Source components: `22`
+- Mission directories: `30`
+- Mission `.moos` files: `418`
+- Mission `.bhv` files: `30`
 
 ## Source Inputs
 
@@ -64,6 +64,8 @@ This is a generated first-hop traversal map for `moos-ivp-pearl`. Use it to choo
 | `pGenPath` | `src/pGenPath` | executable | `pGenPath` | `all` | `apputil`, `geometry`, `m`, `mbutil`, `pthread` |
 | `pOdometry` | `src/pOdometry` | executable | `pOdometry` | `all` | `apputil`, `m`, `mbutil`, `pthread` |
 | `pPearlPID` | `src/pPearlPID` | executable | `pPearlPID` | `all`, `mac` | `mbutil` |
+| `pPearlSunPlan` | `src/pPearlSunPlan` | executable | `pPearlSunPlan` | `all`, `mac` | `apputil`, `m`, `mbutil`, `pthread` |
+| `pSimSOC` | `src/pSimSOC` | executable | `pSimSOC` | `all`, `mac` | `apputil`, `m`, `mbutil`, `pthread` |
 | `pTargetCPA` | `src/pTargetCPA` | executable | `pTargetCPA` | `all` | `apputil`, `m`, `mbutil`, `pthread` |
 | `uSunTracking` | `src/uSunTracking` | executable | `uSunTracking` | `all`, `mac` | `SimpleSerial`, `mbutil` |
 
@@ -81,20 +83,22 @@ This is a generated first-hop traversal map for `moos-ivp-pearl`. Use it to choo
 
 | App | Source | Mission count | Missions |
 | --- | --- | --- | --- |
-| `iBlueRoboticsPing` | `src/iBlueRoboticsPing` | 4 | `missions/charles_river/bathymetry_mission`, `missions/charles_river/bathymetry_mission_sim`, `missions/charles_river/may_test_run`, `missions/charles_river/pearl_fld_square` |
+| `iBlueRoboticsPing` | `src/iBlueRoboticsPing` | 5 | `missions/charles_river/bathymetry_mission`, `missions/charles_river/bathymetry_mission_sim`, `missions/charles_river/may_test_run`, `missions/charles_river/pearl_fld_square`, `missions/charles_river/solar_planning` |
 | `iChargeController` | `src/iChargeController` | 11 | `missions/deep_pond/pearl_fld_lawnmower`, `missions/deep_pond/pearl_fld_long`, `missions/deep_pond/pearl_fld_mit`, `missions/deep_pond/pearl_fld_remote`, `missions/deep_pond/pearl_fld_simple`, `missions/deep_pond/pearl_fld_square`, +5 more |
-| `iDualGPS` | `src/iDualGPS` | 11 | `missions/auv_dock`, `missions/charles_river/bathymetry_mission`, `missions/charles_river/bathymetry_mission_sim`, `missions/charles_river/may_test_run`, `missions/charles_river/pearl_fld_square`, `missions/pavlab23/lawnmower`, +5 more |
-| `iGPS` | `src/iGPS` | 20 | `missions/auv_dock`, `missions/charles_river/bathymetry_mission`, `missions/charles_river/bathymetry_mission_sim`, `missions/charles_river/may_test_run`, `missions/charles_river/pearl_fld_square`, `missions/deep_pond/pearl_fld_lawnmower`, +14 more |
+| `iDualGPS` | `src/iDualGPS` | 12 | `missions/auv_dock`, `missions/charles_river/bathymetry_mission`, `missions/charles_river/bathymetry_mission_sim`, `missions/charles_river/may_test_run`, `missions/charles_river/pearl_fld_square`, `missions/charles_river/solar_planning`, +6 more |
+| `iGPS` | `src/iGPS` | 21 | `missions/auv_dock`, `missions/charles_river/bathymetry_mission`, `missions/charles_river/bathymetry_mission_sim`, `missions/charles_river/may_test_run`, `missions/charles_river/pearl_fld_square`, `missions/charles_river/solar_planning`, +15 more |
 | `iGarmin` | `src/iGarmin` | 1 | `missions/sim/rpi_sim` |
 | `iM300` | `src/iM300` | 5 | `missions/auv_dock`, `missions/pavlab23/lawnmower`, `missions/pavlab23/othwaypoint`, `missions/pavlab23/simplewaypoint`, `missions/pearl_heron` |
 | `iM300Health` | `src/iM300Health` | 5 | `missions/auv_dock`, `missions/pavlab23/lawnmower`, `missions/pavlab23/othwaypoint`, `missions/pavlab23/simplewaypoint`, `missions/pearl_heron` |
-| `iPEARL` | `src/iPEARL` | 21 | `missions/auv_dock`, `missions/charles_river/bathymetry_mission`, `missions/charles_river/bathymetry_mission_sim`, `missions/charles_river/may_test_run`, `missions/charles_river/pearl_fld_square`, `missions/deep_pond/pearl_fld_lawnmower`, +15 more |
-| `iRPISerial` | `src/iRPISerial` | 6 | `missions/charles_river/bathymetry_mission`, `missions/charles_river/bathymetry_mission_sim`, `missions/charles_river/may_test_run`, `missions/charles_river/pearl_fld_square`, `missions/pleasant_bay/pearl_fld_line`, `missions/sim/rpi_sim` |
+| `iPEARL` | `src/iPEARL` | 22 | `missions/auv_dock`, `missions/charles_river/bathymetry_mission`, `missions/charles_river/bathymetry_mission_sim`, `missions/charles_river/may_test_run`, `missions/charles_river/pearl_fld_square`, `missions/charles_river/solar_planning`, +16 more |
+| `iRPISerial` | `src/iRPISerial` | 7 | `missions/charles_river/bathymetry_mission`, `missions/charles_river/bathymetry_mission_sim`, `missions/charles_river/may_test_run`, `missions/charles_river/pearl_fld_square`, `missions/charles_river/solar_planning`, `missions/pleasant_bay/pearl_fld_line`, +1 more |
 | `pAUVdock` | `src/pAUVdock` | 4 | `missions/auv_dock`, `missions/pavlab23/lawnmower`, `missions/pavlab23/othwaypoint`, `missions/pavlab23/simplewaypoint` |
 | `pOdometry` | `src/pOdometry` | 8 | `missions/auv_dock`, `missions/pavlab23/lawnmower`, `missions/pavlab23/othwaypoint`, `missions/pavlab23/simplewaypoint`, `missions/pearl_heron`, `missions/sim/ais_sim/prediction_avoidance_charles_headon_circle`, +2 more |
-| `pPearlPID` | `src/pPearlPID` | 21 | `missions/auv_dock`, `missions/charles_river/bathymetry_mission`, `missions/charles_river/bathymetry_mission_sim`, `missions/charles_river/may_test_run`, `missions/charles_river/pearl_fld_square`, `missions/deep_pond/pearl_fld_lawnmower`, +15 more |
+| `pPearlPID` | `src/pPearlPID` | 22 | `missions/auv_dock`, `missions/charles_river/bathymetry_mission`, `missions/charles_river/bathymetry_mission_sim`, `missions/charles_river/may_test_run`, `missions/charles_river/pearl_fld_square`, `missions/charles_river/solar_planning`, +16 more |
+| `pPearlSunPlan` | `src/pPearlSunPlan` | 1 | `missions/charles_river/solar_planning` |
+| `pSimSOC` | `src/pSimSOC` | 1 | `missions/charles_river/solar_planning` |
 | `pTargetCPA` | `src/pTargetCPA` | 8 | `missions/auv_dock`, `missions/pavlab23/lawnmower`, `missions/pavlab23/othwaypoint`, `missions/pavlab23/simplewaypoint`, `missions/pearl_heron`, `missions/sim/ais_sim/prediction_avoidance_charles_headon_circle`, +2 more |
-| `uSunTracking` | `src/uSunTracking` | 16 | `missions/charles_river/bathymetry_mission`, `missions/charles_river/bathymetry_mission_sim`, `missions/charles_river/may_test_run`, `missions/charles_river/pearl_fld_square`, `missions/deep_pond/pearl_fld_lawnmower`, `missions/deep_pond/pearl_fld_long`, +10 more |
+| `uSunTracking` | `src/uSunTracking` | 17 | `missions/charles_river/bathymetry_mission`, `missions/charles_river/bathymetry_mission_sim`, `missions/charles_river/may_test_run`, `missions/charles_river/pearl_fld_square`, `missions/charles_river/solar_planning`, `missions/deep_pond/pearl_fld_lawnmower`, +11 more |
 
 ## Mission Routes
 
@@ -105,6 +109,7 @@ This is a generated first-hop traversal map for `moos-ivp-pearl`. Use it to choo
 | `missions/charles_river/bathymetry_mission_sim` | 17 | 1 | `missions/charles_river/bathymetry_mission_sim/launch.sh`, `missions/charles_river/bathymetry_mission_sim/launch_shoreside.sh`, `missions/charles_river/bathymetry_mission_sim/launch_vehicle.sh` | `ANTLER`, `iBlueRoboticsPing`, `iDualGPS`, `iGPS`, `iPEARL`, `iRPISerial`, `pEchoVar`, +15 more | `BHV_StationKeep`, `BHV_Waypoint` |
 | `missions/charles_river/may_test_run` | 16 | 1 | `missions/charles_river/may_test_run/launch.sh`, `missions/charles_river/may_test_run/launch_shoreside.sh`, `missions/charles_river/may_test_run/launch_vehicle.sh` | `ANTLER`, `iBlueRoboticsPing`, `iDualGPS`, `iGPS`, `iPEARL`, `iRPISerial`, `pEchoVar`, +15 more | `BHV_StationKeep`, `BHV_Waypoint` |
 | `missions/charles_river/pearl_fld_square` | 17 | 1 | `missions/charles_river/pearl_fld_square/launch.sh`, `missions/charles_river/pearl_fld_square/launch_shoreside.sh`, `missions/charles_river/pearl_fld_square/launch_vehicle.sh` | `ANTLER`, `iBlueRoboticsPing`, `iDualGPS`, `iGPS`, `iPEARL`, `iRPISerial`, `pEchoVar`, +13 more | `BHV_StationKeep`, `BHV_Waypoint` |
+| `missions/charles_river/solar_planning` | 16 | 1 | `missions/charles_river/solar_planning/launch.sh`, `missions/charles_river/solar_planning/launch_shoreside.sh`, `missions/charles_river/solar_planning/launch_vehicle.sh` | `ANTLER`, `iBlueRoboticsPing`, `iDualGPS`, `iGPS`, `iPEARL`, `iRPISerial`, `pEchoVar`, +17 more | `BHV_StationKeep`, `BHV_Waypoint` |
 | `missions/deep_pond/pearl_fld_lawnmower` | 16 | 1 | `missions/deep_pond/pearl_fld_lawnmower/launch.sh`, `missions/deep_pond/pearl_fld_lawnmower/launch_shoreside.sh`, `missions/deep_pond/pearl_fld_lawnmower/launch_vehicle.sh` | `ANTLER`, `iChargeController`, `iGPS`, `iPEARL`, `pEchoVar`, `pHelmIvP`, `pHostInfo`, +9 more | `BHV_StationKeep`, `BHV_Waypoint` |
 | `missions/deep_pond/pearl_fld_long` | 17 | 1 | `missions/deep_pond/pearl_fld_long/launch.sh`, `missions/deep_pond/pearl_fld_long/launch_shoreside.sh`, `missions/deep_pond/pearl_fld_long/launch_vehicle.sh` | `ANTLER`, `iChargeController`, `iGPS`, `iPEARL`, `pEchoVar`, `pHelmIvP`, `pHostInfo`, +10 more | `BHV_StationKeep`, `BHV_Waypoint` |
 | `missions/deep_pond/pearl_fld_mit` | 16 | 1 | `missions/deep_pond/pearl_fld_mit/launch.sh`, `missions/deep_pond/pearl_fld_mit/launch_shoreside.sh`, `missions/deep_pond/pearl_fld_mit/launch_vehicle.sh` | `ANTLER`, `iChargeController`, `iGPS`, `iPEARL`, `pEchoVar`, `pHelmIvP`, `pHostInfo`, +9 more | `BHV_StationKeep`, `BHV_Waypoint` |

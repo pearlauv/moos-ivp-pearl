@@ -1,22 +1,23 @@
 {
   "file_extension_counts": {
-    ".bhv": 29,
-    ".cpp": 120,
-    ".csv": 28,
-    ".h": 119,
+    ".bhv": 30,
+    ".cpp": 126,
+    ".csv": 29,
+    ".h": 123,
     ".info": 31,
     ".ino": 9,
     ".json": 1,
     ".m": 1,
-    ".md": 3,
-    ".moos": 409,
+    ".md": 4,
+    ".moos": 425,
     ".ods": 3,
-    ".py": 16,
-    ".sh": 125,
+    ".png": 1,
+    ".py": 18,
+    ".sh": 129,
     ".tif": 31,
     ".tpp": 1,
-    ".txt": 45,
-    "[none]": 29
+    ".txt": 47,
+    "[none]": 30
   },
   "generated_by": "scripts/generate_context_map.py",
   "generated_outputs": {
@@ -60,6 +61,7 @@
         "missions/charles_river/bathymetry_mission_sim",
         "missions/charles_river/may_test_run",
         "missions/charles_river/pearl_fld_square",
+        "missions/charles_river/solar_planning",
         "missions/deep_pond/pearl_fld_lawnmower",
         "missions/deep_pond/pearl_fld_long",
         "missions/deep_pond/pearl_fld_mit",
@@ -90,6 +92,7 @@
         "missions/charles_river/bathymetry_mission_sim",
         "missions/charles_river/may_test_run",
         "missions/charles_river/pearl_fld_square",
+        "missions/charles_river/solar_planning",
         "missions/deep_pond/pearl_fld_lawnmower",
         "missions/deep_pond/pearl_fld_long",
         "missions/deep_pond/pearl_fld_mit",
@@ -166,6 +169,14 @@
         "all"
       ],
       "pPearlPID": [
+        "all",
+        "mac"
+      ],
+      "pPearlSunPlan": [
+        "all",
+        "mac"
+      ],
+      "pSimSOC": [
         "all",
         "mac"
       ],
@@ -672,6 +683,62 @@
         "source_count": 5,
         "target": "pPearlPID"
       },
+      "pPearlSunPlan": {
+        "build_profiles": [
+          "all",
+          "mac"
+        ],
+        "cmake": "src/pPearlSunPlan/CMakeLists.txt",
+        "core_source_files": [
+          "src/pPearlSunPlan/PearlSunPlan.cpp"
+        ],
+        "header_count": 2,
+        "info_files": [
+          "src/pPearlSunPlan/PearlSunPlan_Info.cpp"
+        ],
+        "kind": "executable",
+        "link_libraries": [
+          "apputil",
+          "m",
+          "mbutil",
+          "pthread"
+        ],
+        "main_files": [
+          "src/pPearlSunPlan/main.cpp"
+        ],
+        "name": "pPearlSunPlan",
+        "path": "src/pPearlSunPlan",
+        "source_count": 3,
+        "target": "pPearlSunPlan"
+      },
+      "pSimSOC": {
+        "build_profiles": [
+          "all",
+          "mac"
+        ],
+        "cmake": "src/pSimSOC/CMakeLists.txt",
+        "core_source_files": [
+          "src/pSimSOC/SimSOC.cpp"
+        ],
+        "header_count": 2,
+        "info_files": [
+          "src/pSimSOC/SimSOC_Info.cpp"
+        ],
+        "kind": "executable",
+        "link_libraries": [
+          "apputil",
+          "m",
+          "mbutil",
+          "pthread"
+        ],
+        "main_files": [
+          "src/pSimSOC/main.cpp"
+        ],
+        "name": "pSimSOC",
+        "path": "src/pSimSOC",
+        "source_count": 3,
+        "target": "pSimSOC"
+      },
       "pTargetCPA": {
         "build_profiles": [
           "all"
@@ -744,6 +811,8 @@
       "pGenPath": "pGenPath",
       "pOdometry": "pOdometry",
       "pPearlPID": "pPearlPID",
+      "pPearlSunPlan": "pPearlSunPlan",
+      "pSimSOC": "pSimSOC",
       "pTargetCPA": "pTargetCPA",
       "sock_util": "lib_sock_utils",
       "uSunTracking": "uSunTracking"
@@ -784,6 +853,7 @@
         "missions/charles_river/bathymetry_mission_sim",
         "missions/charles_river/may_test_run",
         "missions/charles_river/pearl_fld_square",
+        "missions/charles_river/solar_planning",
         "missions/deep_pond/pearl_fld_lawnmower",
         "missions/deep_pond/pearl_fld_long",
         "missions/deep_pond/pearl_fld_mit",
@@ -806,6 +876,7 @@
         "missions/charles_river/bathymetry_mission_sim",
         "missions/charles_river/may_test_run",
         "missions/charles_river/pearl_fld_square",
+        "missions/charles_river/solar_planning",
         "missions/deep_pond/pearl_fld_lawnmower",
         "missions/deep_pond/pearl_fld_long",
         "missions/deep_pond/pearl_fld_mit",
@@ -836,6 +907,7 @@
         "missions/charles_river/bathymetry_mission_sim",
         "missions/charles_river/may_test_run",
         "missions/charles_river/pearl_fld_square",
+        "missions/charles_river/solar_planning",
         "missions/deep_pond/pearl_fld_lawnmower",
         "missions/deep_pond/pearl_fld_long",
         "missions/deep_pond/pearl_fld_mit",
@@ -864,6 +936,7 @@
         "missions/charles_river/bathymetry_mission_sim",
         "missions/charles_river/may_test_run",
         "missions/charles_river/pearl_fld_square",
+        "missions/charles_river/solar_planning",
         "missions/deep_pond/pearl_fld_lawnmower",
         "missions/deep_pond/pearl_fld_long",
         "missions/deep_pond/pearl_fld_mit",
@@ -904,7 +977,8 @@
       ],
       "pMarinePIDV22": [
         "missions/charles_river/bathymetry_mission_sim",
-        "missions/charles_river/may_test_run"
+        "missions/charles_river/may_test_run",
+        "missions/charles_river/solar_planning"
       ],
       "pMarineViewer": [
         "missions/auv_dock",
@@ -912,6 +986,7 @@
         "missions/charles_river/bathymetry_mission_sim",
         "missions/charles_river/may_test_run",
         "missions/charles_river/pearl_fld_square",
+        "missions/charles_river/solar_planning",
         "missions/deep_pond/pearl_fld_lawnmower",
         "missions/deep_pond/pearl_fld_long",
         "missions/deep_pond/pearl_fld_mit",
@@ -940,6 +1015,7 @@
         "missions/charles_river/bathymetry_mission_sim",
         "missions/charles_river/may_test_run",
         "missions/charles_river/pearl_fld_square",
+        "missions/charles_river/solar_planning",
         "missions/deep_pond/pearl_fld_lawnmower",
         "missions/deep_pond/pearl_fld_long",
         "missions/deep_pond/pearl_fld_mit",
@@ -969,6 +1045,7 @@
         "missions/charles_river/bathymetry_mission_sim",
         "missions/charles_river/may_test_run",
         "missions/charles_river/pearl_fld_square",
+        "missions/charles_river/solar_planning",
         "missions/pavlab23/lawnmower",
         "missions/pavlab23/othwaypoint",
         "missions/pavlab23/simplewaypoint",
@@ -986,6 +1063,7 @@
         "missions/charles_river/bathymetry_mission_sim",
         "missions/charles_river/may_test_run",
         "missions/charles_river/pearl_fld_square",
+        "missions/charles_river/solar_planning",
         "missions/deep_pond/pearl_fld_lawnmower",
         "missions/deep_pond/pearl_fld_long",
         "missions/deep_pond/pearl_fld_mit",
@@ -1013,6 +1091,7 @@
         "missions/charles_river/bathymetry_mission_sim",
         "missions/charles_river/may_test_run",
         "missions/charles_river/pearl_fld_square",
+        "missions/charles_river/solar_planning",
         "missions/pavlab23/lawnmower",
         "missions/pavlab23/othwaypoint",
         "missions/pavlab23/simplewaypoint",
@@ -1024,6 +1103,7 @@
         "missions/charles_river/bathymetry_mission_sim",
         "missions/charles_river/may_test_run",
         "missions/charles_river/pearl_fld_square",
+        "missions/charles_river/solar_planning",
         "missions/deep_pond/pearl_fld_lawnmower",
         "missions/deep_pond/pearl_fld_long",
         "missions/deep_pond/pearl_fld_mit",
@@ -1064,6 +1144,7 @@
         "missions/charles_river/bathymetry_mission_sim",
         "missions/charles_river/may_test_run",
         "missions/charles_river/pearl_fld_square",
+        "missions/charles_river/solar_planning",
         "missions/deep_pond/pearl_fld_lawnmower",
         "missions/deep_pond/pearl_fld_long",
         "missions/deep_pond/pearl_fld_mit",
@@ -1123,6 +1204,7 @@
         "missions/charles_river/bathymetry_mission_sim",
         "missions/charles_river/may_test_run",
         "missions/charles_river/pearl_fld_square",
+        "missions/charles_river/solar_planning",
         "missions/deep_pond/pearl_fld_lawnmower",
         "missions/deep_pond/pearl_fld_long",
         "missions/deep_pond/pearl_fld_mit",
@@ -1156,6 +1238,7 @@
         "missions/auv_dock",
         "missions/charles_river/bathymetry_mission_sim",
         "missions/charles_river/may_test_run",
+        "missions/charles_river/solar_planning",
         "missions/pavlab23/lawnmower",
         "missions/pavlab23/othwaypoint",
         "missions/pavlab23/simplewaypoint",
@@ -1194,7 +1277,8 @@
         "missions/charles_river/bathymetry_mission",
         "missions/charles_river/bathymetry_mission_sim",
         "missions/charles_river/may_test_run",
-        "missions/charles_river/pearl_fld_square"
+        "missions/charles_river/pearl_fld_square",
+        "missions/charles_river/solar_planning"
       ],
       "iChargeController": [
         "missions/deep_pond/pearl_fld_lawnmower",
@@ -1215,6 +1299,7 @@
         "missions/charles_river/bathymetry_mission_sim",
         "missions/charles_river/may_test_run",
         "missions/charles_river/pearl_fld_square",
+        "missions/charles_river/solar_planning",
         "missions/pavlab23/lawnmower",
         "missions/pavlab23/othwaypoint",
         "missions/pavlab23/simplewaypoint",
@@ -1228,6 +1313,7 @@
         "missions/charles_river/bathymetry_mission_sim",
         "missions/charles_river/may_test_run",
         "missions/charles_river/pearl_fld_square",
+        "missions/charles_river/solar_planning",
         "missions/deep_pond/pearl_fld_lawnmower",
         "missions/deep_pond/pearl_fld_long",
         "missions/deep_pond/pearl_fld_mit",
@@ -1267,6 +1353,7 @@
         "missions/charles_river/bathymetry_mission_sim",
         "missions/charles_river/may_test_run",
         "missions/charles_river/pearl_fld_square",
+        "missions/charles_river/solar_planning",
         "missions/deep_pond/pearl_fld_lawnmower",
         "missions/deep_pond/pearl_fld_long",
         "missions/deep_pond/pearl_fld_mit",
@@ -1289,6 +1376,7 @@
         "missions/charles_river/bathymetry_mission_sim",
         "missions/charles_river/may_test_run",
         "missions/charles_river/pearl_fld_square",
+        "missions/charles_river/solar_planning",
         "missions/pleasant_bay/pearl_fld_line",
         "missions/sim/rpi_sim"
       ],
@@ -1314,6 +1402,7 @@
         "missions/charles_river/bathymetry_mission_sim",
         "missions/charles_river/may_test_run",
         "missions/charles_river/pearl_fld_square",
+        "missions/charles_river/solar_planning",
         "missions/deep_pond/pearl_fld_lawnmower",
         "missions/deep_pond/pearl_fld_long",
         "missions/deep_pond/pearl_fld_mit",
@@ -1331,6 +1420,12 @@
         "missions/sim/pearl_sim",
         "missions/sim/rpi_sim"
       ],
+      "pPearlSunPlan": [
+        "missions/charles_river/solar_planning"
+      ],
+      "pSimSOC": [
+        "missions/charles_river/solar_planning"
+      ],
       "pTargetCPA": [
         "missions/auv_dock",
         "missions/pavlab23/lawnmower",
@@ -1346,6 +1441,7 @@
         "missions/charles_river/bathymetry_mission_sim",
         "missions/charles_river/may_test_run",
         "missions/charles_river/pearl_fld_square",
+        "missions/charles_river/solar_planning",
         "missions/deep_pond/pearl_fld_lawnmower",
         "missions/deep_pond/pearl_fld_long",
         "missions/deep_pond/pearl_fld_mit",
@@ -1878,6 +1974,110 @@
         "readmes": [
           "missions/charles_river/pearl_fld_square/README"
         ]
+      },
+      "missions/charles_river/solar_planning": {
+        "antler_runs": [
+          "MOOSDB",
+          "iBlueRoboticsPing",
+          "iDualGPS",
+          "iPEARL",
+          "pEchoVar",
+          "pHelmIvP",
+          "pHostInfo",
+          "pLogger",
+          "pMarinePIDV22",
+          "pMarineViewer",
+          "pNodeReporter",
+          "pPearlPID",
+          "pPearlSunPlan",
+          "pRealm",
+          "pShare",
+          "pSimSOC",
+          "uFldMessageHandler",
+          "uFldNodeBroker",
+          "uFldShoreBroker",
+          "uProcessWatch",
+          "uSimMarineV22"
+        ],
+        "behavior_files": [
+          "targ_$(VNAME).bhv"
+        ],
+        "behavior_types": [
+          "BHV_StationKeep",
+          "BHV_Waypoint"
+        ],
+        "bhv_files": [
+          "missions/charles_river/solar_planning/meta_vehicle.bhv"
+        ],
+        "includes": [
+          "plug_iDualGPS.moos",
+          "plug_iGPS.moos",
+          "plug_iPEARL.moos",
+          "plug_iRPISerial.moos",
+          "plug_origin_warp.moos",
+          "plug_pEchoVar.moos",
+          "plug_pHelmIvP.moos",
+          "plug_pHostInfo.moos",
+          "plug_pNodeReporter.moos",
+          "plug_pPearlPID.moos",
+          "plug_pShare.moos",
+          "plug_uFldNodeBroker.moos",
+          "plug_uProcessWatch.moos",
+          "plug_uSunTracking.moos"
+        ],
+        "launch_scripts": [
+          "missions/charles_river/solar_planning/launch.sh",
+          "missions/charles_river/solar_planning/launch_shoreside.sh",
+          "missions/charles_river/solar_planning/launch_vehicle.sh"
+        ],
+        "map_assets": [],
+        "moos_files": [
+          "missions/charles_river/solar_planning/meta_shoreside.moos",
+          "missions/charles_river/solar_planning/meta_vehicle.moos",
+          "missions/charles_river/solar_planning/plug_iDualGPS.moos",
+          "missions/charles_river/solar_planning/plug_iGPS.moos",
+          "missions/charles_river/solar_planning/plug_iPEARL.moos",
+          "missions/charles_river/solar_planning/plug_iRPISerial.moos",
+          "missions/charles_river/solar_planning/plug_origin_warp.moos",
+          "missions/charles_river/solar_planning/plug_pEchoVar.moos",
+          "missions/charles_river/solar_planning/plug_pHelmIvP.moos",
+          "missions/charles_river/solar_planning/plug_pHostInfo.moos",
+          "missions/charles_river/solar_planning/plug_pNodeReporter.moos",
+          "missions/charles_river/solar_planning/plug_pPearlPID.moos",
+          "missions/charles_river/solar_planning/plug_pShare.moos",
+          "missions/charles_river/solar_planning/plug_uFldNodeBroker.moos",
+          "missions/charles_river/solar_planning/plug_uProcessWatch.moos",
+          "missions/charles_river/solar_planning/plug_uSunTracking.moos"
+        ],
+        "name": "missions/charles_river/solar_planning",
+        "path": "missions/charles_river/solar_planning",
+        "process_configs": [
+          "ANTLER",
+          "iBlueRoboticsPing",
+          "iDualGPS",
+          "iGPS",
+          "iPEARL",
+          "iRPISerial",
+          "pEchoVar",
+          "pHelmIvP",
+          "pHostInfo",
+          "pLogger",
+          "pMarinePIDV22",
+          "pMarineViewer",
+          "pNodeReporter",
+          "pPearlPID",
+          "pPearlSunPlan",
+          "pRealm",
+          "pShare",
+          "pSimSOC",
+          "uFldMessageHandler",
+          "uFldNodeBroker",
+          "uFldShoreBroker",
+          "uProcessWatch",
+          "uSimMarineV22",
+          "uSunTracking"
+        ],
+        "readmes": []
       },
       "missions/deep_pond/pearl_fld_lawnmower": {
         "antler_runs": [
@@ -4185,6 +4385,7 @@
           "scripts/arduinoEulerPlot.py",
           "scripts/arduinoGyroPlot.py",
           "scripts/arduinoMagPlot.py",
+          "scripts/fetch_solar_forecast.py",
           "scripts/generate_context_map.py",
           "scripts/rpi_comms_test.py"
         ],
@@ -4196,6 +4397,7 @@
           "scripts/arduinoEulerPlot.py",
           "scripts/arduinoGyroPlot.py",
           "scripts/arduinoMagPlot.py",
+          "scripts/fetch_solar_forecast.py",
           "scripts/generate_context_map.py",
           "scripts/rpi_comms_test.py"
         ],
@@ -4379,11 +4581,11 @@
     "build.sh"
   ],
   "summary": {
-    "indexed_files": 1000,
-    "mission_bhv_files": 29,
-    "mission_moos_files": 402,
-    "missions": 29,
-    "src_components": 20
+    "indexed_files": 1039,
+    "mission_bhv_files": 30,
+    "mission_moos_files": 418,
+    "missions": 30,
+    "src_components": 22
   },
   "validation": {
     "build_all": "./build.sh",

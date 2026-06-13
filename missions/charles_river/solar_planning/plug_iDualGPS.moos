@@ -1,0 +1,21 @@
+//-------------------------------
+// iDualGPS configuration block from plugin
+
+ProcessConfig = iDualGPS
+{
+  AppTick     = 10
+  CommsTick   = 10
+
+  DUAL_GPS		= true
+  PORT_1		  = /dev/ttyAMA5   // Stern GPS
+  PORT_2		  = /dev/ttyAMA4   // Bow GPS
+  BAUDRATE		= 9600
+  PREFIX		  = GPS
+
+  HEADING_OFFSET	= 0.0
+
+  PUBLISH_RAW		= true
+  PUBLISH_HDOP	= true
+
+  TRIGGER_MSG		= GNGGA
+}

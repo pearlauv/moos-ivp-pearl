@@ -1,0 +1,282 @@
+//*******************************************************
+// FILE: meta_vehicle.moos
+// NAME: solar_planning
+
+//ServerHost = $(PEARL_IP)
+ServerHost = localhost
+ServerPort = $(VPORT)
+
+// Community name IS the vehicle name
+Community  = $(VNAME)
+
+#include plug_origin_warp.moos
+
+//------------------------------------------------------------
+Processconfig = ANTLER
+{
+  MSBetweenLaunches = 100
+
+  Run = MOOSDB            @ NewConsole = false
+  Run = pLogger           @ NewConsole = false
+  Run = pEchoVar          @ NewConsole = false
+  Run = pNodeReporter     @ NewConsole = false
+  Run = uProcessWatch     @ NewConsole = false
+  Run = pPearlSunPlan          @ NewConsole = false
+   // Run = uSunTracking      @ NewConsole = false
+
+  Run = pShare            @ NewConsole = false
+  Run = pHostInfo         @ NewConsole = false
+  Run = uFldNodeBroker    @ NewConsole = false
+
+  Run = pHelmIvP          @ NewConsole = false
+  Run = pRealm		        @ NewConsole = false
+  Run = uFldMessageHandler @ NewConsole = false
+
+
+#ifdef XMODE PEARL
+	//Run = iGPS	            @ NewConsole = false
+	Run = iDualGPS	        @ NewConsole = false
+  Run = iPEARL            @ NewConsole = false
+	//Run = iRPISerial	      @ NewConsole = false
+	Run = pPearlPID         @ NewConsole = false
+	Run = iBlueRoboticsPing @ NewConsole = false
+#else
+	Run = uSimMarineV22     @ NewConsole = false
+	Run = pMarinePIDV22     @ NewConsole = false
+  Run = pSimSOC           @ NewConsole = false
+#endif
+
+}
+
+//--------------------------------------------------
+// pPearlSunPlan Config Block
+
+ProcessConfig = pPearlSunPlan
+{
+  AppTick   = 10
+  CommsTick = 10
+
+  soc_var             = BATT_SOC
+  task_complete_var   = SUNPLAN_TASK_COMPLETE
+  task_active_var     = SUNPLAN_SURVEY_ACTIVE
+  wpt_update_var      = WPT_UPDATE
+
+  // Battery label: 12.8V, 120Ah, 1536Wh LiFePO4.
+  battery_capacity_wh = 1536
+  reserve_soc         = 25
+  soc_stale_sec       = 30
+  forecast_horizon_hours = 24
+  forecast_start_hour = 0
+  max_irradiance_w_m2 = 1000
+
+  forecast_mode       = file
+  forecast_file       = forecast_24h.csv
+  irradiance_24h      = 0,0,0,0,30,120,310,520,680,760,720,620,430,230,80,10,0,0,0,0,0,0,0,0
+
+  // Example panel/controller charge model. This is deliberately below the
+  // battery label's recommended charge-current ceiling: 14.4V * 60A ~= 864W.
+  charge_w_base       = 0
+  charge_w_gain       = 160
+  task_power_idle_w   = 6.513
+  task_power_speed_coeff = 40.5
+  task_power_speed_exponent = 2.97
+  giveup_action       = return
+  auto_deploy_on_dispatch = true
+  use_future_charge   = true
+
+  // Planner-controlled day survey blocks. These omit duration_h and cost_wh, so
+  // pPearlSunPlan estimates both from the actual waypoint path, speed, and the
+  // original solar-tracking pSunPlan speed-power form.
+  task = start_h=7.0; speed=2.2; points=8,-8 : 332.444,-8 : 332.444,-18 : 8,-18 : 8,-28 : 332.444,-28 : 332.444,-38 : 8,-38 : 8,-48 : 332.444,-48 : 332.444,-58 : 8,-58 : 8,-68 : 332.444,-68 : 332.444,-78 : 8,-78 : 8,-88 : 332.444,-88
+  task = start_h=9.75; speed=2.2; points=0,-12 : 324.444,-12 : 324.444,-22 : 0,-22 : 0,-32 : 324.444,-32 : 324.444,-42 : 0,-42 : 0,-52 : 324.444,-52 : 324.444,-62 : 0,-62 : 0,-72 : 324.444,-72 : 324.444,-82 : 0,-82 : 0,-92 : 324.444,-92
+  task = start_h=12.5; speed=2.2; points=15,-16 : 339.444,-16 : 339.444,-26 : 15,-26 : 15,-36 : 339.444,-36 : 339.444,-46 : 15,-46 : 15,-56 : 339.444,-56 : 339.444,-66 : 15,-66 : 15,-76 : 339.444,-76 : 339.444,-86 : 15,-86 : 15,-96 : 339.444,-96
+  task = start_h=15.25; speed=2.2; points=0,-20 : 324.444,-20 : 324.444,-30 : 0,-30 : 0,-40 : 324.444,-40 : 324.444,-50 : 0,-50 : 0,-60 : 324.444,-60 : 324.444,-70 : 0,-70 : 0,-80 : 324.444,-80 : 324.444,-90 : 0,-90 : 0,-100 : 324.444,-100
+  task = start_h=18.0; speed=2.2; points=-8,-16 : 316.444,-16 : 316.444,-26 : -8,-26 : -8,-36 : 316.444,-36 : 316.444,-46 : -8,-46 : -8,-56 : 316.444,-56 : 316.444,-66 : -8,-66 : -8,-76 : 316.444,-76 : 316.444,-86 : -8,-86 : -8,-96 : 316.444,-96
+  // Deliberate reserve stress-test: a path-derived roughly 35 km task.
+  task = start_h=20.5; speed=2.2; points=-10,-24 : 3890.611,-24 : 3890.611,-34 : -10,-34 : -10,-44 : 3890.611,-44 : 3890.611,-54 : -10,-54 : -10,-64 : 3890.611,-64 : 3890.611,-74 : -10,-74 : -10,-84 : 3890.611,-84 : 3890.611,-94 : -10,-94 : -10,-104 : 3890.611,-104
+}
+
+//--------------------------------------------------
+// pSimSOC Config Block
+
+ProcessConfig = pSimSOC
+{
+  AppTick   = 10
+  CommsTick = 10
+
+  publish_var         = BATT_SOC
+  start_soc           = 55
+  battery_capacity_wh = 1536
+  charge_w_base       = 0
+  charge_w_gain       = 160
+  idle_load_w         = 6.513
+  speed_load_coeff    = 40.5
+  speed_load_exponent = 2.97
+}
+
+//--------------------------------------------------
+// pLogger Config Block
+
+ProcessConfig = pLogger
+{
+  AppTick   = 10
+  CommsTick = 10
+
+  File          = LOG_%(VNAME)
+  PATH          = ./
+  //SyncLog     = true @ 0.2
+  AsyncLog      = true
+  FileTimeStamp = true
+
+  Log = BATT_SOC                  @ 0 nosync
+  Log = SOLAR_IRRADIANCE          @ 0 nosync
+  Log = SOLAR_INPUT_FACTOR        @ 0 nosync
+  Log = SUNPLAN_MISSION_HOURS     @ 0 nosync
+  Log = SUNPLAN_FORECAST_HOUR     @ 0 nosync
+  Log = SUNPLAN_DECISION          @ 0 nosync
+  Log = SUNPLAN_REASON            @ 0 nosync
+  Log = SUNPLAN_AVAILABLE_WH      @ 0 nosync
+  Log = SUNPLAN_REQUIRED_WH       @ 0 nosync
+  Log = SUNPLAN_EXPECTED_CHARGE_WH @ 0 nosync
+  Log = SUNPLAN_SURVEY_ACTIVE     @ 0 nosync
+  Log = SUNPLAN_TASK_COST_WH      @ 0 nosync
+  Log = SUNPLAN_TASK_START_H      @ 0 nosync
+  Log = SIMSOC_CHARGE_W           @ 0 nosync
+  Log = SIMSOC_LOAD_W             @ 0 nosync
+  Log = SIMSOC_NET_W              @ 0 nosync
+  Log = NAV_SPEED                 @ 0 nosync
+  Log = RETURN                    @ 0 nosync
+  Log = IVPHELM_LIFE_EVENT        @ 0 nosync
+
+  LogAuxSrc = true
+
+  WildCardLogging = false
+  WildCardOmitPattern = *_STATUS
+  WildCardOmitPattern = APPCAST
+  WildCardOmitPattern = DB_VARSUMMARY
+  //WildCardOmitPattern = DB_RWSUMMARY
+  //WildCardOmitPattern = NAV_LAT, NAV_LONG
+  WildCardOmitPattern = NAV_PITCH, NAV_YAW, NAV_Z
+  WildCardOmitPattern = SIMULATION_MODE, TRUE_X, TRUE_Y
+  WildCardOmitPattern = NAV_DEPTH, NAV_SPEED_OVER_GROUND, DB_QOS
+  //WildCardOmitPattern = NODE_BROKER_PING_0, PSHARE*
+  WildCardOmitPattern = IVPHELM_ALLSTOP_DEBUG
+  //WildCardOmitPattern = *ITER_GAP, *ITER_LEN
+  WildCardOmitPattern = PHI_HOST*
+
+  //WildCardOmitPattern = DB_CLIENTS
+  //WildCardOmitPattern = PHI_HOST*, NODE_REPORT_LOCAL
+
+  //CompressAlogs = false
+}
+
+#include plug_pEchoVar.moos
+#include plug_pNodeReporter.moos
+#include plug_pPearlPID.moos
+#include plug_uProcessWatch.moos
+#include plug_iDualGPS.moos
+#include plug_iGPS.moos
+#include plug_iPEARL.moos
+#include plug_uSunTracking.moos
+#include plug_iRPISerial.moos
+
+#include plug_pShare.moos
+#include plug_pHostInfo.moos
+#include plug_uFldNodeBroker.moos
+
+#include plug_pHelmIvP.moos
+//---------------------------------------------------------
+// uFldMessageHandler Config Block
+
+ProcessConfig = uFldMessageHandler
+{
+  AppTick   = 3
+  CommsTick = 3
+
+  strict_addressing = false
+}
+
+//------------------------------------------------------------
+//pRealm config block
+ProcessConfig = pRealm
+{
+  AppTick   = 4
+  CommsTick = 4
+
+  relcast_interval = 0.8
+  summary_interval = 2.0
+  wrap_length = 90
+  trunc_length = 270
+  msg_max_hist = 30
+
+	app_logging = true
+	}
+
+//------------------------------------------------
+// iBlueRoboticsPing config block
+
+ProcessConfig = iBlueRoboticsPing
+{
+   AppTick   = 4
+   CommsTick = 4
+}
+
+//------------------------------------------------------
+// uSimMarineV22 Config Block
+
+ProcessConfig = uSimMarineV22
+{
+  AppTick   = 10
+  CommsTick = 10
+
+  start_pos = $(START_POS)
+  prefix    = NAV
+
+	//app_logging = true
+	//max_speed   = $(MAX_SPD)
+
+	turn_rate = 100
+	turn_spd_loss = 0.6
+
+	post_des_thrust = DESIRED_THRUSTX
+	post_des_rudder = DESIRED_RUDDERX
+
+  //rotate_speed = 0.012
+  //drift_x      = 0.0045
+
+  //thrust_map = -100:-2, 0:0, 20:1, 40:2, 60:3, 80:5, 100:5
+  //thrust_map = -100:-2, 0:0, 20:1, 40:2, 60:3, 80:5, 100:5
+}
+
+//-----------------------------------------------------
+// pMarinePIDV22 Config Block
+
+ProcessConfig = pMarinePIDV22
+{
+  AppTick    = 10
+  CommsTick  = 10
+
+  verbose       = true
+  depth_control = false
+  active_start  = true
+
+  // Yaw PID controller
+  yaw_pid_kp             = 1.2
+  yaw_pid_kd             = 0.1
+  yaw_pid_ki             = 0.3
+  yaw_pid_integral_limit = 0.07
+
+  // Speed PID controller
+  speed_pid_kp           = 1.0
+  speed_pid_kd           = 0.0
+  speed_pid_ki           = 0.0
+  speed_pid_integral_limit = 0.07
+
+  // Maximums
+  maxrudder  = 100
+  maxthrust  = 100
+
+  // A non-zero SPEED_FACTOR overrides use of SPEED_PID
+  // Will set DESIRED_THRUST = DESIRED_SPEED * SPEED_FACTOR
+  speed_factor = 20
+}

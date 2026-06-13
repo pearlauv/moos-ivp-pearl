@@ -1,0 +1,29 @@
+# source=Open-Meteo forecast API
+# url=https://api.open-meteo.com/v1/forecast?latitude=42.358436&longitude=-71.087448&hourly=shortwave_radiation&forecast_days=3&timezone=America%2FNew_York
+# date=2026-06-12
+# timezone=America/New_York
+# hour,shortwave_radiation_w_m2
+0,0.000
+1,0.000
+2,0.000
+3,0.000
+4,0.000
+5,0.000
+6,5.000
+7,178.000
+8,351.000
+9,532.000
+10,695.000
+11,743.000
+12,884.300
+13,921.500
+14,900.500
+15,842.000
+16,485.000
+17,514.000
+18,413.000
+19,239.000
+20,78.000
+21,2.000
+22,0.000
+23,0.000

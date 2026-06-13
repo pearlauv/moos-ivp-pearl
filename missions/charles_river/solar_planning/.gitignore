@@ -1,0 +1,5 @@
+LOG_*/
+XLOG_*/
+targ_*.moos
+targ_*.bhv
+.LastOpenedMOOSLogDirectory
