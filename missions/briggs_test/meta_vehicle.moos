@@ -1,0 +1,230 @@
+//-------------------------------------------------
+// FILE: meta_vehicle.moos
+// NAME: Charles Benjamin
+//-------------------------------------------------
+
+ServerHost = $(IP_ADDR)
+ServerPort = $(MOOS_PORT)
+Community  = $(VNAME)
+
+#include plug_origin_warp.moos
+
+//----------------------------------------------------
+ProcessConfig = ANTLER
+{
+  MSBetweenLaunches = 100
+
+  Run = MOOSDB         @ NewConsole = false
+  Run = pRealm         @ NewConsole = false
+  Run = uProcessWatch  @ NewConsole = false
+  Run = uLoadWatch     @ NewConsole = false
+  Run = pShare         @ NewConsole = false
+  Run = pHostInfo      @ NewConsole = false
+  Run = pLogger        @ NewConsole = false
+  Run = pNodeReporter  @ NewConsole = false
+  Run = uFldNodeBroker @ NewConsole = false
+#ifdef XMODE SIM
+  Run = uSimMarineV22  @ NewConsole = false
+  Run = pMarinePIDV22  @ NewConsole = false
+  Run = pHelmIvP       @ NewConsole = false
+#else
+  Run = pArduBridge    @ NewConsole = false
+#endif
+}
+
+//----------------------------------------------------
+ProcessConfig = pShare
+{
+  AppTick   = 4
+  CommsTick = 4
+
+  input = route = localhost:$(PSHARE_PORT)
+}
+
+//----------------------------------------------------
+ProcessConfig = pRealm
+{
+  AppTick   = 4
+  CommsTick = 4
+
+  relcast_interval = 0.8
+  summary_interval = 2.0
+}
+
+//----------------------------------------------------
+ProcessConfig = uProcessWatch
+{
+  AppTick   = 1
+  CommsTick = 1
+
+  allow_retractions = true
+  watch_all         = true
+  nowatch           = uMAC*
+  nowatch           = uXMS*
+  nowatch           = uPokeDB*
+  nowatch           = uQueryDB*
+  summary_wait      = 20
+}
+
+//----------------------------------------------------
+ProcessConfig = uLoadWatch
+{
+  AppTick   = 1
+  CommsTick = 1
+
+#ifdef XMODE SIM
+  thresh = app=uSimMarineV22, gapthresh=3
+  thresh = app=pMarinePIDV22, gapthresh=3
+  thresh = app=pHelmIvP,      gapthresh=3
+#else
+  thresh = app=pArduBridge,   gapthresh=3
+#endif
+  thresh = app=pNodeReporter, gapthresh=4
+  thresh = app=pHostInfo,     gapthresh=5
+  thresh = app=any,           gapthresh=2.0
+
+  breach_trigger = 5
+}
+
+//----------------------------------------------------
+ProcessConfig = pHostInfo
+{
+  AppTick   = 1
+  CommsTick = 1
+}
+
+//----------------------------------------------------
+ProcessConfig = pLogger
+{
+  AppTick       = 5
+  CommsTick     = 5
+  File          = LOG_$(VNAME)
+  PATH          = ./
+  AsyncLog      = true
+  FileTimeStamp = true
+
+  WildCardLogging     = true
+  WildCardOmitPattern = *_STATUS
+  WildCardOmitPattern = DB_VARSUMMARY
+  WildCardOmitPattern = DB_RWSUMMARY
+}
+
+//----------------------------------------------------
+ProcessConfig = pNodeReporter
+{
+  AppTick   = 4
+  CommsTick = 4
+
+  platform_type   = quadcopter
+  platform_color  = $(COLOR)
+  platform_length = 4
+  platform_group  = drone
+
+  cross_fill_policy = global
+  report_cog        = true
+}
+
+//----------------------------------------------------
+ProcessConfig = uFldNodeBroker
+{
+  AppTick   = 1
+  CommsTick = 1
+
+  try_shore_host = pshare_route=$(SHORE_IP):$(SHORE_PSHARE)
+
+  bridge = src=NODE_REPORT_LOCAL, alias=NODE_REPORT
+  bridge = src=NODE_MESSAGE_LOCAL, alias=NODE_MESSAGE
+  bridge = src=VIEW_POINT
+  bridge = src=VIEW_MARKER
+  bridge = src=VIEW_VECTOR
+  bridge = src=APPCAST
+
+  bridge = src=UAV_COMMAND_RESULT
+  bridge = src=UAV_IS_ARMED
+  bridge = src=UAV_LANDED_STATE
+  bridge = src=UAV_LANDING_TARGET_AVAILABLE
+  bridge = src=UAV_LANDING_TARGET_AGE
+  bridge = src=AUTOPILOT_MODE
+  bridge = src=IVPHELM_STATE
+#ifdef XMODE SITL
+  bridge = src=NAV_ALTITUDE
+#endif
+#ifdef XMODE REAL
+  bridge = src=NAV_ALTITUDE
+#endif
+}
+
+//----------------------------------------------------
+#ifdef XMODE SIM
+ProcessConfig = uSimMarineV22
+{
+  AppTick   = 10
+  CommsTick = 10
+
+  start_pos = -200, -150, 90
+  prefix    = NAV
+
+  max_speed        = 5
+  max_deceleration = 2
+  turn_rate        = 80
+  turn_spd_loss    = 0.6
+
+}
+
+//----------------------------------------------------
+ProcessConfig = pMarinePIDV22
+{
+  AppTick   = 10
+  CommsTick = 10
+
+  verbose       = false
+  depth_control = false
+  active_start  = true
+
+  yaw_pid_kp             = 1.2
+  yaw_pid_kd             = 0.1
+  yaw_pid_ki             = 0.3
+  yaw_pid_integral_limit = 0.07
+
+  speed_pid_kp             = 1.0
+  speed_pid_kd             = 0.0
+  speed_pid_ki             = 0.0
+  speed_pid_integral_limit = 0.07
+
+  maxrudder   = 100
+  maxthrust   = 100
+  speed_factor = 20
+}
+
+//----------------------------------------------------
+ProcessConfig = pHelmIvP
+{
+  AppTick   = 4
+  CommsTick = 4
+
+  ok_skew   = any
+  behaviors = targ_$(VNAME).bhv
+  Domain    = course:0:359:360
+  Domain    = speed:0:5:51
+}
+#else
+ProcessConfig = pArduBridge
+{
+  AppTick   = 10
+  CommsTick = 10
+
+  url          = $(AP_URL)
+  url_protocol = $(AP_PROTOCOL)
+  vehicle_type = copter
+
+  vname  = $(VNAME)
+  vcolor = $(COLOR)
+  prefix = NAV
+
+  takeoff_altitude              = $(TAKEOFF_ALTITUDE)
+  precision_loiter_enter_loiter = true
+  command_groundspeed           = true
+  is_sim                        = $(IS_SIM)
+  logger                        = false
+}
+#endif

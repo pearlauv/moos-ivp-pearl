@@ -1,0 +1,19 @@
+# ArduCopter SITL parameters for the Briggs precision target.
+PLND_ENABLED      1
+PLND_TYPE         4
+SIM_PLD_ENABLE    1
+SIM_PLD_LAT       42.3555241248
+SIM_PLD_LON      -71.1014110416
+SIM_PLD_HEIGHT    0
+SIM_PLD_ALT_LMT  15
+SIM_PLD_DIST_LMT 12
+
+# The helper supplies neutral throttle only while native Loiter is active.
+FS_THR_ENABLE     0
+FLTMODE_CH        0
+
+# Direct TCP is serial link 0. Keep navigation/state streams explicit because
+# this launch path intentionally does not depend on MAVProxy to request them.
+SR0_EXT_STAT       2
+SR0_EXTRA1         5
+SR0_POSITION       5

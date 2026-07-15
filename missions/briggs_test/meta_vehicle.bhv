@@ -1,0 +1,72 @@
+//-------------------------------------------------
+// FILE: meta_vehicle.bhv
+// NAME: Charles Benjamin
+//-------------------------------------------------
+
+initialize DEPLOY               = false
+initialize STATION_KEEP         = false
+initialize PRECISION_LOITER     = false
+initialize MOOS_MANUAL_OVERRIDE = true
+
+//----------------------------------------------------
+// Used only by --sim. Each operator waypoint button updates this behavior
+// with one destination; there is no automatic multi-leg sequence.
+Behavior = BHV_Waypoint
+{
+  name      = operator_waypoint
+  pwt       = 100
+  condition = DEPLOY=true
+  condition = STATION_KEEP=false
+  condition = MOOS_MANUAL_OVERRIDE=false
+  updates   = WPT_UPDATE
+  perpetual = true
+  endflag   = STATION_KEEP=true
+
+  speed          = 3
+  capture_radius = 1.5
+  slip_radius    = 4
+  points         = -200,-150
+
+  visual_hints = nextpt_color=yellow
+  visual_hints = nextpt_vertex_size=8
+  visual_hints = vertex_color=dodger_blue, edge_color=white
+}
+
+//----------------------------------------------------
+// Native-style loiter holds the point at which the button is pressed.
+Behavior = BHV_StationKeep
+{
+  name      = operator_fc_loiter
+  pwt       = 100
+  condition = DEPLOY=true
+  condition = STATION_KEEP=true
+  condition = PRECISION_LOITER=false
+  condition = MOOS_MANUAL_OVERRIDE=false
+
+  center_activate    = true
+  inner_radius       = 1
+  outer_radius       = 3
+  hibernation_radius = 5
+  outer_speed        = 1.5
+  transit_speed      = 3
+  swing_time         = 2
+}
+
+//----------------------------------------------------
+// Precision loiter converges on the fixed mapped landing target at home.
+Behavior = BHV_StationKeep
+{
+  name      = operator_precision_loiter
+  pwt       = 100
+  condition = DEPLOY=true
+  condition = STATION_KEEP=true
+  condition = PRECISION_LOITER=true
+  condition = MOOS_MANUAL_OVERRIDE=false
+
+  station_pt        = -200,-150
+  inner_radius      = 1.5
+  outer_radius      = 8
+  outer_speed       = 0.8
+  transit_speed     = 1
+  swing_time        = 2
+}
