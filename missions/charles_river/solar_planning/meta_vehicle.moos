@@ -77,7 +77,7 @@ ProcessConfig = pPearlSunPlan
   // battery label's recommended charge-current ceiling: 14.4V * 60A ~= 864W.
   charge_w_base       = 0
   charge_w_gain       = 160
-  task_power_idle_w   = 6.513
+  task_power_idle_w   = 37.8
   task_power_speed_coeff = 40.5
   task_power_speed_exponent = 2.97
   giveup_action       = return
@@ -109,7 +109,7 @@ ProcessConfig = pSimSOC
   battery_capacity_wh = 1536
   charge_w_base       = 0
   charge_w_gain       = 160
-  idle_load_w         = 6.513
+  idle_load_w         = 37.8
   speed_load_coeff    = 40.5
   speed_load_exponent = 2.97
 }

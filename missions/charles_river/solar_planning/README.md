@@ -75,11 +75,11 @@ including any return-to-home energy draw after the planner gives up.
 
 The simulated vehicle starts close to the first lawnmower block by default. All
 tasks omit both `duration_h` and `cost_wh`, so `pPearlSunPlan` estimates
-duration from path length and speed, then estimates energy with the original
-solar-tracking model: `power_w = 40.5 * speed^2.97 + 6.513`. `pSimSOC` uses that
-same speed-power form against logged `NAV_SPEED`, so SOC changes come from
-motion and solar input rather than a separate task-active load. The first five
-paths are 3 km each. The final configured task is a deliberate reserve
-stress-test with a roughly 35 km path; under the same model at `speed=2.2`, this
-is about a 1900 Wh task. The planner should publish
+duration from path length and speed, then estimates energy with
+`power_w = 40.5 * speed^2.97 + 37.8`. `pSimSOC` uses that same speed-power form
+against logged `NAV_SPEED`, so SOC changes come from motion and solar input
+rather than a separate task-active load. The first five paths are 3 km each. The
+final configured task is a deliberate reserve stress-test with a roughly 35 km
+path; under the same model at `speed=2.2`, this is about a 2040 Wh task. The
+planner should publish
 `SUNPLAN_DECISION=give_up` and command `RETURN=true` when that task becomes due.
