@@ -1,0 +1,12 @@
+// generated_by = moos-map 1.1.0
+// source = esri-world-imagery
+// attribution = Esri, Maxar, Earthstar Geographics, and contributors
+// zoom = 20
+// requested_bounds_wsen = -71.0950711274,42.3589878839,-71.0913470770,42.3606368743
+
+lat_north = 42.3606368743
+lat_south = 42.3589878839
+lon_east  = -71.0913470770
+lon_west  = -71.0950711274
+datum_lat = 42.3598322041
+datum_lon = -71.0931945226

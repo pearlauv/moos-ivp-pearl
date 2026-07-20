@@ -1,24 +1,24 @@
-# briggs_test
+# b33_test
 
-`briggs_test` is a single-drone operator mission for the lower-left grass field
-in the Briggs map. It has three launch modes: a self-contained MOOS-IvP
+`b33_test` is a single-drone operator mission for the B33 map. It has three
+launch modes: a self-contained MOOS-IvP
 simulation, ArduPilot SITL through `pArduBridge`, and real ArduCopter hardware
 through `pArduBridge`. The mission does not automate the flight sequence:
 every leg and flight-mode change has its own pMarineViewer button.
 
 ## Layout
 
-- Map: `../images/briggs_test/briggs_test.tif`
-- Datum: `42.3569186052, -71.0990291116`
-- Vehicle: `briggs`, rendered with the native `quadcopter` shape added by the
+- Map: `../images/B33_Test/B33_Test.tif`
+- Datum: `42.3598322041, -71.0931945226`
+- Vehicle: `b33`, rendered with the native `quadcopter` shape added by the
   companion MOOS-IvP feature branch
 - Takeoff altitude: 8 m AGL
-- Home / precision target: `x=-173, y=-128`
-- Pattern: the four marked points `(-173,-128)`, `(-131,-108)`, `(-145,-74)`,
-  and `(-184,-86)`
+- Home / precision target: `x=0, y=0`
+- Pattern: three first-quadrant operator points `(35,20)`, `(65,55)`, and
+  `(20,65)`
 
 The fixed home point corresponds to approximately
-`42.3557281324, -71.1010900133`. For real operation, place the landing target
+`42.3598322041, -71.0931945226`. For real operation, place the landing target
 there and verify the aircraft's physical launch location, fence, and flight
 permissions before arming.
 
@@ -47,7 +47,7 @@ still fully manual and no multi-leg sequence is encoded.
 Start ArduCopter SITL in one terminal:
 
 ```bash
-cd missions/briggs_test
+cd missions/b33_test
 ./launch_sitl.sh
 ```
 
@@ -123,10 +123,10 @@ the vehicle community bridges measured `NAV_ALTITUDE` from `pArduBridge`.
 | `ARM` | Publishes representative armed/mode state. | Requests arming through `pArduBridge`. |
 | `DISARM` | Parks the helm and publishes disarmed/on-ground state. | Requests disarming; the bridge requires fresh `ON_GROUND` telemetry. |
 | `TAKEOFF` | Releases manual override, deploys the helm in station keep, and publishes 8 m simulated altitude state. Vertical flight is not modeled. | Requests an ArduCopter takeoff to the configured 8 m AGL altitude. |
-| `LEG 1` | Sends the helm to `(-131,-108)`. | Sends the corresponding GPS waypoint and requests `FLY_WAYPOINT`. |
-| `LEG 2` | Sends the helm to `(-145,-74)`. | Sends the corresponding GPS waypoint and requests `FLY_WAYPOINT`. |
-| `LEG 3` | Sends the helm to `(-184,-86)`. | Sends the corresponding GPS waypoint and requests `FLY_WAYPOINT`. |
-| `HOME` | Sends the helm to fixed mapped home at `(-173,-128)`. | Sends the corresponding fixed GPS waypoint and requests `FLY_WAYPOINT`. |
+| `LEG 1` | Sends the helm to `(35,20)`. | Sends the corresponding GPS waypoint and requests `FLY_WAYPOINT`. |
+| `LEG 2` | Sends the helm to `(65,55)`. | Sends the corresponding GPS waypoint and requests `FLY_WAYPOINT`. |
+| `LEG 3` | Sends the helm to `(20,65)`. | Sends the corresponding GPS waypoint and requests `FLY_WAYPOINT`. |
+| `HOME` | Sends the helm to fixed mapped home at `(0,0)`. | Sends the corresponding fixed GPS waypoint and requests `FLY_WAYPOINT`. |
 | `FC LOITER` | Activates station keep centered on the vehicle's current position. | Requests native flight-controller Loiter. |
 | `PREC LOITER` | Activates station keep centered on fixed mapped home. | Requests native FC Loiter plus the precision-loiter auxiliary function. |
 | `PREC OFF` | Leaves station keep and resumes the currently loaded helm waypoint. | Disables the precision-loiter auxiliary function. |

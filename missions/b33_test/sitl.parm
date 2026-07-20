@@ -1,9 +1,9 @@
-# ArduCopter SITL parameters for the Briggs precision target.
+# ArduCopter SITL parameters for the B33 precision target.
 PLND_ENABLED      1
 PLND_TYPE         4
 SIM_PLD_ENABLE    1
-SIM_PLD_LAT       42.3557281324
-SIM_PLD_LON      -71.1010900133
+SIM_PLD_LAT       42.3598322041
+SIM_PLD_LON      -71.0931945226
 SIM_PLD_HEIGHT    0
 SIM_PLD_ALT_LMT  15
 SIM_PLD_DIST_LMT 12

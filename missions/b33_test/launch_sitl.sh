@@ -1,7 +1,7 @@
 #!/bin/bash
 #------------------------------------------------------------
 #   Script: launch_sitl.sh
-#  Mission: briggs_test
+#  Mission: b33_test
 #   Author: Charles Benjamin
 #------------------------------------------------------------
 #  Part 1: Set global defaults
@@ -13,8 +13,8 @@ SPEEDUP="1"
 WIPE="yes"
 NO_REBUILD="no"
 
-HOME_LAT="42.3557281324"
-HOME_LON="-71.1010900133"
+HOME_LAT="42.3598322041"
+HOME_LON="-71.0931945226"
 
 #------------------------------------------------------------
 #  Part 2: Check for and handle command-line arguments
@@ -54,7 +54,7 @@ fi
 ARGS=(-v ArduCopter -f quad)
 ARGS+=(--custom-location="$HOME_LAT,$HOME_LON,5,0")
 ARGS+=(--speedup="$SPEEDUP")
-ARGS+=(--use-dir="$MISSION_DIR/SITL_briggs_test")
+ARGS+=(--use-dir="$MISSION_DIR/SITL_b33_test")
 ARGS+=(--add-param-file="$MISSION_DIR/sitl.parm")
 ARGS+=(--no-mavproxy)
 ARGS+=(--sitl-instance-args="--serial1=udpclient:127.0.0.1:14551")

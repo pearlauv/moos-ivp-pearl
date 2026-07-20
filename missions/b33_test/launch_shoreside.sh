@@ -1,7 +1,7 @@
 #!/bin/bash
 #------------------------------------------------------------
 #   Script: launch_shoreside.sh
-#  Mission: briggs_test
+#  Mission: b33_test
 #   Author: Charles Benjamin
 #------------------------------------------------------------
 #  Part 1: Set convenience functions for terminal output and
@@ -29,16 +29,16 @@ MODE="SIM"
 IP_ADDR="localhost"
 MOOS_PORT="9000"
 PSHARE_PORT="9200"
-VNAMES="briggs"
+VNAMES="b33"
 
-HOME_LAT="42.3557281324"
-HOME_LON="-71.1010900133"
-LEG1_LAT="42.3559174770"
-LEG1_LON="-71.1005863695"
-LEG2_LAT="42.3562203636"
-LEG2_LON="-71.1007664499"
-LEG3_LAT="42.3561036867"
-LEG3_LON="-71.1012360905"
+HOME_LAT="42.3598322041"
+HOME_LON="-71.0931945226"
+LEG1_LAT="42.3600122043"
+LEG1_LON="-71.0927682289"
+LEG2_LAT="42.3603272046"
+LEG2_LON="-71.0924028343"
+LEG3_LAT="42.3604172047"
+LEG3_LON="-71.0929509262"
 
 #------------------------------------------------------------
 #  Part 3: Check for and handle command-line arguments
@@ -56,7 +56,7 @@ for ARGI; do
     echo "  --ip=<localhost>       Shoreside IP address     "
     echo "  --mport=<9000>         Shoreside MOOSDB port    "
     echo "  --pshare=<9200>        Shoreside pShare port    "
-    echo "  --vnames=<briggs>      Colon-separated vehicles "
+    echo "  --vnames=<b33>         Colon-separated vehicles "
     exit 0
   elif [[ "${ARGI}" =~ ^[0-9]+$ && "$TIME_WARP" = 1 ]]; then
     if [ "$ARGI" -lt 1 ]; then
