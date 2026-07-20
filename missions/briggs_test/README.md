@@ -13,12 +13,12 @@ automates only the ordered Copter handoff into Helm guidance.
 - Vehicle: `briggs`, rendered with the native `quadcopter` shape added by the
   companion MOOS-IvP feature branch
 - Takeoff altitude: 8 m AGL
-- Home / precision target: `x=-173, y=-128`
-- Pattern: the four marked points `(-173,-128)`, `(-131,-108)`, `(-145,-74)`,
-  and `(-184,-86)`
+- Home / precision target: `x=-167, y=-131`
+- Pattern: the four marked points `(-167,-131)`, `(-197,-140)`, `(-196,-162)`,
+  and `(-160,-152)`
 
 The fixed home point corresponds to approximately
-`42.3557281324, -71.1010900133`. For real operation, place the landing target
+`42.3557024671, -71.1010163059`. For real operation, place the landing target
 there and verify the aircraft's physical launch location, fence, and flight
 permissions before arming.
 
@@ -139,10 +139,10 @@ community bridges measured `NAV_ALTITUDE` from `pArduBridge`.
 | `ARM` | Publishes representative armed/mode state. | Requests arming through `pArduBridge`. |
 | `DISARM` | Parks the helm and publishes disarmed/on-ground state. | Requests disarming; the bridge requires fresh `ON_GROUND` telemetry. |
 | `TAKEOFF` | Releases manual override, deploys the helm in station keep, and publishes 8 m simulated altitude state. Vertical flight is not modeled. | Requests an ArduCopter takeoff to the configured 8 m AGL altitude. |
-| `LEG 1` | Activates the Helm leg to `(-131,-108)`. | Sends the corresponding target through `pArduBridge` and starts Helm guidance. |
-| `LEG 2` | Activates the Helm leg to `(-145,-74)`. | Sends the corresponding target through `pArduBridge` and starts Helm guidance. |
-| `LEG 3` | Activates the Helm leg to `(-184,-86)`. | Sends the corresponding target through `pArduBridge` and starts Helm guidance. |
-| `HOME` | Activates the Helm leg to fixed mapped home at `(-173,-128)`. | Sends the fixed home target through `pArduBridge` and starts Helm guidance. |
+| `LEG 1` | Activates the Helm leg to `(-197,-140)`. | Sends the corresponding target through `pArduBridge` and starts Helm guidance. |
+| `LEG 2` | Activates the Helm leg to `(-196,-162)`. | Sends the corresponding target through `pArduBridge` and starts Helm guidance. |
+| `LEG 3` | Activates the Helm leg to `(-160,-152)`. | Sends the corresponding target through `pArduBridge` and starts Helm guidance. |
+| `HOME` | Activates the Helm leg to fixed mapped home at `(-167,-131)`. | Sends the fixed home target through `pArduBridge` and starts Helm guidance. |
 | `FC LOITER` | Activates station keep centered on the vehicle's current position. | Requests native flight-controller Loiter. |
 | `PREC LOITER` | Activates station keep centered on fixed mapped home. | Requests native FC Loiter plus the precision-loiter auxiliary function. |
 | `PREC OFF` | Leaves precision station keep. | Disables the precision-loiter auxiliary function; select a LEG/HOME action to resume Helm travel. |

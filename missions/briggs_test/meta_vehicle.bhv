@@ -27,7 +27,7 @@ Behavior = BHV_Waypoint
   speed          = 3
   capture_radius = 1.5
   slip_radius    = 4
-  points         = -131,-108
+  points         = -197,-140
 }
 
 //----------------------------------------------------
@@ -46,7 +46,7 @@ Behavior = BHV_Waypoint
   speed          = 3
   capture_radius = 1.5
   slip_radius    = 4
-  points         = -145,-74
+  points         = -196,-162
 }
 
 //----------------------------------------------------
@@ -65,7 +65,7 @@ Behavior = BHV_Waypoint
   speed          = 3
   capture_radius = 1.5
   slip_radius    = 4
-  points         = -184,-86
+  points         = -160,-152
 }
 
 //----------------------------------------------------
@@ -84,7 +84,7 @@ Behavior = BHV_Waypoint
   speed          = 3
   capture_radius = 1.5
   slip_radius    = 4
-  points         = -173,-128
+  points         = -167,-131
 }
 
 //----------------------------------------------------
@@ -118,7 +118,7 @@ Behavior = BHV_StationKeep
   condition = PRECISION_LOITER=true
   condition = MOOS_MANUAL_OVERRIDE=false
 
-  station_pt        = -173,-128
+  station_pt        = -167,-131
   inner_radius      = 1.5
   outer_radius      = 8
   outer_speed       = 0.8
@@ -151,7 +151,7 @@ Behavior = BHV_Waypoint
   use_alt_speed   = true
   capture_radius = 3
   slip_radius    = 8
-  points         = -173,-128
+  points         = -167,-131
 
   visual_hints = nextpt_color=yellow
   visual_hints = nextpt_vertex_size=8

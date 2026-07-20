@@ -13,8 +13,8 @@ SPEEDUP="1"
 WIPE="yes"
 NO_REBUILD="no"
 
-HOME_LAT="42.3557281324"
-HOME_LON="-71.1010900133"
+HOME_LAT="42.3557024671"
+HOME_LON="-71.1010163059"
 
 #------------------------------------------------------------
 #  Part 2: Check for and handle command-line arguments
