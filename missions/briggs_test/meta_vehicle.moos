@@ -23,12 +23,13 @@ ProcessConfig = ANTLER
   Run = pLogger        @ NewConsole = false
   Run = pNodeReporter  @ NewConsole = false
   Run = uFldNodeBroker @ NewConsole = false
+  Run = pHelmIvP       @ NewConsole = false
 #ifdef XMODE SIM
   Run = uSimMarineV22  @ NewConsole = false
   Run = pMarinePIDV22  @ NewConsole = false
-  Run = pHelmIvP       @ NewConsole = false
 #else
   Run = pArduBridge    @ NewConsole = false
+  Run = uTimerScript   @ NewConsole = false ~ uLegSequence
 #endif
 }
 
@@ -75,10 +76,10 @@ ProcessConfig = uLoadWatch
 #ifdef XMODE SIM
   thresh = app=uSimMarineV22, gapthresh=3
   thresh = app=pMarinePIDV22, gapthresh=3
-  thresh = app=pHelmIvP,      gapthresh=3
 #else
   thresh = app=pArduBridge,   gapthresh=3
 #endif
+  thresh = app=pHelmIvP,      gapthresh=3
   thresh = app=pNodeReporter, gapthresh=4
   thresh = app=pHostInfo,     gapthresh=5
   thresh = app=any,           gapthresh=2.0
@@ -146,6 +147,13 @@ ProcessConfig = uFldNodeBroker
   bridge = src=UAV_LANDING_TARGET_AGE
   bridge = src=AUTOPILOT_MODE
   bridge = src=IVPHELM_STATE
+#ifdef XMODE SIM
+#else
+  bridge = src=TOWAYPT_UPDATE
+  bridge = src=DESIRED_HEADING
+  bridge = src=DESIRED_SPEED
+  bridge = src=DESIRED_ALTITUDE
+#endif
 #ifdef XMODE SITL
   bridge = src=NAV_ALTITUDE
 #endif
@@ -196,6 +204,8 @@ ProcessConfig = pMarinePIDV22
   speed_factor = 20
 }
 
+#endif
+
 //----------------------------------------------------
 ProcessConfig = pHelmIvP
 {
@@ -206,8 +216,37 @@ ProcessConfig = pHelmIvP
   behaviors = targ_$(VNAME).bhv
   Domain    = course:0:359:360
   Domain    = speed:0:5:51
-}
+#ifdef XMODE SIM
 #else
+  Domain    = altitude:0:30:61
+#endif
+}
+
+#ifdef XMODE SIM
+#else
+//----------------------------------------------------
+// Orders the internal Copter handoff behind one LEG/HOME button click.
+ProcessConfig = uLegSequence
+{
+  AppTick   = 10
+  CommsTick = 10
+
+  condition     = LEG_REQUEST=true
+  upon_awake    = restart
+  script_atomic = true
+  reset_max     = unlimited
+  paused        = false
+  script_name   = COPTER_LEG_SEQUENCE
+  status_var    = LEG_SEQUENCE_STATUS
+
+  event = var=HELM_STATUS,  val=true,         time=0
+  event = var=ARDU_COMMAND, val=FLY_WAYPOINT, time=0.25
+  event = var=STATION_KEEP, val=false,        time=0.50
+  event = var=LEG_ACTIVE,   val=true,         time=0.60
+  event = var=LEG_REQUEST,  val=false,        time=0.75
+}
+
+//----------------------------------------------------
 ProcessConfig = pArduBridge
 {
   AppTick   = 10

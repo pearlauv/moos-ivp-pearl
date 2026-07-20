@@ -169,7 +169,8 @@ nsplug meta_vehicle.moos "targ_${VNAME}.moos" "${NSFLAGS[@]}" WARP="$TIME_WARP" 
   COLOR="$COLOR" AP_URL="$AP_URL" AP_PROTOCOL="$AP_PROTOCOL" \
   TAKEOFF_ALTITUDE="$TAKEOFF_ALTITUDE" IS_SIM="$IS_SIM" XMODE="$MODE"
 
-nsplug meta_vehicle.bhv "targ_${VNAME}.bhv" "${NSFLAGS[@]}" VNAME="$VNAME"
+nsplug meta_vehicle.bhv "targ_${VNAME}.bhv" "${NSFLAGS[@]}" VNAME="$VNAME" \
+  TAKEOFF_ALTITUDE="$TAKEOFF_ALTITUDE" XMODE="$MODE"
 
 if [ "${JUST_MAKE}" = "yes" ]; then
   echo "$ME: Targ files made; exiting without launch."

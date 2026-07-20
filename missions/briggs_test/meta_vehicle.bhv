@@ -3,33 +3,88 @@
 // NAME: Charles Benjamin
 //-------------------------------------------------
 
+#ifdef XMODE SIM
 initialize DEPLOY               = false
 initialize STATION_KEEP         = false
 initialize PRECISION_LOITER     = false
 initialize MOOS_MANUAL_OVERRIDE = true
+initialize LEG_MODE             = HOME
+initialize GO                   = false
 
 //----------------------------------------------------
-// Used only by --sim. Each operator waypoint button updates this behavior
-// with one destination; there is no automatic multi-leg sequence.
 Behavior = BHV_Waypoint
 {
-  name      = operator_waypoint
+  name      = operator_leg1
   pwt       = 100
   condition = DEPLOY=true
-  condition = STATION_KEEP=false
+  condition = GO=true
+  condition = LEG_MODE=LEG1
   condition = MOOS_MANUAL_OVERRIDE=false
-  updates   = WPT_UPDATE
   perpetual = true
+  endflag   = GO=false
+  endflag   = STATION_KEEP=true
+
+  speed          = 3
+  capture_radius = 1.5
+  slip_radius    = 4
+  points         = -131,-108
+}
+
+//----------------------------------------------------
+Behavior = BHV_Waypoint
+{
+  name      = operator_leg2
+  pwt       = 100
+  condition = DEPLOY=true
+  condition = GO=true
+  condition = LEG_MODE=LEG2
+  condition = MOOS_MANUAL_OVERRIDE=false
+  perpetual = true
+  endflag   = GO=false
+  endflag   = STATION_KEEP=true
+
+  speed          = 3
+  capture_radius = 1.5
+  slip_radius    = 4
+  points         = -145,-74
+}
+
+//----------------------------------------------------
+Behavior = BHV_Waypoint
+{
+  name      = operator_leg3
+  pwt       = 100
+  condition = DEPLOY=true
+  condition = GO=true
+  condition = LEG_MODE=LEG3
+  condition = MOOS_MANUAL_OVERRIDE=false
+  perpetual = true
+  endflag   = GO=false
+  endflag   = STATION_KEEP=true
+
+  speed          = 3
+  capture_radius = 1.5
+  slip_radius    = 4
+  points         = -184,-86
+}
+
+//----------------------------------------------------
+Behavior = BHV_Waypoint
+{
+  name      = operator_home
+  pwt       = 100
+  condition = DEPLOY=true
+  condition = GO=true
+  condition = LEG_MODE=HOME
+  condition = MOOS_MANUAL_OVERRIDE=false
+  perpetual = true
+  endflag   = GO=false
   endflag   = STATION_KEEP=true
 
   speed          = 3
   capture_radius = 1.5
   slip_radius    = 4
   points         = -173,-128
-
-  visual_hints = nextpt_color=yellow
-  visual_hints = nextpt_vertex_size=8
-  visual_hints = vertex_color=dodger_blue, edge_color=white
 }
 
 //----------------------------------------------------
@@ -70,3 +125,67 @@ Behavior = BHV_StationKeep
   transit_speed     = 1
   swing_time        = 2
 }
+#else
+
+initialize LEG_ACTIVE   = false
+initialize STATION_KEEP = false
+
+//----------------------------------------------------
+// pArduBridge translates the selected NEXT_WAYPOINT to this update variable.
+Behavior = BHV_Waypoint
+{
+  name      = operator_waypoint
+  pwt       = 100
+  condition = AUTOPILOT_MODE=HELM_TOWAYPT
+  condition = LEG_ACTIVE=true
+  updates   = TOWAYPT_UPDATE
+  perpetual = true
+  endflag   = LEG_ACTIVE=false
+  endflag   = STATION_KEEP=true
+
+  // pArduBridge publishes its initial target speed (zero for Copter SITL)
+  // on TOWAYPT_UPDATE. Keep this fixed-leg mission at 3 m/s while still
+  // accepting the point update from pArduBridge.
+  speed           = 3
+  speed_alt       = 3
+  use_alt_speed   = true
+  capture_radius = 3
+  slip_radius    = 8
+  points         = -173,-128
+
+  visual_hints = nextpt_color=yellow
+  visual_hints = nextpt_vertex_size=8
+  visual_hints = vertex_color=dodger_blue, edge_color=white
+}
+
+//----------------------------------------------------
+// Copter holds the captured endpoint through the Helm, without dropping back
+// to FC Loiter or requiring another HELM ON action for the next leg.
+Behavior = BHV_StationKeep
+{
+  name      = operator_station_keep
+  pwt       = 100
+  condition = AUTOPILOT_MODE=HELM_TOWAYPT
+  condition = STATION_KEEP=true
+
+  center_activate    = true
+  inner_radius       = 1
+  outer_radius       = 3
+  hibernation_radius = 5
+  outer_speed        = 1.5
+  transit_speed      = 3
+  swing_time         = 2
+}
+
+//----------------------------------------------------
+// Hold the commanded takeoff altitude during both leg guidance and station keep.
+Behavior = BHV_ConstantAltitude
+{
+  name       = operator_altitude
+  pwt        = 100
+  condition  = AUTOPILOT_MODE=HELM_TOWAYPT
+  perpetual  = true
+  altitude   = $(TAKEOFF_ALTITUDE)
+  duration   = -1
+}
+#endif
