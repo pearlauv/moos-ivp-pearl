@@ -13,9 +13,6 @@ the address advertised by `pHostInfo`, so split operation cannot silently pick
 a Wi-Fi, Ethernet, or Tailscale address. Intra-community processes always use
 their local MOOSDB through `ServerHost=localhost`; `--ip` controls only the
 externally advertised pShare identity.
-If `--ip` is omitted, its default is the literal `localhost`. An empty,
-malformed, or out-of-range IPv4 value is rejected instead of falling back to
-interface autodiscovery.
 
 ## Layout
 

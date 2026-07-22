@@ -8,18 +8,6 @@
 #          catching SIGINT (ctrl-c).
 #------------------------------------------------------------
 vecho() { if [ "$VERBOSE" = "yes" ]; then echo "$ME: $1"; fi; }
-is_valid_host_ip() {
-  local value="$1"
-  local octet
-  local -a octets
-
-  [ "$value" = "localhost" ] && return 0
-  [[ "$value" =~ ^([0-9]{1,3}\.){3}[0-9]{1,3}$ ]] || return 1
-  IFS='.' read -r -a octets <<< "$value"
-  for octet in "${octets[@]}"; do
-    (( 10#$octet <= 255 )) || return 1
-  done
-}
 # shellcheck disable=SC2329  # Invoked by the SIGINT trap.
 on_exit() { echo; echo "$ME: Halting all apps"; kill -- -$$; }
 trap on_exit SIGINT
@@ -65,7 +53,7 @@ for ARGI; do
     echo "  --auto, -a             Script launch, no uMAC   "
     echo "  --nogui, -ng           No pMarineViewer         "
     echo "  --mode=<SIM|SITL|REAL> Button command mode       "
-    echo "  --ip=<localhost|IPv4>  Advertised pShare host   "
+    echo "  --ip=<localhost>       Advertised pShare host   "
     echo "  --mport=<9000>         Shoreside MOOSDB port    "
     echo "  --pshare=<9200>        Shoreside pShare port    "
     echo "  --vnames=<briggs>      Colon-separated vehicles "
@@ -103,11 +91,6 @@ done
 MODE=$(echo "$MODE" | tr '[:lower:]' '[:upper:]')
 if [[ "$MODE" != "SIM" && "$MODE" != "SITL" && "$MODE" != "REAL" ]]; then
   echo "$ME: --mode must be SIM, SITL, or REAL. Exit Code 1."
-  exit 1
-fi
-
-if ! is_valid_host_ip "$IP_ADDR"; then
-  echo "$ME: --ip must be localhost or a valid IPv4 address. Exit Code 1."
   exit 1
 fi
 
