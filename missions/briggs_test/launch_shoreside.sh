@@ -31,14 +31,14 @@ MOOS_PORT="9000"
 PSHARE_PORT="9200"
 VNAMES="briggs"
 
-HOME_LAT="42.3557024671"
-HOME_LON="-71.1010163059"
-LEG1_LAT="42.3556147926"
-LEG1_LON="-71.1013776382"
-LEG2_LAT="42.3554170143"
-LEG2_LON="-71.1013589045"
-LEG3_LAT="42.3555150233"
-LEG3_LON="-71.1009250670"
+HOME_LAT="42.3557400134"
+HOME_LON="-71.1010623410"
+LEG1_LAT="42.3556590415"
+LEG1_LON="-71.1014275918"
+LEG2_LAT="42.3554611101"
+LEG2_LON="-71.1014154168"
+LEG3_LAT="42.3555510789"
+LEG3_LON="-71.1009771158"
 
 #------------------------------------------------------------
 #  Part 3: Check for and handle command-line arguments
@@ -53,7 +53,7 @@ for ARGI; do
     echo "  --auto, -a             Script launch, no uMAC   "
     echo "  --nogui, -ng           No pMarineViewer         "
     echo "  --mode=<SIM|SITL|REAL> Button command mode       "
-    echo "  --ip=<localhost>       Shoreside IP address     "
+    echo "  --ip=<localhost>       Advertised pShare host   "
     echo "  --mport=<9000>         Shoreside MOOSDB port    "
     echo "  --pshare=<9200>        Shoreside pShare port    "
     echo "  --vnames=<briggs>      Colon-separated vehicles "
@@ -117,9 +117,6 @@ fi
 #  Part 5: Create the shoreside .moos file
 #------------------------------------------------------------
 NSFLAGS=(--strict --force -x)
-if [ "${AUTO_LAUNCHED}" = "no" ]; then
-  NSFLAGS=(--interactive --force -x)
-fi
 
 nsplug meta_shoreside.moos targ_shoreside.moos "${NSFLAGS[@]}" WARP="$TIME_WARP" \
   IP_ADDR="$IP_ADDR" MOOS_PORT="$MOOS_PORT" PSHARE_PORT="$PSHARE_PORT" \

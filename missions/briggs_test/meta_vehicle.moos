@@ -3,7 +3,9 @@
 // NAME: Charles Benjamin
 //-------------------------------------------------
 
-ServerHost = $(IP_ADDR)
+// All processes in this community use the local MOOSDB. IP_ADDR is reserved
+// for the externally advertised pShare address in pHostInfo below.
+ServerHost = localhost
 ServerPort = $(MOOS_PORT)
 Community  = $(VNAME)
 
@@ -29,7 +31,6 @@ ProcessConfig = ANTLER
   Run = pMarinePIDV22  @ NewConsole = false
 #else
   Run = pArduBridge    @ NewConsole = false
-  Run = uTimerScript   @ NewConsole = false ~ uLegSequence
 #endif
 }
 
@@ -92,6 +93,10 @@ ProcessConfig = pHostInfo
 {
   AppTick   = 1
   CommsTick = 1
+
+  // Pin the broker-advertised address to --ip. This prevents automatic
+  // interface discovery from selecting Wi-Fi, Ethernet, or Tailscale.
+  default_hostip_force = $(IP_ADDR)
 }
 
 //----------------------------------------------------
@@ -146,6 +151,7 @@ ProcessConfig = uFldNodeBroker
   bridge = src=UAV_LANDING_TARGET_AVAILABLE
   bridge = src=UAV_LANDING_TARGET_AGE
   bridge = src=AUTOPILOT_MODE
+  bridge = src=CONTROL_AUTHORITY
   bridge = src=IVPHELM_STATE
 #ifdef XMODE SIM
 #else
@@ -177,6 +183,8 @@ ProcessConfig = uSimMarineV22
   turn_rate        = 80
   turn_spd_loss    = 0.6
 
+  post_des_thrust = DESIRED_THRUSTX
+  post_des_rudder = DESIRED_RUDDERX
 }
 
 //----------------------------------------------------
@@ -203,7 +211,6 @@ ProcessConfig = pMarinePIDV22
   maxthrust   = 100
   speed_factor = 20
 }
-
 #endif
 
 //----------------------------------------------------
@@ -216,36 +223,10 @@ ProcessConfig = pHelmIvP
   behaviors = targ_$(VNAME).bhv
   Domain    = course:0:359:360
   Domain    = speed:0:5:51
-#ifdef XMODE SIM
-#else
-  Domain    = altitude:0:30:61
-#endif
 }
 
 #ifdef XMODE SIM
 #else
-//----------------------------------------------------
-// Orders the internal Copter handoff behind one LEG/HOME button click.
-ProcessConfig = uLegSequence
-{
-  AppTick   = 10
-  CommsTick = 10
-
-  condition     = LEG_REQUEST=true
-  upon_awake    = restart
-  script_atomic = true
-  reset_max     = unlimited
-  paused        = false
-  script_name   = COPTER_LEG_SEQUENCE
-  status_var    = LEG_SEQUENCE_STATUS
-
-  event = var=HELM_STATUS,  val=true,         time=0
-  event = var=ARDU_COMMAND, val=FLY_WAYPOINT, time=0.25
-  event = var=STATION_KEEP, val=false,        time=0.50
-  event = var=LEG_ACTIVE,   val=true,         time=0.60
-  event = var=LEG_REQUEST,  val=false,        time=0.75
-}
-
 //----------------------------------------------------
 ProcessConfig = pArduBridge
 {

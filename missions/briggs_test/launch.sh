@@ -33,8 +33,6 @@ TAKEOFF_ALTITUDE="8"
 
 VNAME="briggs"
 COLOR="yellow"
-SHORE_IP="localhost"
-VEH_IP="localhost"
 
 SHORE_MPORT="9000"
 VEH_MPORT="9001"
@@ -67,8 +65,6 @@ for ARGI; do
     echo "  --takeoff_altitude=<8>  Copter takeoff altitude, m AGL"
     echo "  --vname=<briggs>        Vehicle/community name         "
     echo "  --color=<yellow>        Viewer vehicle color           "
-    echo "  --shore_ip=<localhost>  Shoreside host                 "
-    echo "  --veh_ip=<localhost>    Vehicle host                   "
     echo "                                                       "
     echo "  --shore_mport=<9000>    Shoreside MOOSDB port          "
     echo "  --veh_mport=<9001>      Vehicle MOOSDB port            "
@@ -107,10 +103,6 @@ for ARGI; do
     VNAME="${ARGI#*=}"
   elif [[ "${ARGI}" == --color=* ]]; then
     COLOR="${ARGI#*=}"
-  elif [[ "${ARGI}" == --shore_ip=* ]]; then
-    SHORE_IP="${ARGI#*=}"
-  elif [[ "${ARGI}" == --veh_ip=* ]]; then
-    VEH_IP="${ARGI#*=}"
   elif [[ "${ARGI}" == --shore_mport=* ]]; then
     SHORE_MPORT="${ARGI#*=}"
   elif [[ "${ARGI}" == --veh_mport=* ]]; then
@@ -180,8 +172,8 @@ fi
 #  Part 6: Launch the vehicle community
 #------------------------------------------------------------
 VARGS=(--auto "$TIME_WARP" --mode="$MODE")
-VARGS+=(--ip="$VEH_IP" --mport="$VEH_MPORT" --pshare="$VEH_PSHARE")
-VARGS+=(--shore="$SHORE_IP" --shore_pshare="$SHORE_PSHARE")
+VARGS+=(--mport="$VEH_MPORT" --pshare="$VEH_PSHARE")
+VARGS+=(--shore_pshare="$SHORE_PSHARE")
 VARGS+=(--vname="$VNAME" --color="$COLOR")
 VARGS+=(--ap_url="$AP_URL" --ap_protocol="$AP_PROTOCOL")
 VARGS+=(--takeoff_altitude="$TAKEOFF_ALTITUDE")
@@ -195,7 +187,7 @@ vecho "Launching vehicle with args: ${VARGS[*]}"
 #  Part 7: Launch the shoreside community
 #------------------------------------------------------------
 SARGS=(--auto "$TIME_WARP" --mode="$MODE" --mport="$SHORE_MPORT" --pshare="$SHORE_PSHARE")
-SARGS+=(--ip="$SHORE_IP" --vnames="$VNAME")
+SARGS+=(--vnames="$VNAME")
 [ "$JUST_MAKE" = "yes" ] && SARGS+=(--just_make)
 [ "$VERBOSE" = "yes" ] && SARGS+=(--verbose)
 [ "$NOGUI" = "yes" ] && SARGS+=(--nogui)
