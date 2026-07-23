@@ -4,37 +4,47 @@
 //-------------------------------------------------
 
 #ifdef XMODE SIM
-initialize DEPLOY                = false
+initialize ROUTE_DEPLOY          = false
+initialize ROUTE_READY           = false
+initialize ROUTE_CLEAR           = false
 initialize STATION_KEEP          = false
 initialize MOOS_MANUAL_OVERRIDE  = true
 #else
+initialize ROUTE_DEPLOY         = false
+initialize ROUTE_READY          = false
+initialize ROUTE_CLEAR          = false
 initialize LEG_ACTIVE           = false
 initialize STATION_KEEP          = false
 initialize DESIRED_ALTITUDE      = $(TAKEOFF_ALTITUDE)
 #endif
 
 //----------------------------------------------------
-// Each operator waypoint button updates this behavior with one destination.
-// There is no automatic multi-leg sequence.
+// The first mouse click spawns an empty named route. Further clicks append
+// waypoints to that same instance. Completing or clearing the route removes
+// the spawned behavior, so the next click starts with a genuinely empty list.
 Behavior = BHV_Waypoint
 {
-  name      = operator_waypoint
-  pwt       = 100
+  name       = operator_route_
+  pwt        = 100
+  updates    = ROUTE_UPDATE
+  templating = spawn
+
+  condition = ROUTE_DEPLOY=true
 #ifdef XMODE SIM
-  condition = DEPLOY=true
-  condition = STATION_KEEP=false
-  condition = MOOS_MANUAL_OVERRIDE=false
-  updates   = WPT_UPDATE
-  perpetual = true
-  endflag   = STATION_KEEP=true
-  endflag   = AUTOPILOT_MODE=SIM_STATION_KEEP
+  condition = (ROUTE_CLEAR=true) or (MOOS_MANUAL_OVERRIDE=false)
 #else
-  condition = AUTOPILOT_MODE=HELM_TOWAYPT
-  condition = LEG_ACTIVE=true
-  updates   = TOWAYPT_UPDATE
-  perpetual = true
-  endflag   = LEG_ACTIVE=false
-  endflag   = STATION_KEEP=true
+  condition = (ROUTE_CLEAR=true) or (AUTOPILOT_MODE=HELM_TOWAYPT)
+  condition = (ROUTE_CLEAR=true) or (LEG_ACTIVE=true)
+#endif
+
+  endflag = ROUTE_DEPLOY=false
+  endflag = ROUTE_READY=false
+  endflag = ROUTE_CLEAR=false
+  endflag = STATION_KEEP=true
+#ifdef XMODE SIM
+  endflag = AUTOPILOT_MODE=SIM_STATION_KEEP
+#else
+  endflag = LEG_ACTIVE=false
 #endif
 
   speed          = 3
@@ -47,6 +57,9 @@ Behavior = BHV_Waypoint
 #endif
   capture_radius = 1.5
   slip_radius    = 4
+  // Prime an otherwise-empty spawned engine for its first newpt update.
+  // The first route update immediately restores normal traversal order.
+  order           = reverse
   points         = empty
 
   visual_hints = nextpt_color=yellow
@@ -62,12 +75,12 @@ Behavior = BHV_StationKeep
   name      = operator_station_keep
   pwt       = 100
 #ifdef XMODE SIM
-  condition = DEPLOY=true
   condition = MOOS_MANUAL_OVERRIDE=false
 #else
   condition = AUTOPILOT_MODE=HELM_TOWAYPT
 #endif
   condition = STATION_KEEP=true
+  condition = ROUTE_DEPLOY=false
 
   center_activate    = true
   inner_radius       = 1

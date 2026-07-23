@@ -1,210 +1,126 @@
 # briggs_test
 
-`briggs_test` is a single-drone operator mission for the lower-left grass field
-in the Briggs map. It has three launch modes: a self-contained MOOS-IvP
-simulation, ArduPilot SITL through `pArduBridge`, and real ArduCopter hardware
-through `pArduBridge`. The operator chooses every leg; each LEG/HOME button
-updates one waypoint behavior, with no automatic multi-leg sequence.
+`briggs_test` is a single-drone operator mission for the Briggs field. It
+supports a self-contained MOOS-IvP simulation, ArduPilot SITL through
+`pArduBridge`, and real ArduCopter hardware through `pArduBridge`.
 
-The top-level `launch.sh` is the local, two-community launcher. For a split
-vehicle/shoreside deployment, run the two sublaunchers with their explicit host
-arguments as documented in `RADIO_PPP.md`. The `--ip` value is also forced as
-the address advertised by `pHostInfo`, so split operation cannot silently pick
-a Wi-Fi, Ethernet, or Tailscale address. Intra-community processes always use
-their local MOOSDB through `ServerHost=localhost`; `--ip` controls only the
-externally advertised pShare identity.
+The operator builds an ordered route directly in pMarineViewer. There are no
+hardcoded mission waypoints, home waypoint, or FC RTL/Loiter controls in the
+normal route interface.
 
 ## Layout
 
 - Map: `../../images/briggs_test/briggs_test.tif`
 - Datum: `42.3569186052, -71.0990291116`
-- Vehicle: `briggs`, rendered with the native `quadcopter` shape added by the
-  companion MOOS-IvP feature branch
-- Takeoff altitude: 8 m AGL
-- Home / precision target: `x=-167, y=-131`
-- Pattern: the four marked points `(-167,-131)`, `(-197,-140)`, `(-196,-162)`,
-  and `(-160,-152)`
+- Vehicle: `briggs`
+- Route altitude in SITL/real mode: 8 m AGL by default
+- Route endpoint: passive Helm StationKeep
 
-The fixed home point corresponds to approximately
-`42.3557400134, -71.1010623410`. For real operation, place the landing target
-there and verify the aircraft's physical launch location, fence, and flight
-permissions before arming.
-
-For split operation with the vehicle community on the Raspberry Pi and
-shoreside on a Mac over the Holybro SiK radio pair, see
-[`RADIO_PPP.md`](RADIO_PPP.md). It covers the persistent Pi service, manual Mac
-startup, radio settings, PPP addresses, and the two-host mission commands.
+The top-level `launch.sh` runs both communities locally. For a split
+vehicle/shoreside deployment over the Holybro SiK PPP link, run the
+sublaunchers as documented in [`RADIO_PPP.md`](RADIO_PPP.md).
+`ServerHost=localhost` keeps each community local; a sublauncher's `--ip`
+selects only its externally advertised pShare identity.
 
 ## MOOS-IvP simulation
-
-This is the default mode and does not require ArduPilot, MAVSDK, or an
-autopilot connection:
 
 ```bash
 ./launch.sh --sim
 ```
 
-The operator buttons drive a conventional `pHelmIvP` -> `pMarinePIDV22` ->
-`uSimMarineV22` stack. `ARM`, `TAKEOFF`, and `PREC LAND` publish representative
-drone state for the operator display; the simulator itself models the horizontal
-motion on the map. Each LEG/HOME button updates one `BHV_Waypoint`, so the route
-remains operator-selected and no multi-leg sequence is encoded.
+This mode runs the conventional `pHelmIvP` -> `pMarinePIDV22` ->
+`uSimMarineV22` horizontal-motion stack. Drone arming, takeoff altitude, and
+precision-landing state are represented for the operator display; vertical
+dynamics are not simulated.
 
 ## ArduPilot SITL
 
-Start ArduCopter SITL in one terminal:
+Start ArduCopter SITL:
 
 ```bash
-cd missions/uav_solo/briggs_test
 ./launch_sitl.sh
 ```
 
-After SITL reports that the flight controller is ready, launch MOOS in another
-terminal:
+Then launch MOOS in another terminal:
 
 ```bash
 ./launch.sh --sitl
 ```
 
-`launch_sitl.sh` uses `~/ardupilot` by default. Override that with
-`--ardupilot_root=/path/to/ardupilot` when needed. The supplied `sitl.parm`
-enables ArduPilot's simulated precision-landing target at the marked home
-point. It uses ArduPilot's direct TCP endpoint at `127.0.0.1:5760`, so MAVProxy
-is not required. If the checkout already has a valid SITL build, pass
-`--no_rebuild` to skip rebuilding it. A SITL-only helper supplies neutral
-throttle only while native Copter Loiter is active so it holds altitude without
-a joystick; it leaves all other modes untouched. It does not issue any mission
-or flight-mode commands.
-These settings are not used in MOOS-IvP simulation or real mode.
+`launch_sitl.sh` uses `~/ardupilot` by default. Use
+`--ardupilot_root=/path/to/ardupilot` when needed, and `--no_rebuild` when a
+valid SITL binary already exists.
 
-In SITL, `pHelmIvP` supplies the waypoint course, speed, and altitude setpoints;
-`pArduBridge` streams them to ArduCopter in Guided mode. At capture, the Helm
-changes from waypoint travel to passive station keeping and ArduCopter remains
-in Guided mode.
+In SITL, `pHelmIvP` supplies route course, speed, and altitude setpoints.
+`pArduBridge` streams them to ArduCopter in Guided mode. Route completion and
+CLEAR both transfer horizontal guidance to passive Helm StationKeep while
+ArduCopter remains in Guided mode.
 
 ## Real hardware
 
-The real-mode default is a Linux serial device at `ttyACM0:115200`:
+The real-mode default is `ttyACM0:115200`:
 
 ```bash
 ./launch.sh --real
 ```
 
-Override the endpoint when necessary:
+Override the endpoint when required:
 
 ```bash
 ./launch.sh --real --ap_url=ttyUSB0:57600 --ap_protocol=serial
 ```
 
-The flight controller must already have a qualified Precision Landing backend:
-`PLND_ENABLED=1`, the correct nonzero `PLND_TYPE`, sensor orientation/offsets,
-and verified landing-target traffic. Complete the `pArduBridge` hardware
-qualification procedure before powered flight.
+Complete the `pArduBridge` hardware qualification procedure before powered
+flight. Precision landing also requires a qualified ArduPilot backend,
+verified target traffic, and correct sensor orientation and offsets.
 
-## Operator buttons
+## Operator workflow
 
-The normal visible workflow is:
+1. In pMarineViewer, choose the `route` left-click context.
+2. Left-click the desired waypoints in traversal order. The yellow markers are
+   a pending route; the aircraft does not move while the route is being built.
+   Marker labels are intentionally hidden because pMarineViewer's mouse-click
+   counter is global to the viewer and does not reset when a route is cleared.
+3. Press `ARM`, then `TAKEOFF`.
+4. Press `DEPLOY` once to traverse the complete selected route.
+5. At the final waypoint, the route is discarded and passive StationKeep is
+   centered at the captured position.
+6. Press `CLEAR` at any time to discard the selected/active route, clear its
+   map markers, and enter passive StationKeep at the current position.
+7. Use `PREC LAND` only for the qualified precision-landing workflow.
 
-1. `ARM`
-2. `TAKEOFF`
-3. Press `LEG 1`, `LEG 2`, and `LEG 3` as desired. In simulation, each click
-   updates the single waypoint behavior. In SITL/real mode, each click posts
-   one local/geodetic `NEXT_WAYPOINT` and triggers a short vehicle-side sequence
-   that enables Helm guidance after `pArduBridge` synchronizes the target with
-   `TOWAYPT_UPDATE`. Verify that `UAV_COMMAND_RESULT` reports `MOOS_GUIDANCE`
-   before issuing the next command.
-4. Press `HOME` to fly the fixed home waypoint.
-5. At capture, the Helm permits drift inside the 5 m hibernation radius and
-   guides the vehicle back when it leaves that zone. The flight controller
-   remains in Guided mode and continues holding the commanded altitude.
-6. On real hardware, confirm `UAV_LANDING_TARGET_AVAILABLE=1` and a fresh
-   `UAV_LANDING_TARGET_AGE`
-7. Press `PREC LAND`.
+Every mouse click updates one named, dynamically spawned `BHV_Waypoint`.
+The first click starts the route; later clicks append to the same route. Route
+completion or CLEAR removes that behavior instance, so the next click starts a
+new list.
 
-`DISARM`, `FC LOITER`, `PREC OFF`, `VIZ HOME`, and `RTL (FC)` remain available
-as explicit operator controls; they are not additional steps in the normal
-leg workflow. `PREC LOITER` is an optional acquisition/hold control, not a
-prerequisite for `PREC LAND`.
+The StationKeep behavior has a 1 m inner radius, 3 m outer radius, and 5 m
+hibernation radius. It permits passive drift within the hibernation zone and
+restores the vehicle with Helm guidance outside it. StationKeep is locally
+inhibited whenever `ROUTE_DEPLOY=true`, so it cannot compete with an active
+route if a repeated shoreside state update is suppressed. In SITL/real mode,
+`BHV_ConstantAltitude` continues commanding the configured altitude.
 
-The labels are intentionally similar across modes, but their underlying
-postings differ:
+## Buttons
 
-- `--sim` LEG/HOME buttons post `WPT_UPDATE` to one `BHV_Waypoint` behavior.
-- `--sitl` and `--real` LEG/HOME buttons post one `NEXT_WAYPOINT` containing
-  matching local/geodetic coordinates and trigger a vehicle-side sequence.
-  `pArduBridge` posts the synchronized `TOWAYPT_UPDATE`; the sequence then
-  activates the waypoint behavior.
-
-The pMarineViewer `Variable` selector includes command result, armed state,
-landed state, altitude, landing-target availability/age, autopilot mode,
-control authority, Helm state, waypoint update, the three desired guidance
-values, and process-watch health. In MOOS-only simulation, `NAV_ALTITUDE` is
-representative button state because vertical dynamics are not modeled. In SITL
-and real mode, the vehicle community bridges measured `NAV_ALTITUDE` from
-`pArduBridge`.
-
-| Button | MOOS-only `--sim` | `--sitl` and `--real` |
+| Button | `--sim` | `--sitl` and `--real` |
 | --- | --- | --- |
-| `ARM` | Publishes representative armed/mode state. | Requests arming through `pArduBridge`. |
-| `DISARM` | Parks the helm and publishes disarmed/on-ground state. | Requests disarming; the bridge requires fresh `ON_GROUND` telemetry. |
-| `TAKEOFF` | Keeps horizontal motion stopped and publishes 8 m simulated altitude state. Vertical flight is not modeled. | Requests an ArduCopter takeoff to the configured 8 m AGL altitude. |
-| `LEG 1` | Updates the Helm waypoint to `(-197,-140)`; capture enters station keep. | Enables Helm guidance to the corresponding target; capture enters Helm station keep. |
-| `LEG 2` | Updates the Helm waypoint to `(-196,-162)`; capture enters station keep. | Enables Helm guidance to the corresponding target; capture enters Helm station keep. |
-| `LEG 3` | Updates the Helm waypoint to `(-160,-152)`; capture enters station keep. | Enables Helm guidance to the corresponding target; capture enters Helm station keep. |
-| `HOME` | Updates the Helm waypoint to fixed mapped home at `(-167,-131)`; capture enters station keep. | Uses the same Helm waypoint path to fixed home; capture enters Helm station keep. |
-| `FC LOITER` | Activates station keep centered on the vehicle's current position. | Requests native flight-controller Loiter. |
-| `PREC LOITER` | Sends the single waypoint behavior to fixed mapped home, then station-keeps at capture. | Requests native FC Loiter plus the precision-loiter auxiliary function. |
-| `PREC OFF` | Stops the simulated precision approach. | Disables the precision-loiter auxiliary function. |
-| `PREC LAND` | Parks the helm and publishes landed/disarmed simulated state. | Requests ArduCopter Land through the bridge's `AUTOLAND` command. |
-| `VIZ HOME` | Draws the fixed mapped home point. | Requests visualization of the flight controller's recorded home. |
-| `RETURN HOME` / `RTL (FC)` | Flies the helm to fixed mapped home. | Requests flight-controller Return-to-Launch using its recorded home. |
+| `ARM` | Publishes simulated armed state. | Requests arming through `pArduBridge`. |
+| `DISARM` | Parks horizontal guidance and publishes on-ground state. | Requests disarming through `pArduBridge`. |
+| `TAKEOFF` | Publishes the configured simulated altitude. | Requests Copter takeoff to the configured altitude. |
+| `DEPLOY` | Activates the complete staged route. | Performs the Guided/Helm handoff, then activates the complete route. |
+| `CLEAR` | Deletes the route and enters StationKeep. | Deletes the route and enters Guided Helm StationKeep. |
+| `PREC LAND` | Publishes simulated landed/disarmed state. | Requests Copter Land through `pArduBridge`. |
 
-All modes use one updateable `BHV_Waypoint`; every leg and home selection uses
-that behavior. Capture activates `BHV_StationKeep`, centered on the captured
-point. Its 1 m inner radius, 3 m outer radius, and 5 m hibernation radius allow
-the vehicle to drift without a horizontal correction inside the zone, then
-restore it with Helm guidance outside the zone. In SITL/real mode the bridge
-continues sending Guided setpoints, including the constant 8 m altitude target.
-`FC LOITER` and `RTL (FC)` remain explicit, independent flight-controller
-actions.
-
-SITL's `PLND_TYPE=4` target is internal to ArduPilot and does not emit a
-MAVLink `LANDING_TARGET` packet back to `pArduBridge`, so
-`UAV_LANDING_TARGET_AVAILABLE` remains false in SITL mode. The simulated
-precision backend is instead checked by its loaded parameters and observed
-loiter/landing behavior.
-
-`FC LOITER` is the immediate flight-controller hold button. `RTL (FC)` is an
-independent flight-controller return action and is not part of the normal
-precision-landing sequence. `DISARM` is accepted by `pArduBridge` only when
-fresh landed-state telemetry reports `ON_GROUND`.
-
-Unlike the Plane-oriented base examples, this mission configures
-`pArduBridge` with `vehicle_type=copter`. FC Loiter, Copter Land, and RTL remain
-explicit flight-controller actions.
+In SITL/real mode, `PREC LAND` cancels route traversal and asks ArduCopter to
+enter Land mode through `pArduBridge`. In SIM it only models the corresponding
+landed state and does not simulate a landing target sensor.
 
 ## Generation and cleanup
 
-Generate MOOS-IvP simulation targets without launching:
-
 ```bash
 ./launch.sh --sim --just_make --nogui 5
-```
-
-Generate ArduPilot SITL targets without launching:
-
-```bash
 ./launch.sh --sitl --just_make --nogui
-```
-
-Generate real-mode targets without opening a serial connection:
-
-```bash
 ./launch.sh --real --just_make --nogui
-```
-
-Remove generated targets, logs, and local SITL state:
-
-```bash
 ./clean.sh
 ```
