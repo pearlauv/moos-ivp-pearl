@@ -110,8 +110,10 @@ ProcessConfig = pLogger
 //----------------------------------------------------
 ProcessConfig = uFldShoreBroker
 {
-  AppTick   = 1
-  CommsTick = 1
+  // Route points are discrete operator events. Keep the broker faster than
+  // normal mouse-click cadence so successive updates are not coalesced.
+  AppTick   = 10
+  CommsTick = 10
 
   auto_bridge_appcast = true
 
@@ -206,12 +208,12 @@ ProcessConfig = pMarineViewer
   button_6 = PREC LAND # ROUTE_DEPLOY_ALL=false # STATION_KEEP_ALL=false # MOOS_MANUAL_OVERRIDE_ALL=true # NAV_ALTITUDE=0 # UAV_LANDED_STATE=ON_GROUND # UAV_IS_ARMED=false # AUTOPILOT_MODE=SIM_LANDED # UAV_COMMAND_RESULT=id=sim,command=LAND,status=COMPLETED,detail=SIMULATED # color=orange
 #else
   button_1 = ARM # ARM_UAV_ALL=true
-  button_2 = DISARM # ARM_UAV_ALL=false # color=red
+  button_2 = DISARM # ROUTE_DEPLOY_ALL=false # MOOS_MANUAL_OVERRIDE_ALL=true # ARM_UAV_ALL=false # color=red
   button_3 = TAKEOFF # ARDU_COMMAND_ALL=DO_TAKEOFF
 
   button_4 = DEPLOY # LEG_REQUEST_ALL=true
   button_5 = CLEAR # ROUTE_UPDATE_ALL="name=active # duration=0" # ROUTE_CLEAR_ALL=true # ROUTE_DEPLOY_ALL=true # ROUTE_READY_ALL=false # LEG_REQUEST_ALL="" # PMV_CLEAR=shape=point
 
-  button_6 = PREC LAND # ROUTE_DEPLOY_ALL=false # ARDU_COMMAND_ALL=AUTOLAND # color=orange
+  button_6 = PREC LAND # ROUTE_DEPLOY_ALL=false # MOOS_MANUAL_OVERRIDE_ALL=true # ARDU_COMMAND_ALL=AUTOLAND # color=orange
 #endif
 }

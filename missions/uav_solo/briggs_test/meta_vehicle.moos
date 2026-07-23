@@ -223,6 +223,12 @@ ProcessConfig = pHelmIvP
 
   ok_skew   = any
   behaviors = targ_$(VNAME).bhv
+#ifdef XMODE SIM
+#else
+  // Route points may be staged before DEPLOY. DRIVE is safe here because all
+  // horizontal behaviors remain idle until their explicit conditions are met.
+  start_in_drive = true
+#endif
   Domain    = course:0:359:360
   Domain    = speed:0:5:51
 #ifdef XMODE SIM

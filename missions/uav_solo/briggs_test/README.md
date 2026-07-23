@@ -92,7 +92,9 @@ verified target traffic, and correct sensor orientation and offsets.
 Every mouse click updates one named, dynamically spawned `BHV_Waypoint`.
 The first click starts the route; later clicks append to the same route. Route
 completion or CLEAR removes that behavior instance, so the next click starts a
-new list.
+new list. In SITL/real mode, pHelmIvP starts in DRIVE with these behaviors idle
+so it can retain every staged point before DEPLOY; ArduCopter does not transfer
+to Helm guidance until DEPLOY performs the explicit handoff.
 
 The StationKeep behavior has a 1 m inner radius, 3 m outer radius, and 5 m
 hibernation radius. It permits passive drift within the hibernation zone and
@@ -112,9 +114,9 @@ route if a repeated shoreside state update is suppressed. In SITL/real mode,
 | `CLEAR` | Deletes the route and enters StationKeep. | Deletes the route and enters Guided Helm StationKeep. |
 | `PREC LAND` | Publishes simulated landed/disarmed state. | Requests Copter Land through `pArduBridge`. |
 
-In SITL/real mode, `PREC LAND` cancels route traversal and asks ArduCopter to
-enter Land mode through `pArduBridge`. In SIM it only models the corresponding
-landed state and does not simulate a landing target sensor.
+In SITL/real mode, `PREC LAND` cancels route traversal, parks pHelmIvP, and asks
+ArduCopter to enter Land mode through `pArduBridge`. In SIM it only models the
+corresponding landed state and does not simulate a landing target sensor.
 
 ## Generation and cleanup
 
