@@ -31,10 +31,14 @@ MOOS_PORT="9000"
 PSHARE_PORT="9200"
 VNAMES="briggs"
 
-HOME_LAT="42.3561268794"
-HOME_LON="-71.0995526377"
-LEG1_LAT="42.3563338078"
-LEG1_LON="-71.0992360870"
+HOME_LAT="42.3557400134"
+HOME_LON="-71.1010623410"
+LEG1_LAT="42.3556590415"
+LEG1_LON="-71.1014275918"
+LEG2_LAT="42.3554611101"
+LEG2_LON="-71.1014154168"
+LEG3_LAT="42.3555510789"
+LEG3_LON="-71.1009771158"
 
 #------------------------------------------------------------
 #  Part 3: Check for and handle command-line arguments
@@ -118,7 +122,9 @@ nsplug meta_shoreside.moos targ_shoreside.moos "${NSFLAGS[@]}" WARP="$TIME_WARP"
   IP_ADDR="$IP_ADDR" MOOS_PORT="$MOOS_PORT" PSHARE_PORT="$PSHARE_PORT" \
   LAUNCH_GUI="$LAUNCH_GUI" XMODE="$MODE" VNAMES="$VNAMES" \
   HOME_LAT="$HOME_LAT" HOME_LON="$HOME_LON" \
-  LEG1_LAT="$LEG1_LAT" LEG1_LON="$LEG1_LON"
+  LEG1_LAT="$LEG1_LAT" LEG1_LON="$LEG1_LON" \
+  LEG2_LAT="$LEG2_LAT" LEG2_LON="$LEG2_LON" \
+  LEG3_LAT="$LEG3_LAT" LEG3_LON="$LEG3_LON"
 
 if [ "${JUST_MAKE}" = "yes" ]; then
   echo "$ME: Targ files made; exiting without launch."

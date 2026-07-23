@@ -3,9 +3,8 @@
 `briggs_test` is a single-drone operator mission for the lower-left grass field
 in the Briggs map. It has three launch modes: a self-contained MOOS-IvP
 simulation, ArduPilot SITL through `pArduBridge`, and real ArduCopter hardware
-through `pArduBridge`. The operator chooses the leg or home destination; each
-LEG/HOME button updates one waypoint behavior, with no automatic multi-leg
-sequence.
+through `pArduBridge`. The operator chooses every leg; each LEG/HOME button
+updates one waypoint behavior, with no automatic multi-leg sequence.
 
 The top-level `launch.sh` is the local, two-community launcher. For a split
 vehicle/shoreside deployment, run the two sublaunchers with their explicit host
@@ -22,11 +21,12 @@ externally advertised pShare identity.
 - Vehicle: `briggs`, rendered with the native `quadcopter` shape added by the
   companion MOOS-IvP feature branch
 - Takeoff altitude: 8 m AGL
-- Home / precision target: `x=-43, y=-88`
-- Leg 1 target: `x=-17, y=-65`
+- Home / precision target: `x=-167, y=-131`
+- Pattern: the four marked points `(-167,-131)`, `(-197,-140)`, `(-196,-162)`,
+  and `(-160,-152)`
 
 The fixed home point corresponds to approximately
-`42.3561268794, -71.0995526377`. For real operation, place the landing target
+`42.3557400134, -71.1010623410`. For real operation, place the landing target
 there and verify the aircraft's physical launch location, fence, and flight
 permissions before arming.
 
@@ -106,7 +106,7 @@ The normal visible workflow is:
 
 1. `ARM`
 2. `TAKEOFF`
-3. Press `LEG 1` as desired. In simulation, each click
+3. Press `LEG 1`, `LEG 2`, and `LEG 3` as desired. In simulation, each click
    updates the single waypoint behavior. In SITL/real mode, each click posts
    `HELM_STATUS=true`, one local/geodetic `NEXT_WAYPOINT`, and
    `ARDU_COMMAND=FLY_WAYPOINT`; the bridge synchronizes the behavior with
@@ -144,8 +144,10 @@ and real mode, the vehicle community bridges measured `NAV_ALTITUDE` from
 | `ARM` | Publishes representative armed/mode state. | Requests arming through `pArduBridge`. |
 | `DISARM` | Parks the helm and publishes disarmed/on-ground state. | Requests disarming; the bridge requires fresh `ON_GROUND` telemetry. |
 | `TAKEOFF` | Keeps horizontal motion stopped and publishes 8 m simulated altitude state. Vertical flight is not modeled. | Requests an ArduCopter takeoff to the configured 8 m AGL altitude. |
-| `LEG 1` | Updates the Helm waypoint to `(-17,-65)`. | Enables Helm guidance to the corresponding target; capture switches to FC Loiter. |
-| `HOME` | Updates the Helm waypoint to fixed mapped home at `(-43,-88)`. | Uses the same Helm waypoint path to fixed home; capture switches to FC Loiter. |
+| `LEG 1` | Updates the Helm waypoint to `(-197,-140)`. | Enables Helm guidance to the corresponding target; capture switches to FC Loiter. |
+| `LEG 2` | Updates the Helm waypoint to `(-196,-162)`. | Enables Helm guidance to the corresponding target; capture switches to FC Loiter. |
+| `LEG 3` | Updates the Helm waypoint to `(-160,-152)`. | Enables Helm guidance to the corresponding target; capture switches to FC Loiter. |
+| `HOME` | Updates the Helm waypoint to fixed mapped home at `(-167,-131)`. | Uses the same Helm waypoint path to fixed home; capture switches to FC Loiter. |
 | `FC LOITER` | Stops horizontal motion with Helm all-stop. | Requests native flight-controller Loiter. |
 | `PREC LOITER` | Sends the single waypoint behavior to fixed mapped home, then all-stops at capture. | Requests native FC Loiter plus the precision-loiter auxiliary function. |
 | `PREC OFF` | Stops the simulated precision approach. | Disables the precision-loiter auxiliary function. |
