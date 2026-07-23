@@ -1,0 +1,94 @@
+//-------------------------------------------------
+// FILE: meta_vehicle.bhv
+// NAME: Charles Benjamin
+//-------------------------------------------------
+
+#ifdef XMODE SIM
+initialize DEPLOY                = false
+initialize STATION_KEEP          = false
+initialize MOOS_MANUAL_OVERRIDE  = true
+#else
+initialize LEG_ACTIVE           = false
+initialize STATION_KEEP          = false
+initialize DESIRED_ALTITUDE      = $(TAKEOFF_ALTITUDE)
+#endif
+
+//----------------------------------------------------
+// Each operator waypoint button updates this behavior with one destination.
+// There is no automatic multi-leg sequence.
+Behavior = BHV_Waypoint
+{
+  name      = operator_waypoint
+  pwt       = 100
+#ifdef XMODE SIM
+  condition = DEPLOY=true
+  condition = STATION_KEEP=false
+  condition = MOOS_MANUAL_OVERRIDE=false
+  updates   = WPT_UPDATE
+  perpetual = true
+  endflag   = STATION_KEEP=true
+  endflag   = AUTOPILOT_MODE=SIM_STATION_KEEP
+#else
+  condition = AUTOPILOT_MODE=HELM_TOWAYPT
+  condition = LEG_ACTIVE=true
+  updates   = TOWAYPT_UPDATE
+  perpetual = true
+  endflag   = LEG_ACTIVE=false
+  endflag   = STATION_KEEP=true
+#endif
+
+  speed          = 3
+#ifdef XMODE SIM
+#else
+  // pArduBridge may publish speed=0 before the first Copter leg. Keep this
+  // operator mission's effective travel speed fixed while accepting points.
+  speed_alt      = 3
+  use_alt_speed  = true
+#endif
+  capture_radius = 1.5
+  slip_radius    = 4
+  points         = empty
+
+  visual_hints = nextpt_color=yellow
+  visual_hints = nextpt_vertex_size=8
+  visual_hints = vertex_color=dodger_blue, edge_color=white
+}
+
+//----------------------------------------------------
+// Allow passive drift inside the hibernation radius, then use Helm guidance
+// to return to the captured endpoint. ArduCopter remains in Guided mode.
+Behavior = BHV_StationKeep
+{
+  name      = operator_station_keep
+  pwt       = 100
+#ifdef XMODE SIM
+  condition = DEPLOY=true
+  condition = MOOS_MANUAL_OVERRIDE=false
+#else
+  condition = AUTOPILOT_MODE=HELM_TOWAYPT
+#endif
+  condition = STATION_KEEP=true
+
+  center_activate    = true
+  inner_radius       = 1
+  outer_radius       = 3
+  hibernation_radius = 5
+  outer_speed        = 1.5
+  transit_speed      = 3
+  swing_time         = 2
+}
+
+#ifdef XMODE SIM
+#else
+//----------------------------------------------------
+// Keep vertical guidance active during both waypoint travel and station keep.
+Behavior = BHV_ConstantAltitude
+{
+  name      = operator_altitude
+  pwt       = 100
+  condition = AUTOPILOT_MODE=HELM_TOWAYPT
+  perpetual = true
+  altitude  = $(TAKEOFF_ALTITUDE)
+  duration  = -1
+}
+#endif

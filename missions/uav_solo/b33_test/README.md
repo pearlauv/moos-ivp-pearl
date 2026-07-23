@@ -6,9 +6,15 @@ simulation, ArduPilot SITL through `pArduBridge`, and real ArduCopter hardware
 through `pArduBridge`. The operator chooses every leg; each LEG/HOME button
 automates only the ordered Copter handoff into Helm guidance.
 
+The top-level `launch.sh` runs both communities locally. For a split
+vehicle/shoreside deployment, use the two sublaunchers and their explicit host
+arguments from `RADIO_PPP.md`. In either case, community processes connect to
+their same-machine MOOSDB at `localhost`; `--ip` controls the externally
+advertised pShare identity.
+
 ## Layout
 
-- Map: `../images/B33_Test/B33_Test.tif`
+- Map: `../../images/B33_Test/B33_Test.tif`
 - Datum: `42.3598322041, -71.0931945226`
 - Vehicle: `b33`, rendered with the native `quadcopter` shape added by the
   companion MOOS-IvP feature branch
@@ -48,7 +54,7 @@ sequence is encoded.
 Start ArduCopter SITL in one terminal:
 
 ```bash
-cd missions/b33_test
+cd missions/uav_solo/b33_test
 ./launch_sitl.sh
 ```
 

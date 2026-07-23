@@ -53,7 +53,7 @@ for ARGI; do
     echo "  --auto, -a             Script launch, no uMAC   "
     echo "  --nogui, -ng           No pMarineViewer         "
     echo "  --mode=<SIM|SITL|REAL> Button command mode       "
-    echo "  --ip=<localhost>       Shoreside IP address     "
+    echo "  --ip=<localhost>       Advertised pShare host   "
     echo "  --mport=<9000>         Shoreside MOOSDB port    "
     echo "  --pshare=<9200>        Shoreside pShare port    "
     echo "  --vnames=<b33>         Colon-separated vehicles "
@@ -117,9 +117,6 @@ fi
 #  Part 5: Create the shoreside .moos file
 #------------------------------------------------------------
 NSFLAGS=(--strict --force -x)
-if [ "${AUTO_LAUNCHED}" = "no" ]; then
-  NSFLAGS=(--interactive --force -x)
-fi
 
 nsplug meta_shoreside.moos targ_shoreside.moos "${NSFLAGS[@]}" WARP="$TIME_WARP" \
   IP_ADDR="$IP_ADDR" MOOS_PORT="$MOOS_PORT" PSHARE_PORT="$PSHARE_PORT" \

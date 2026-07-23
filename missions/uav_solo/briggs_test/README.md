@@ -16,7 +16,7 @@ externally advertised pShare identity.
 
 ## Layout
 
-- Map: `../images/briggs_test/briggs_test.tif`
+- Map: `../../images/briggs_test/briggs_test.tif`
 - Datum: `42.3569186052, -71.0990291116`
 - Vehicle: `briggs`, rendered with the native `quadcopter` shape added by the
   companion MOOS-IvP feature branch
@@ -55,7 +55,7 @@ remains operator-selected and no multi-leg sequence is encoded.
 Start ArduCopter SITL in one terminal:
 
 ```bash
-cd missions/briggs_test
+cd missions/uav_solo/briggs_test
 ./launch_sitl.sh
 ```
 
@@ -78,8 +78,9 @@ or flight-mode commands.
 These settings are not used in MOOS-IvP simulation or real mode.
 
 In SITL, `pHelmIvP` supplies the waypoint course, speed, and altitude setpoints;
-`pArduBridge` streams them to ArduCopter in Guided mode. Capturing the waypoint
-hands control back to native flight-controller Loiter.
+`pArduBridge` streams them to ArduCopter in Guided mode. At capture, the Helm
+changes from waypoint travel to passive station keeping and ArduCopter remains
+in Guided mode.
 
 ## Real hardware
 
@@ -108,14 +109,17 @@ The normal visible workflow is:
 2. `TAKEOFF`
 3. Press `LEG 1`, `LEG 2`, and `LEG 3` as desired. In simulation, each click
    updates the single waypoint behavior. In SITL/real mode, each click posts
-   `HELM_STATUS=true`, one local/geodetic `NEXT_WAYPOINT`, and
-   `ARDU_COMMAND=FLY_WAYPOINT`; the bridge synchronizes the behavior with
+   one local/geodetic `NEXT_WAYPOINT` and triggers a short vehicle-side sequence
+   that enables Helm guidance after `pArduBridge` synchronizes the target with
    `TOWAYPT_UPDATE`. Verify that `UAV_COMMAND_RESULT` reports `MOOS_GUIDANCE`
    before issuing the next command.
 4. Press `HOME` to fly the fixed home waypoint.
-5. On real hardware, confirm `UAV_LANDING_TARGET_AVAILABLE=1` and a fresh
+5. At capture, the Helm permits drift inside the 5 m hibernation radius and
+   guides the vehicle back when it leaves that zone. The flight controller
+   remains in Guided mode and continues holding the commanded altitude.
+6. On real hardware, confirm `UAV_LANDING_TARGET_AVAILABLE=1` and a fresh
    `UAV_LANDING_TARGET_AGE`
-6. Press `PREC LAND`.
+7. Press `PREC LAND`.
 
 `DISARM`, `FC LOITER`, `PREC OFF`, `VIZ HOME`, and `RTL (FC)` remain available
 as explicit operator controls; they are not additional steps in the normal
@@ -126,10 +130,10 @@ The labels are intentionally similar across modes, but their underlying
 postings differ:
 
 - `--sim` LEG/HOME buttons post `WPT_UPDATE` to one `BHV_Waypoint` behavior.
-- `--sitl` and `--real` LEG/HOME buttons enable the Helm and post one
-  `NEXT_WAYPOINT` containing matching local/geodetic coordinates plus
-  `ARDU_COMMAND=FLY_WAYPOINT`. `pArduBridge` posts the synchronized
-  `TOWAYPT_UPDATE` that drives the same waypoint behavior.
+- `--sitl` and `--real` LEG/HOME buttons post one `NEXT_WAYPOINT` containing
+  matching local/geodetic coordinates and trigger a vehicle-side sequence.
+  `pArduBridge` posts the synchronized `TOWAYPT_UPDATE`; the sequence then
+  activates the waypoint behavior.
 
 The pMarineViewer `Variable` selector includes command result, armed state,
 landed state, altitude, landing-target availability/age, autopilot mode,
@@ -144,22 +148,25 @@ and real mode, the vehicle community bridges measured `NAV_ALTITUDE` from
 | `ARM` | Publishes representative armed/mode state. | Requests arming through `pArduBridge`. |
 | `DISARM` | Parks the helm and publishes disarmed/on-ground state. | Requests disarming; the bridge requires fresh `ON_GROUND` telemetry. |
 | `TAKEOFF` | Keeps horizontal motion stopped and publishes 8 m simulated altitude state. Vertical flight is not modeled. | Requests an ArduCopter takeoff to the configured 8 m AGL altitude. |
-| `LEG 1` | Updates the Helm waypoint to `(-197,-140)`. | Enables Helm guidance to the corresponding target; capture switches to FC Loiter. |
-| `LEG 2` | Updates the Helm waypoint to `(-196,-162)`. | Enables Helm guidance to the corresponding target; capture switches to FC Loiter. |
-| `LEG 3` | Updates the Helm waypoint to `(-160,-152)`. | Enables Helm guidance to the corresponding target; capture switches to FC Loiter. |
-| `HOME` | Updates the Helm waypoint to fixed mapped home at `(-167,-131)`. | Uses the same Helm waypoint path to fixed home; capture switches to FC Loiter. |
-| `FC LOITER` | Stops horizontal motion with Helm all-stop. | Requests native flight-controller Loiter. |
-| `PREC LOITER` | Sends the single waypoint behavior to fixed mapped home, then all-stops at capture. | Requests native FC Loiter plus the precision-loiter auxiliary function. |
+| `LEG 1` | Updates the Helm waypoint to `(-197,-140)`; capture enters station keep. | Enables Helm guidance to the corresponding target; capture enters Helm station keep. |
+| `LEG 2` | Updates the Helm waypoint to `(-196,-162)`; capture enters station keep. | Enables Helm guidance to the corresponding target; capture enters Helm station keep. |
+| `LEG 3` | Updates the Helm waypoint to `(-160,-152)`; capture enters station keep. | Enables Helm guidance to the corresponding target; capture enters Helm station keep. |
+| `HOME` | Updates the Helm waypoint to fixed mapped home at `(-167,-131)`; capture enters station keep. | Uses the same Helm waypoint path to fixed home; capture enters Helm station keep. |
+| `FC LOITER` | Activates station keep centered on the vehicle's current position. | Requests native flight-controller Loiter. |
+| `PREC LOITER` | Sends the single waypoint behavior to fixed mapped home, then station-keeps at capture. | Requests native FC Loiter plus the precision-loiter auxiliary function. |
 | `PREC OFF` | Stops the simulated precision approach. | Disables the precision-loiter auxiliary function. |
 | `PREC LAND` | Parks the helm and publishes landed/disarmed simulated state. | Requests ArduCopter Land through the bridge's `AUTOLAND` command. |
 | `VIZ HOME` | Draws the fixed mapped home point. | Requests visualization of the flight controller's recorded home. |
 | `RETURN HOME` / `RTL (FC)` | Flies the helm to fixed mapped home. | Requests flight-controller Return-to-Launch using its recorded home. |
 
-All modes use one updateable `BHV_Waypoint` and no station-keeping behavior.
-Every leg and home selection uses that behavior. SIM capture undeploys the Helm
-and enters all-stop; SITL/real capture posts `LOITER_FC`, transferring control
-from the Helm to native ArduCopter Loiter. `RTL (FC)` remains an independent
-flight-controller return using its recorded home.
+All modes use one updateable `BHV_Waypoint`; every leg and home selection uses
+that behavior. Capture activates `BHV_StationKeep`, centered on the captured
+point. Its 1 m inner radius, 3 m outer radius, and 5 m hibernation radius allow
+the vehicle to drift without a horizontal correction inside the zone, then
+restore it with Helm guidance outside the zone. In SITL/real mode the bridge
+continues sending Guided setpoints, including the constant 8 m altitude target.
+`FC LOITER` and `RTL (FC)` remain explicit, independent flight-controller
+actions.
 
 SITL's `PLND_TYPE=4` target is internal to ArduPilot and does not emit a
 MAVLink `LANDING_TARGET` packet back to `pArduBridge`, so

@@ -139,7 +139,7 @@ a split Pi/Mac mission, launch the two subcommunities separately.
 On the Pi, start the simulated vehicle community:
 
 ```bash
-cd ~/moos-ivp-pearl/missions/b33_test
+cd ~/moos-ivp-pearl/missions/uav_solo/b33_test
 ./launch_vehicle.sh --mode=SIM --auto \
   --ip=10.0.0.2 --shore=10.0.0.1 \
   --mport=9001 --pshare=9201 --shore_pshare=9200
@@ -148,7 +148,7 @@ cd ~/moos-ivp-pearl/missions/b33_test
 On the Mac, start shoreside:
 
 ```bash
-cd ~/moos-ivp-pearl/missions/b33_test
+cd ~/moos-ivp-pearl/missions/uav_solo/b33_test
 ./launch_shoreside.sh --mode=SIM --auto \
   --ip=localhost --mport=9000 --pshare=9200
 ```

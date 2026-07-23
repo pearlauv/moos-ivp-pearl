@@ -3,7 +3,9 @@
 // NAME: Charles Benjamin
 //-------------------------------------------------
 
-ServerHost = $(IP_ADDR)
+// All processes in this community use the local MOOSDB. IP_ADDR is reserved
+// for the externally advertised pShare address in pHostInfo below.
+ServerHost = localhost
 ServerPort = $(MOOS_PORT)
 Community  = $(VNAME)
 
@@ -27,6 +29,7 @@ ProcessConfig = ANTLER
 #ifdef XMODE SIM
   Run = uSimMarineV22  @ NewConsole = false
   Run = pMarinePIDV22  @ NewConsole = false
+  Run = uTimerScript   @ NewConsole = false ~ uSimLegSequence
 #else
   Run = pArduBridge    @ NewConsole = false
   Run = uTimerScript   @ NewConsole = false ~ uLegSequence
@@ -92,6 +95,8 @@ ProcessConfig = pHostInfo
 {
   AppTick   = 1
   CommsTick = 1
+
+  default_hostip_force = $(IP_ADDR)
 }
 
 //----------------------------------------------------
@@ -164,6 +169,27 @@ ProcessConfig = uFldNodeBroker
 
 //----------------------------------------------------
 #ifdef XMODE SIM
+//----------------------------------------------------
+// Reset the travel latch locally for each distinct operator leg request. This
+// avoids relying on repeated false/true values being resent through pShare.
+ProcessConfig = uSimLegSequence
+{
+  AppTick   = 10
+  CommsTick = 10
+
+  condition     = LEG_REQUEST != ""
+  upon_awake    = restart
+  script_atomic = true
+  reset_max     = unlimited
+  paused        = false
+  script_name   = SIM_LEG_SEQUENCE
+
+  event = var=STATION_KEEP,     val=false, time=0
+  event = var=PRECISION_LOITER, val=false, time=0
+  event = var=GO,               val=true,  time=0.05
+  event = var=LEG_REQUEST,      val="",    time=0.10
+}
+
 ProcessConfig = uSimMarineV22
 {
   AppTick   = 10
@@ -231,7 +257,7 @@ ProcessConfig = uLegSequence
   AppTick   = 10
   CommsTick = 10
 
-  condition     = LEG_REQUEST=true
+  condition     = LEG_REQUEST != ""
   upon_awake    = restart
   script_atomic = true
   reset_max     = unlimited
@@ -243,7 +269,7 @@ ProcessConfig = uLegSequence
   event = var=ARDU_COMMAND, val=FLY_WAYPOINT, time=0.25
   event = var=STATION_KEEP, val=false,        time=0.50
   event = var=LEG_ACTIVE,   val=true,         time=0.60
-  event = var=LEG_REQUEST,  val=false,        time=0.75
+  event = var=LEG_REQUEST,  val="",           time=0.75
 }
 
 //----------------------------------------------------
