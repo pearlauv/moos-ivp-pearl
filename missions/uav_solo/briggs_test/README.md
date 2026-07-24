@@ -53,7 +53,7 @@ valid SITL binary already exists.
 
 In SITL, `pHelmIvP` supplies route course, speed, and altitude setpoints.
 `pArduBridge` streams them to ArduCopter in Guided mode. Route completion and
-CLEAR transfer the captured current position and configured 8 m altitude to
+CLEAR transfers the captured current latitude, longitude, and altitude to
 ArduCopter as a native Guided position hold. The bridge also captures and
 holds the current yaw, so the vehicle does not keep chasing a Helm course.
 
@@ -114,7 +114,7 @@ In SIM, the StationKeep behavior has a 1 m inner radius, 3 m outer radius, and
 5 m hibernation radius. It permits passive drift within the hibernation zone
 and restores the vehicle with Helm guidance outside it. In SITL/real, the route
 endflag explicitly posts `ARDU_COMMAND=HOLD_POSITION`. `pArduBridge` captures
-the current latitude, longitude, yaw, and configured altitude and refreshes
+the current latitude, longitude, altitude, and yaw and refreshes
 that native ArduCopter Guided target. `STATION_KEEP` remains a mission/Helm
 concept used only by SIM; `pArduBridge` does not subscribe to it. A later
 DEPLOY returns control to the Helm route.

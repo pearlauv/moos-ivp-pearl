@@ -192,6 +192,7 @@ ProcessConfig = pMarineViewer
   scope = DESIRED_ALTITUDE
   scope = PROC_WATCH_SUMMARY
   scope = PROC_WATCH_ALL_OK
+  scope = VEHICLE_PROC_WATCH_ALL_OK
 
   left_context[route] = ROUTE_UPDATE_ALL = "name=active # order=normal # newpt=$[XPOS],$[YPOS] # duration=-1"
   left_context[route] = VIEW_POINT = x=$[XPOS],y=$[YPOS],label=route_$[IX],type=route_pending,label_color=invisible,vertex_color=yellow,vertex_size=8,active=true

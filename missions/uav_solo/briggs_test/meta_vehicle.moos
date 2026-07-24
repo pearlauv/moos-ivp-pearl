@@ -164,6 +164,7 @@ ProcessConfig = uFldNodeBroker
   bridge = src=AUTOPILOT_MODE
   bridge = src=CONTROL_AUTHORITY
   bridge = src=IVPHELM_STATE
+  bridge = src=PROC_WATCH_ALL_OK, alias=VEHICLE_PROC_WATCH_ALL_OK
 #ifdef XMODE SIM
   bridge = src=STATION_KEEP
 #else
@@ -358,6 +359,7 @@ ProcessConfig = pArduBridge
   prefix = NAV
 
   takeoff_altitude              = $(TAKEOFF_ALTITUDE)
+  helm_setpoint_timeout         = 2
   command_groundspeed           = true
   is_sim                        = $(IS_SIM)
   logger                        = false
