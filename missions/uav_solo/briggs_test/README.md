@@ -116,6 +116,10 @@ heartbeat, twenty continuous seconds without another heartbeat causes
 the Helm and any mission return waypoint. Headless launches do not arm the
 dead-man until a heartbeat is explicitly posted. Vehicle AppCast terminal
 reports are limited to one every two seconds to reduce radio load.
+RealmCast auto-bridging is disabled in both field brokers to keep RealmCast
+request/response traffic off the radio link. Each community still runs its
+local `pRealm`, and the Pi's complete `pLogger` logs remain available directly
+over Ethernet or from local storage.
 
 ## Buttons
 

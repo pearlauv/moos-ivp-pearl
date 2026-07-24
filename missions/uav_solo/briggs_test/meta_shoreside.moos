@@ -116,6 +116,7 @@ ProcessConfig = uFldShoreBroker
   CommsTick = 10
 
   auto_bridge_appcast = true
+  auto_bridge_realmcast = false
 
 #ifdef XMODE SIM
   qbridge = AUTOPILOT_MODE

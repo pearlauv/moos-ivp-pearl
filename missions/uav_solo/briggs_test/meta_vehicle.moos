@@ -144,6 +144,7 @@ ProcessConfig = uFldNodeBroker
   CommsTick = 1
   term_report_interval = 2
 
+  auto_bridge_realmcast = false
   try_shore_host = pshare_route=$(SHORE_IP):$(SHORE_PSHARE)
 
   bridge = src=NODE_REPORT_LOCAL, alias=NODE_REPORT
