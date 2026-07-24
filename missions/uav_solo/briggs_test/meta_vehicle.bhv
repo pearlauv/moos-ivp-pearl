@@ -8,7 +8,7 @@ initialize ROUTE_DEPLOY          = false
 initialize ROUTE_READY           = false
 initialize ROUTE_CLEAR           = false
 initialize STATION_KEEP          = false
-initialize MOOS_MANUAL_OVERRIDE  = true
+initialize MOOS_MANUAL_OVERRIDE  = false
 #else
 initialize ROUTE_DEPLOY         = false
 initialize ROUTE_READY          = false
@@ -31,7 +31,7 @@ Behavior = BHV_Waypoint
   spawnflag  = ROUTE_CLEAR=false
 
 #ifdef XMODE SIM
-  condition = (ROUTE_CLEAR=true) or ((ROUTE_DEPLOY=true) and (MOOS_MANUAL_OVERRIDE=false))
+  condition = (ROUTE_CLEAR=true) or (ROUTE_DEPLOY=true)
 #else
   // Form the Helm decision before pArduBridge transfers control authority.
   condition = (ROUTE_CLEAR=true) or (ROUTE_DEPLOY=true)

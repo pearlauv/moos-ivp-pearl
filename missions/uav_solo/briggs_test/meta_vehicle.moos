@@ -26,6 +26,7 @@ ProcessConfig = ANTLER
   Run = pNodeReporter  @ NewConsole = false
   Run = uFldNodeBroker @ NewConsole = false
   Run = pHelmIvP       @ NewConsole = false
+  Run = uTimerScript   @ NewConsole = false ~ uRouteClear
 #ifdef XMODE SIM
   Run = uSimMarineV22  @ NewConsole = false
   Run = pMarinePIDV22  @ NewConsole = false
@@ -233,18 +234,40 @@ ProcessConfig = pHelmIvP
 
   ok_skew   = any
   behaviors = targ_$(VNAME).bhv
-#ifdef XMODE SIM
-#else
   // Route points may be staged before DEPLOY. DRIVE is safe here because all
   // horizontal behaviors remain idle until their explicit conditions are met.
   start_in_drive = true
-#endif
   Domain    = course:0:359:360
   Domain    = speed:0:5:51
 #ifdef XMODE SIM
 #else
   Domain    = altitude:0:30:61
 #endif
+}
+
+//----------------------------------------------------
+// Expand one repeatable cross-link CLEAR request into local route cleanup.
+// All route-control consequences remain inside the vehicle community.
+ProcessConfig = uRouteClear
+{
+  AppTick   = 10
+  CommsTick = 10
+  term_report_interval = 2
+
+  condition     = ROUTE_CLEAR = true
+  upon_awake    = restart
+  script_atomic = true
+  reset_max     = unlimited
+  paused        = false
+  script_name   = ROUTE_CLEAR_SEQUENCE
+
+  event = var=ROUTE_DEPLOY, val=false, time=0
+#ifdef XMODE SIM
+#else
+  event = var=ROUTE_EXECUTE, val=false, time=0
+#endif
+  event = var=ROUTE_UPDATE, val="name=active # duration=0", time=0.10
+  event = var=ROUTE_CLEAR,  val=false, time=0.75
 }
 
 #ifdef XMODE SIM
@@ -261,12 +284,13 @@ ProcessConfig = uRouteSequence
   condition     = ROUTE_EXECUTE = true
   condition     = ROUTE_READY = true
   upon_awake    = restart
-  script_atomic = true
+  // CLEAR locally sets ROUTE_EXECUTE=false, which must be allowed to pause
+  // this handoff before a pending FLY_WAYPOINT post.
+  script_atomic = false
   reset_max     = unlimited
   paused        = false
   script_name   = COPTER_ROUTE_SEQUENCE
   status_var    = ROUTE_SEQUENCE_STATUS
-
   event = var=HELM_STATUS,   val=true,         time=0
   event = var=ROUTE_DEPLOY,  val=true,         time=0.20
   event = var=ARDU_COMMAND,  val=FLY_WAYPOINT, time=0.80

@@ -95,13 +95,20 @@ verified target traffic, and correct sensor orientation and offsets.
 Every mouse click updates one named, dynamically spawned `BHV_Waypoint`.
 The first click starts the route; later clicks append to the same route. Route
 completion or CLEAR removes that behavior instance, so the next click starts a
-new list. In SITL/real mode, pHelmIvP starts in DRIVE with these behaviors idle
-so it can retain every staged point before DEPLOY. DEPLOY first activates the
+new list. In all modes, pHelmIvP starts in DRIVE with these behaviors idle so
+it can retain every staged point before DEPLOY. DEPLOY first activates the
 staged behavior so pHelm can form a complete decision, then sends the established
-`FLY_WAYPOINT` command while the Helm is on. This selects its Helm-guidance
-branch: pArduBridge requests Guided mode and enters `HELM_TOWAYPT` without
-requiring or duplicating a `NEXT_WAYPOINT`. The staged `BHV_Waypoint` remains
-the sole route owner.
+`FLY_WAYPOINT` command while the Helm is on in SITL/real mode. This selects its
+Helm-guidance branch: pArduBridge requests Guided mode and enters
+`HELM_TOWAYPT` without requiring or duplicating a `NEXT_WAYPOINT`. The staged
+`BHV_Waypoint` remains the sole route owner.
+
+`CLEAR` sends one repeatable `ROUTE_CLEAR=true` request across the community
+link. A vehicle-local `uTimerScript` sequence cancels route execution, empties
+the dynamic waypoint list, and resets the clear request. Repeated CLEAR presses
+therefore converge on the same empty-route state without sending a multi-part
+route operation over pShare. The map-marker clear remains a local pMarineViewer
+action.
 
 In SIM, the StationKeep behavior has a 1 m inner radius, 3 m outer radius, and
 5 m hibernation radius. It permits passive drift within the hibernation zone
@@ -130,11 +137,11 @@ over Ethernet or from local storage.
 | Button | `--sim` | `--sitl` and `--real` |
 | --- | --- | --- |
 | `ARM` | Publishes simulated armed state. | Requests arming through `pArduBridge`. |
-| `DISARM` | Parks horizontal guidance and publishes on-ground state. | Requests manual override/RTL and disarming through `pArduBridge`; airborne disarm is rejected while RTL remains active. |
+| `DISARM` | Cancels route execution and publishes on-ground state without parking the Helm. | Requests manual override/RTL and disarming through `pArduBridge`; airborne disarm is rejected while RTL remains active. |
 | `TAKEOFF` | Publishes the configured simulated altitude. | Requests Copter takeoff to the configured altitude. |
 | `DEPLOY` | Activates the complete staged route. | Performs the Guided/Helm handoff, then activates the complete route. |
 | `CLEAR` | Deletes the route and enters StationKeep. | Deletes the route and enters native Guided XYZ hold. |
-| `PREC LAND` | Publishes simulated landed/disarmed state. | Requests Copter Land through `pArduBridge`. |
+| `PREC LAND` | Cancels route execution and publishes simulated landed/disarmed state without parking the Helm. | Requests Copter Land through `pArduBridge`. |
 
 In SITL/real mode, `PREC LAND` cancels route traversal, parks pHelmIvP, and asks
 ArduCopter to enter Land mode through `pArduBridge`. In SIM it only models the
