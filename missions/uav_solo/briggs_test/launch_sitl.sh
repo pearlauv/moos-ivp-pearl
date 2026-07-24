@@ -47,6 +47,8 @@ if [ ! -x "$SIM_VEHICLE" ]; then
   echo "$ME: ArduPilot sim_vehicle.py not found at: $SIM_VEHICLE"
   exit 1
 fi
+SITL_DIR="$MISSION_DIR/SITL_briggs_test"
+mkdir -p "$SITL_DIR"
 
 #------------------------------------------------------------
 #  Part 3: Launch ArduCopter SITL at the marked home point
@@ -54,7 +56,7 @@ fi
 ARGS=(-v ArduCopter -f quad)
 ARGS+=(--custom-location="$HOME_LAT,$HOME_LON,5,0")
 ARGS+=(--speedup="$SPEEDUP")
-ARGS+=(--use-dir="$MISSION_DIR/SITL_briggs_test")
+ARGS+=(--use-dir="$SITL_DIR")
 ARGS+=(--add-param-file="$MISSION_DIR/sitl.parm")
 ARGS+=(--no-mavproxy)
 ARGS+=(--sitl-instance-args="--serial1=udpclient:127.0.0.1:14551")

@@ -96,8 +96,12 @@ Every mouse click updates one named, dynamically spawned `BHV_Waypoint`.
 The first click starts the route; later clicks append to the same route. Route
 completion or CLEAR removes that behavior instance, so the next click starts a
 new list. In SITL/real mode, pHelmIvP starts in DRIVE with these behaviors idle
-so it can retain every staged point before DEPLOY; ArduCopter does not transfer
-to Helm guidance until DEPLOY performs the explicit handoff.
+so it can retain every staged point before DEPLOY. DEPLOY first activates the
+staged behavior so pHelm can form a complete decision, then sends the established
+`FLY_WAYPOINT` command while the Helm is on. This selects its Helm-guidance
+branch: pArduBridge requests Guided mode and enters `HELM_TOWAYPT` without
+requiring or duplicating a `NEXT_WAYPOINT`. The staged `BHV_Waypoint` remains
+the sole route owner.
 
 In SIM, the StationKeep behavior has a 1 m inner radius, 3 m outer radius, and
 5 m hibernation radius. It permits passive drift within the hibernation zone

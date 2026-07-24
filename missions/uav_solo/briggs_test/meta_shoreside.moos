@@ -88,7 +88,7 @@ ProcessConfig = pHostInfo
 
   // Pin the broker-advertised address to --ip. This prevents automatic
   // interface discovery from selecting Wi-Fi, Ethernet, or Tailscale.
-  default_hostip_force = $(IP_ADDR)
+  default_hostip_force = $(IP_ADDR=localhost)
 }
 
 //----------------------------------------------------

@@ -102,7 +102,7 @@ ProcessConfig = pHostInfo
 
   // Pin the broker-advertised address to --ip. This prevents automatic
   // interface discovery from selecting Wi-Fi, Ethernet, or Tailscale.
-  default_hostip_force = $(IP_ADDR)
+  default_hostip_force = $(IP_ADDR=localhost)
 }
 
 //----------------------------------------------------
@@ -267,10 +267,10 @@ ProcessConfig = uRouteSequence
   script_name   = COPTER_ROUTE_SEQUENCE
   status_var    = ROUTE_SEQUENCE_STATUS
 
-  event = var=HELM_STATUS,   val=true,          time=0
-  event = var=ARDU_COMMAND,  val=HELM_GUIDANCE, time=0.20
-  event = var=ROUTE_DEPLOY,  val=true,          time=0.50
-  event = var=ROUTE_EXECUTE, val=false,         time=0.60
+  event = var=HELM_STATUS,   val=true,         time=0
+  event = var=ROUTE_DEPLOY,  val=true,         time=0.20
+  event = var=ARDU_COMMAND,  val=FLY_WAYPOINT, time=0.80
+  event = var=ROUTE_EXECUTE, val=false,        time=0.90
 }
 
 //----------------------------------------------------
