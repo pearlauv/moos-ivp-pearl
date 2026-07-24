@@ -27,6 +27,7 @@ ProcessConfig = ANTLER
   Run = uFldNodeBroker @ NewConsole = false
   Run = pHelmIvP       @ NewConsole = false
   Run = uTimerScript   @ NewConsole = false ~ uRouteClear
+  Run = uTimerScript   @ NewConsole = false ~ uDeployGuard
 #ifdef XMODE SIM
   Run = uSimMarineV22  @ NewConsole = false
   Run = pMarinePIDV22  @ NewConsole = false
@@ -268,6 +269,34 @@ ProcessConfig = uRouteClear
 #endif
   event = var=ROUTE_UPDATE, val="name=active # duration=0", time=0.10
   event = var=ROUTE_CLEAR,  val=false, time=0.75
+}
+
+//----------------------------------------------------
+// Consume DEPLOY when no route is staged. This prevents a request from
+// remaining armed and activating automatically when the next point arrives.
+ProcessConfig = uDeployGuard
+{
+  AppTick   = 10
+  CommsTick = 10
+  term_report_interval = 2
+
+#ifdef XMODE SIM
+  condition = ROUTE_DEPLOY = true
+#else
+  condition = ROUTE_EXECUTE = true
+#endif
+  condition     = ROUTE_READY = false
+  upon_awake    = restart
+  script_atomic = true
+  reset_max     = unlimited
+  paused        = false
+  script_name   = ROUTE_DEPLOY_GUARD
+
+#ifdef XMODE SIM
+  event = var=ROUTE_DEPLOY,  val=false, time=0
+#else
+  event = var=ROUTE_EXECUTE, val=false, time=0
+#endif
 }
 
 #ifdef XMODE SIM
