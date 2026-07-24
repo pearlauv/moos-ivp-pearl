@@ -8,9 +8,10 @@ SIM_PLD_HEIGHT    0
 SIM_PLD_ALT_LMT  15
 SIM_PLD_DIST_LMT 12
 
-# The helper supplies neutral throttle only while native Loiter is active.
+# The SITL helper centers yaw without overriding the default low throttle.
 FS_THR_ENABLE     0
 FLTMODE_CH        0
+GUID_OPTIONS      4
 
 # Direct TCP is serial link 0. Keep navigation/state streams explicit because
 # this launch path intentionally does not depend on MAVProxy to request them.

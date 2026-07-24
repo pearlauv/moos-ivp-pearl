@@ -31,6 +31,7 @@ ProcessConfig = ANTLER
   Run = pMarinePIDV22  @ NewConsole = false
 #else
   Run = pArduBridge    @ NewConsole = false
+  Run = pDeadManPost   @ NewConsole = false
   Run = uTimerScript   @ NewConsole = false ~ uLegSequence
 #endif
 }
@@ -49,6 +50,7 @@ ProcessConfig = pRealm
 {
   AppTick   = 4
   CommsTick = 4
+  term_report_interval = 2
 
   relcast_interval = 0.8
   summary_interval = 2.0
@@ -59,6 +61,7 @@ ProcessConfig = uProcessWatch
 {
   AppTick   = 1
   CommsTick = 1
+  term_report_interval = 2
 
   allow_retractions = true
   watch_all         = true
@@ -74,6 +77,7 @@ ProcessConfig = uLoadWatch
 {
   AppTick   = 1
   CommsTick = 1
+  term_report_interval = 2
 
 #ifdef XMODE SIM
   thresh = app=uSimMarineV22, gapthresh=3
@@ -94,6 +98,7 @@ ProcessConfig = pHostInfo
 {
   AppTick   = 1
   CommsTick = 1
+  term_report_interval = 2
 
   // Pin the broker-advertised address to --ip. This prevents automatic
   // interface discovery from selecting Wi-Fi, Ethernet, or Tailscale.
@@ -121,6 +126,7 @@ ProcessConfig = pNodeReporter
 {
   AppTick   = 4
   CommsTick = 4
+  term_report_interval = 2
 
   platform_type   = quadcopter
   platform_color  = $(COLOR)
@@ -136,6 +142,7 @@ ProcessConfig = uFldNodeBroker
 {
   AppTick   = 1
   CommsTick = 1
+  term_report_interval = 2
 
   try_shore_host = pshare_route=$(SHORE_IP):$(SHORE_PSHARE)
 
@@ -176,6 +183,7 @@ ProcessConfig = uSimMarineV22
 {
   AppTick   = 10
   CommsTick = 10
+  term_report_interval = 2
 
   start_pos = -173, -128, 90
   prefix    = NAV
@@ -194,6 +202,7 @@ ProcessConfig = pMarinePIDV22
 {
   AppTick   = 10
   CommsTick = 10
+  term_report_interval = 2
 
   verbose       = false
   depth_control = false
@@ -220,6 +229,7 @@ ProcessConfig = pHelmIvP
 {
   AppTick   = 4
   CommsTick = 4
+  term_report_interval = 2
 
   ok_skew   = any
   behaviors = targ_$(VNAME).bhv
@@ -246,6 +256,7 @@ ProcessConfig = uLegSequence
 {
   AppTick   = 10
   CommsTick = 10
+  term_report_interval = 2
 
   condition     = LEG_REQUEST != ""
   condition     = ROUTE_READY = true
@@ -256,9 +267,9 @@ ProcessConfig = uLegSequence
   script_name   = COPTER_LEG_SEQUENCE
   status_var    = LEG_SEQUENCE_STATUS
 
-  event = var=HELM_STATUS,  val=true,         time=0
+  event = var=STATION_KEEP, val=false,        time=0
+  event = var=HELM_STATUS,  val=true,         time=0.05
   event = var=ARDU_COMMAND, val=FLY_WAYPOINT, time=0.25
-  event = var=STATION_KEEP, val=false,        time=0.50
   event = var=LEG_ACTIVE,   val=true,         time=0.60
   event = var=ROUTE_CLEAR,  val=false,        time=0.60
   event = var=ROUTE_DEPLOY, val=true,         time=0.65
@@ -266,10 +277,27 @@ ProcessConfig = uLegSequence
 }
 
 //----------------------------------------------------
+ProcessConfig = pDeadManPost
+{
+  AppTick   = 4
+  CommsTick = 4
+  term_report_interval = 2
+
+  // Arm only after the first viewer heartbeat. Ten continuous seconds
+  // without another heartbeat requests RTL through pArduBridge.
+  heartbeat_var   = HEARTBEAT
+  max_noheart     = 10
+  post_policy     = reset
+  active_at_start = false
+  deadflag        = DEAD_MAN_POST_INTERRUPT = true
+}
+
+//----------------------------------------------------
 ProcessConfig = pArduBridge
 {
   AppTick   = 10
   CommsTick = 10
+  term_report_interval = 2
 
   url          = $(AP_URL)
   url_protocol = $(AP_PROTOCOL)

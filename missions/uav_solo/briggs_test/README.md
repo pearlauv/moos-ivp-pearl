@@ -14,7 +14,7 @@ normal route interface.
 - Datum: `42.3569186052, -71.0990291116`
 - Vehicle: `briggs`
 - Route altitude in SITL/real mode: 8 m AGL by default
-- Route endpoint: passive Helm StationKeep
+- Route endpoint in SITL/real: native ArduCopter Guided 3D hold
 
 The top-level `launch.sh` runs both communities locally. For a split
 vehicle/shoreside deployment over the Holybro SiK PPP link, run the
@@ -53,8 +53,9 @@ valid SITL binary already exists.
 
 In SITL, `pHelmIvP` supplies route course, speed, and altitude setpoints.
 `pArduBridge` streams them to ArduCopter in Guided mode. Route completion and
-CLEAR both transfer horizontal guidance to passive Helm StationKeep while
-ArduCopter remains in Guided mode.
+CLEAR transfer the captured current position and configured 8 m altitude to
+ArduCopter as a native Guided position hold. The bridge also captures and
+holds the current yaw, so the vehicle does not keep chasing a Helm course.
 
 ## Real hardware
 
@@ -83,10 +84,12 @@ verified target traffic, and correct sensor orientation and offsets.
    counter is global to the viewer and does not reset when a route is cleared.
 3. Press `ARM`, then `TAKEOFF`.
 4. Press `DEPLOY` once to traverse the complete selected route.
-5. At the final waypoint, the route is discarded and passive StationKeep is
-   centered at the captured position.
+5. At the final waypoint, the route is discarded. SIM enters passive Helm
+   StationKeep; SITL/real transfers the captured position to native Guided
+   hold.
 6. Press `CLEAR` at any time to discard the selected/active route, clear its
-   map markers, and enter passive StationKeep at the current position.
+   map markers, and hold the current position using the same mode-specific
+   endpoint behavior.
 7. Use `PREC LAND` only for the qualified precision-landing workflow.
 
 Every mouse click updates one named, dynamically spawned `BHV_Waypoint`.
@@ -96,12 +99,20 @@ new list. In SITL/real mode, pHelmIvP starts in DRIVE with these behaviors idle
 so it can retain every staged point before DEPLOY; ArduCopter does not transfer
 to Helm guidance until DEPLOY performs the explicit handoff.
 
-The StationKeep behavior has a 1 m inner radius, 3 m outer radius, and 5 m
-hibernation radius. It permits passive drift within the hibernation zone and
-restores the vehicle with Helm guidance outside it. StationKeep is locally
-inhibited whenever `ROUTE_DEPLOY=true`, so it cannot compete with an active
-route if a repeated shoreside state update is suppressed. In SITL/real mode,
-`BHV_ConstantAltitude` continues commanding the configured altitude.
+In SIM, the StationKeep behavior has a 1 m inner radius, 3 m outer radius, and
+5 m hibernation radius. It permits passive drift within the hibernation zone
+and restores the vehicle with Helm guidance outside it. In SITL/real,
+`STATION_KEEP=true` asks `pArduBridge` to capture the current latitude and
+longitude and command ArduCopter's Guided position target at the configured
+altitude. A later DEPLOY returns control to the Helm route.
+Briggs uses `GUID_OPTIONS=4` so pilot yaw input cannot compete with the
+autonomous yaw target while Guided owns the vehicle.
+
+The live pMarineViewer emits a `HEARTBEAT` to the vehicle. After the first
+heartbeat, ten continuous seconds without another heartbeat causes
+`pDeadManPost` to request RTL through `pArduBridge`. Headless launches do not
+arm the dead-man until a heartbeat is explicitly posted. Vehicle AppCast
+terminal reports are limited to one every two seconds to reduce radio load.
 
 ## Buttons
 
@@ -111,12 +122,16 @@ route if a repeated shoreside state update is suppressed. In SITL/real mode,
 | `DISARM` | Parks horizontal guidance and publishes on-ground state. | Requests disarming through `pArduBridge`. |
 | `TAKEOFF` | Publishes the configured simulated altitude. | Requests Copter takeoff to the configured altitude. |
 | `DEPLOY` | Activates the complete staged route. | Performs the Guided/Helm handoff, then activates the complete route. |
-| `CLEAR` | Deletes the route and enters StationKeep. | Deletes the route and enters Guided Helm StationKeep. |
+| `CLEAR` | Deletes the route and enters StationKeep. | Deletes the route and enters native Guided XYZ hold. |
 | `PREC LAND` | Publishes simulated landed/disarmed state. | Requests Copter Land through `pArduBridge`. |
 
 In SITL/real mode, `PREC LAND` cancels route traversal, parks pHelmIvP, and asks
 ArduCopter to enter Land mode through `pArduBridge`. In SIM it only models the
 corresponding landed state and does not simulate a landing target sensor.
+
+For a split-host flight, launch the Pi vehicle subcommunity with `--auto`.
+That suppresses the Pi-side uMAC; use the shoreside pMarineViewer as the only
+interactive AppCast requester and close any extra uMAC/uMAC-like viewers.
 
 ## Generation and cleanup
 
