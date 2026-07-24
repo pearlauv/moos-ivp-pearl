@@ -13,8 +13,7 @@ initialize MOOS_MANUAL_OVERRIDE  = true
 initialize ROUTE_DEPLOY         = false
 initialize ROUTE_READY          = false
 initialize ROUTE_CLEAR          = false
-initialize LEG_ACTIVE           = false
-initialize STATION_KEEP          = false
+initialize ROUTE_EXECUTE         = false
 initialize DESIRED_ALTITUDE      = $(TAKEOFF_ALTITUDE)
 #endif
 
@@ -28,23 +27,23 @@ Behavior = BHV_Waypoint
   pwt        = 100
   updates    = ROUTE_UPDATE
   templating = spawn
+  spawnflag  = ROUTE_READY=true
+  spawnflag  = ROUTE_CLEAR=false
 
-  condition = ROUTE_DEPLOY=true
 #ifdef XMODE SIM
-  condition = (ROUTE_CLEAR=true) or (MOOS_MANUAL_OVERRIDE=false)
+  condition = (ROUTE_CLEAR=true) or ((ROUTE_DEPLOY=true) and (MOOS_MANUAL_OVERRIDE=false))
 #else
-  condition = (ROUTE_CLEAR=true) or (AUTOPILOT_MODE=HELM_TOWAYPT)
-  condition = (ROUTE_CLEAR=true) or (LEG_ACTIVE=true)
+  condition = (ROUTE_CLEAR=true) or ((ROUTE_DEPLOY=true) and (AUTOPILOT_MODE=HELM_TOWAYPT))
 #endif
 
   endflag = ROUTE_DEPLOY=false
   endflag = ROUTE_READY=false
   endflag = ROUTE_CLEAR=false
-  endflag = STATION_KEEP=true
 #ifdef XMODE SIM
+  endflag = STATION_KEEP=true
   endflag = AUTOPILOT_MODE=SIM_STATION_KEEP
 #else
-  endflag = LEG_ACTIVE=false
+  endflag = ARDU_COMMAND=HOLD_POSITION
 #endif
 
   speed          = 3
@@ -69,16 +68,13 @@ Behavior = BHV_Waypoint
 
 //----------------------------------------------------
 // Allow passive drift inside the hibernation radius, then use Helm guidance
-// to return to the captured endpoint. ArduCopter remains in Guided mode.
+// to return to the captured endpoint.
+#ifdef XMODE SIM
 Behavior = BHV_StationKeep
 {
   name      = operator_station_keep
   pwt       = 100
-#ifdef XMODE SIM
   condition = MOOS_MANUAL_OVERRIDE=false
-#else
-  condition = AUTOPILOT_MODE=HELM_TOWAYPT
-#endif
   condition = STATION_KEEP=true
   condition = ROUTE_DEPLOY=false
 
@@ -90,6 +86,7 @@ Behavior = BHV_StationKeep
   transit_speed      = 3
   swing_time         = 2
 }
+#endif
 
 #ifdef XMODE SIM
 #else

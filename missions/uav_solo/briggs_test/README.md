@@ -101,25 +101,28 @@ to Helm guidance until DEPLOY performs the explicit handoff.
 
 In SIM, the StationKeep behavior has a 1 m inner radius, 3 m outer radius, and
 5 m hibernation radius. It permits passive drift within the hibernation zone
-and restores the vehicle with Helm guidance outside it. In SITL/real,
-`STATION_KEEP=true` asks `pArduBridge` to capture the current latitude and
-longitude and command ArduCopter's Guided position target at the configured
-altitude. A later DEPLOY returns control to the Helm route.
+and restores the vehicle with Helm guidance outside it. In SITL/real, the route
+endflag explicitly posts `ARDU_COMMAND=HOLD_POSITION`. `pArduBridge` captures
+the current latitude, longitude, yaw, and configured altitude and refreshes
+that native ArduCopter Guided target. `STATION_KEEP` remains a mission/Helm
+concept used only by SIM; `pArduBridge` does not subscribe to it. A later
+DEPLOY returns control to the Helm route.
 Briggs uses `GUID_OPTIONS=4` so pilot yaw input cannot compete with the
 autonomous yaw target while Guided owns the vehicle.
 
 The live pMarineViewer emits a `HEARTBEAT` to the vehicle. After the first
-heartbeat, ten continuous seconds without another heartbeat causes
-`pDeadManPost` to request RTL through `pArduBridge`. Headless launches do not
-arm the dead-man until a heartbeat is explicitly posted. Vehicle AppCast
-terminal reports are limited to one every two seconds to reduce radio load.
+heartbeat, twenty continuous seconds without another heartbeat causes
+`pDeadManPost` to request native ArduPilot RTL through `pArduBridge`, bypassing
+the Helm and any mission return waypoint. Headless launches do not arm the
+dead-man until a heartbeat is explicitly posted. Vehicle AppCast terminal
+reports are limited to one every two seconds to reduce radio load.
 
 ## Buttons
 
 | Button | `--sim` | `--sitl` and `--real` |
 | --- | --- | --- |
 | `ARM` | Publishes simulated armed state. | Requests arming through `pArduBridge`. |
-| `DISARM` | Parks horizontal guidance and publishes on-ground state. | Requests disarming through `pArduBridge`. |
+| `DISARM` | Parks horizontal guidance and publishes on-ground state. | Requests manual override/RTL and disarming through `pArduBridge`; airborne disarm is rejected while RTL remains active. |
 | `TAKEOFF` | Publishes the configured simulated altitude. | Requests Copter takeoff to the configured altitude. |
 | `DEPLOY` | Activates the complete staged route. | Performs the Guided/Helm handoff, then activates the complete route. |
 | `CLEAR` | Deletes the route and enters StationKeep. | Deletes the route and enters native Guided XYZ hold. |

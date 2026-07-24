@@ -32,7 +32,7 @@ ProcessConfig = ANTLER
 #else
   Run = pArduBridge    @ NewConsole = false
   Run = pDeadManPost   @ NewConsole = false
-  Run = uTimerScript   @ NewConsole = false ~ uLegSequence
+  Run = uTimerScript   @ NewConsole = false ~ uRouteSequence
 #endif
 }
 
@@ -161,10 +161,9 @@ ProcessConfig = uFldNodeBroker
   bridge = src=AUTOPILOT_MODE
   bridge = src=CONTROL_AUTHORITY
   bridge = src=IVPHELM_STATE
-  bridge = src=STATION_KEEP
 #ifdef XMODE SIM
+  bridge = src=STATION_KEEP
 #else
-  bridge = src=TOWAYPT_UPDATE
   bridge = src=DESIRED_HEADING
   bridge = src=DESIRED_SPEED
   bridge = src=DESIRED_ALTITUDE
@@ -250,30 +249,27 @@ ProcessConfig = pHelmIvP
 #ifdef XMODE SIM
 #else
 //----------------------------------------------------
-// Order the Copter handoff behind one route DEPLOY request. The route behavior
-// is activated only after pArduBridge has accepted the Guided-mode handoff.
-ProcessConfig = uLegSequence
+// Order the Copter control handoff behind one route execution request. Route
+// state remains mission-owned; pArduBridge receives only generic commands.
+ProcessConfig = uRouteSequence
 {
   AppTick   = 10
   CommsTick = 10
   term_report_interval = 2
 
-  condition     = LEG_REQUEST != ""
+  condition     = ROUTE_EXECUTE = true
   condition     = ROUTE_READY = true
   upon_awake    = restart
   script_atomic = true
   reset_max     = unlimited
   paused        = false
-  script_name   = COPTER_LEG_SEQUENCE
-  status_var    = LEG_SEQUENCE_STATUS
+  script_name   = COPTER_ROUTE_SEQUENCE
+  status_var    = ROUTE_SEQUENCE_STATUS
 
-  event = var=STATION_KEEP, val=false,        time=0
-  event = var=HELM_STATUS,  val=true,         time=0.05
-  event = var=ARDU_COMMAND, val=FLY_WAYPOINT, time=0.25
-  event = var=LEG_ACTIVE,   val=true,         time=0.60
-  event = var=ROUTE_CLEAR,  val=false,        time=0.60
-  event = var=ROUTE_DEPLOY, val=true,         time=0.65
-  event = var=LEG_REQUEST,  val="",           time=0.75
+  event = var=HELM_STATUS,   val=true,          time=0
+  event = var=ARDU_COMMAND,  val=HELM_GUIDANCE, time=0.20
+  event = var=ROUTE_DEPLOY,  val=true,          time=0.50
+  event = var=ROUTE_EXECUTE, val=false,         time=0.60
 }
 
 //----------------------------------------------------
@@ -283,10 +279,10 @@ ProcessConfig = pDeadManPost
   CommsTick = 4
   term_report_interval = 2
 
-  // Arm only after the first viewer heartbeat. Ten continuous seconds
+  // Arm only after the first viewer heartbeat. Twenty continuous seconds
   // without another heartbeat requests RTL through pArduBridge.
   heartbeat_var   = HEARTBEAT
-  max_noheart     = 10
+  max_noheart     = 20
   post_policy     = reset
   active_at_start = false
   deadflag        = DEAD_MAN_POST_INTERRUPT = true
