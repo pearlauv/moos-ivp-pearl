@@ -4,9 +4,10 @@
 supports a self-contained MOOS-IvP simulation, ArduPilot SITL through
 `pArduBridge`, and real ArduCopter hardware through `pArduBridge`.
 
-The operator builds an ordered route directly in pMarineViewer. There are no
-hardcoded mission waypoints, home waypoint, or FC RTL/Loiter controls in the
-normal route interface.
+The operator builds an ordered route directly in pMarineViewer. `pRouteBuffer`
+keeps those clicks shoreside and submits the complete route through
+`pMediator` when DEPLOY is pressed. There are no hardcoded mission waypoints,
+home waypoint, or FC RTL/Loiter controls in the normal route interface.
 
 ## Layout
 
@@ -80,8 +81,8 @@ verified target traffic, and correct sensor orientation and offsets.
 1. In pMarineViewer, choose the `route` left-click context.
 2. Left-click the desired waypoints in traversal order. The yellow markers are
    a pending route; the aircraft does not move while the route is being built.
-   Marker labels are intentionally hidden because pMarineViewer's mouse-click
-   counter is global to the viewer and does not reset when a route is cleared.
+   The pending route exists only in the shoreside `pRouteBuffer`, so individual
+   clicks do not cross the vehicle link.
 3. Press `ARM`, then `TAKEOFF`.
 4. Press `DEPLOY` once to traverse the complete selected route.
 5. At the final waypoint, the route is discarded. SIM enters passive Helm
@@ -92,23 +93,28 @@ verified target traffic, and correct sensor orientation and offsets.
    endpoint behavior.
 7. Use `PREC LAND` only for the qualified precision-landing workflow.
 
-Every mouse click updates one named, dynamically spawned `BHV_Waypoint`.
-The first click starts the route; later clicks append to the same route. Route
-completion or CLEAR removes that behavior instance, so the next click starts a
-new list. In all modes, pHelmIvP starts in DRIVE with these behaviors idle so
-it can retain every staged point before DEPLOY. DEPLOY first activates the
-staged behavior so pHelm can form a complete decision, then sends the established
-`FLY_WAYPOINT` command while the Helm is on in SITL/real mode. This selects its
-Helm-guidance branch: pArduBridge requests Guided mode and enters
-`HELM_TOWAYPT` without requiring or duplicating a `NEXT_WAYPOINT`. The staged
-`BHV_Waypoint` remains the sole route owner.
+Every mouse click updates the shoreside `pRouteBuffer`. DEPLOY serializes the
+ordered point list into one full-route snapshot. `pMediator` gives that snapshot
+an ordered message ID and resends it until the vehicle acknowledges delivery or
+the configured retry limit is reached. The vehicle `pRouteBuffer` validates the
+snapshot, updates one named dynamically spawned `BHV_Waypoint`, waits for
+`ROUTE_READY`, and only then posts the local deploy trigger. Repeated DEPLOY
+presses for an unchanged shoreside route are ignored.
 
-`CLEAR` sends one repeatable `ROUTE_CLEAR=true` request across the community
-link. A vehicle-local `uTimerScript` sequence cancels route execution, empties
-the dynamic waypoint list, and resets the clear request. Repeated CLEAR presses
-therefore converge on the same empty-route state without sending a multi-part
-route operation over pShare. The map-marker clear remains a local pMarineViewer
-action.
+In all modes, pHelmIvP starts in DRIVE with the route behavior idle. In
+SITL/real, the local deploy sequence sends the established `FLY_WAYPOINT`
+command while the Helm is on. This selects its Helm-guidance branch:
+pArduBridge requests Guided mode and enters `HELM_TOWAYPT` without requiring or
+duplicating a `NEXT_WAYPOINT`. The staged `BHV_Waypoint` remains the sole route
+owner.
+
+`CLEAR` clears the shoreside buffer and sends one mediated, repeatable
+`action=clear` command. The vehicle expands that command into the existing
+local `ROUTE_CLEAR=true` sequence, which cancels execution, empties the dynamic
+waypoint list, and resets the clear request. Repeated CLEAR presses therefore
+converge on the same empty-route state. Because both DEPLOY and CLEAR are
+single ordered commands, their effects cannot be partially delivered as
+independent route variables.
 
 In SIM, the StationKeep behavior has a 1 m inner radius, 3 m outer radius, and
 5 m hibernation radius. It permits passive drift within the hibernation zone
@@ -150,6 +156,8 @@ corresponding landed state and does not simulate a landing target sensor.
 For a split-host flight, launch the Pi vehicle subcommunity with `--auto`.
 That suppresses the Pi-side uMAC; use the shoreside pMarineViewer as the only
 interactive AppCast requester and close any extra uMAC/uMAC-like viewers.
+The mission requires `pMediator` from `moos-ivp-swarm` and `pRouteBuffer` from
+this repository to be built and available in `PATH` on both hosts.
 
 ## Generation and cleanup
 

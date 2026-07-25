@@ -18,9 +18,8 @@ initialize DESIRED_ALTITUDE      = $(TAKEOFF_ALTITUDE)
 #endif
 
 //----------------------------------------------------
-// The first mouse click spawns an empty named route. Further clicks append
-// waypoints to that same instance. Completing or clearing the route removes
-// the spawned behavior, so the next click starts with a genuinely empty list.
+// Each mediated DEPLOY supplies one complete, ordered route snapshot.
+// Completing or clearing the route removes the spawned behavior.
 Behavior = BHV_Waypoint
 {
   name       = operator_route_
@@ -57,9 +56,7 @@ Behavior = BHV_Waypoint
 #endif
   capture_radius = 1.5
   slip_radius    = 4
-  // Prime an otherwise-empty spawned engine for its first newpt update.
-  // The first route update immediately restores normal traversal order.
-  order           = reverse
+  order           = normal
   points         = empty
 
   visual_hints = nextpt_color=yellow

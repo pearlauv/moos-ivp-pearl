@@ -25,6 +25,9 @@ ProcessConfig = ANTLER
   Run = pLogger        @ NewConsole = false
   Run = pNodeReporter  @ NewConsole = false
   Run = uFldNodeBroker @ NewConsole = false
+  Run = uFldMessageHandler @ NewConsole = false
+  Run = pMediator      @ NewConsole = false
+  Run = pRouteBuffer   @ NewConsole = false
   Run = pHelmIvP       @ NewConsole = false
   Run = uTimerScript   @ NewConsole = false ~ uRouteClear
   Run = uTimerScript   @ NewConsole = false ~ uDeployGuard
@@ -140,6 +143,44 @@ ProcessConfig = pNodeReporter
 }
 
 //----------------------------------------------------
+ProcessConfig = pMediator
+{
+  AppTick   = 4
+  CommsTick = 4
+  term_report_interval = 2
+
+  vname         = $(VNAME)
+  mates         = shoreside
+  resend_thresh = 2
+  max_tries     = 5
+}
+
+//----------------------------------------------------
+ProcessConfig = uFldMessageHandler
+{
+  AppTick   = 4
+  CommsTick = 4
+  term_report_interval = 2
+
+  strict_addressing = true
+}
+
+//----------------------------------------------------
+ProcessConfig = pRouteBuffer
+{
+  AppTick   = 4
+  CommsTick = 4
+  term_report_interval = 2
+
+  role = vehicle
+#ifdef XMODE SIM
+  route_deploy_var = ROUTE_DEPLOY
+#else
+  route_deploy_var = ROUTE_EXECUTE
+#endif
+}
+
+//----------------------------------------------------
 ProcessConfig = uFldNodeBroker
 {
   AppTick   = 1
@@ -150,7 +191,8 @@ ProcessConfig = uFldNodeBroker
   try_shore_host = pshare_route=$(SHORE_IP):$(SHORE_PSHARE)
 
   bridge = src=NODE_REPORT_LOCAL, alias=NODE_REPORT
-  bridge = src=NODE_MESSAGE_LOCAL, alias=NODE_MESSAGE
+  bridge = src=MEDIATED_MESSAGE_LOCAL, alias=MEDIATED_MESSAGE
+  bridge = src=ACK_MESSAGE_LOCAL, alias=ACK_MESSAGE
   bridge = src=VIEW_POINT
   bridge = src=VIEW_MARKER
   bridge = src=VIEW_VECTOR
@@ -165,6 +207,7 @@ ProcessConfig = uFldNodeBroker
   bridge = src=CONTROL_AUTHORITY
   bridge = src=IVPHELM_STATE
   bridge = src=PROC_WATCH_ALL_OK, alias=VEHICLE_PROC_WATCH_ALL_OK
+  bridge = src=ROUTE_BUFFER_VEHICLE_STATE
 #ifdef XMODE SIM
   bridge = src=STATION_KEEP
 #else
