@@ -151,8 +151,8 @@ ProcessConfig = pMediator
 
   vname         = $(VNAME)
   mates         = shoreside
-  resend_thresh = 2
-  max_tries     = 5
+  resend_thresh = 1
+  max_tries     = 10
 }
 
 //----------------------------------------------------
