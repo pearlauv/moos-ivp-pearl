@@ -31,6 +31,10 @@ ProcessConfig = ANTLER
   Run = pHelmIvP       @ NewConsole = false
   Run = uTimerScript   @ NewConsole = false ~ uRouteClear
   Run = uTimerScript   @ NewConsole = false ~ uDeployGuard
+  Run = uTimerScript   @ NewConsole = false ~ uOperatorArm
+  Run = uTimerScript   @ NewConsole = false ~ uOperatorDisarm
+  Run = uTimerScript   @ NewConsole = false ~ uOperatorTakeoff
+  Run = uTimerScript   @ NewConsole = false ~ uOperatorPrecLand
 #ifdef XMODE SIM
   Run = uSimMarineV22  @ NewConsole = false
   Run = pMarinePIDV22  @ NewConsole = false
@@ -208,18 +212,13 @@ ProcessConfig = uFldNodeBroker
   bridge = src=IVPHELM_STATE
   bridge = src=PROC_WATCH_ALL_OK, alias=VEHICLE_PROC_WATCH_ALL_OK
   bridge = src=ROUTE_BUFFER_VEHICLE_STATE
+  bridge = src=NAV_ALTITUDE
 #ifdef XMODE SIM
   bridge = src=STATION_KEEP
 #else
   bridge = src=DESIRED_HEADING
   bridge = src=DESIRED_SPEED
   bridge = src=DESIRED_ALTITUDE
-#endif
-#ifdef XMODE SITL
-  bridge = src=NAV_ALTITUDE
-#endif
-#ifdef XMODE REAL
-  bridge = src=NAV_ALTITUDE
 #endif
 }
 
@@ -341,6 +340,118 @@ ProcessConfig = uDeployGuard
 #else
   event = var=ROUTE_EXECUTE, val=false, time=0
 #endif
+}
+
+//----------------------------------------------------
+// Expand each acknowledged operator request inside the vehicle community.
+// Distinct request variables prevent one command type from superseding another
+// in pMediator's per-variable ordering cache.
+ProcessConfig = uOperatorArm
+{
+  AppTick   = 10
+  CommsTick = 10
+  term_report_interval = 2
+
+  condition     = UAV_ARM_REQUEST = true
+  upon_awake    = restart
+  script_atomic = true
+  reset_max     = unlimited
+  paused        = false
+  script_name   = OPERATOR_ARM
+
+#ifdef XMODE SIM
+  event = var=UAV_IS_ARMED,      val=true,      time=0
+  event = var=AUTOPILOT_MODE,    val=SIM_ARMED, time=0
+  event = var=UAV_COMMAND_RESULT, val="id=sim,command=ARM,status=ACCEPTED,detail=SIMULATED", time=0
+#else
+  event = var=ARM_UAV, val=true, time=0
+#endif
+  event = var=UAV_ARM_REQUEST, val=false, time=0.10
+}
+
+//----------------------------------------------------
+ProcessConfig = uOperatorDisarm
+{
+  AppTick   = 10
+  CommsTick = 10
+  term_report_interval = 2
+
+  condition     = UAV_DISARM_REQUEST = true
+  upon_awake    = restart
+  script_atomic = true
+  reset_max     = unlimited
+  paused        = false
+  script_name   = OPERATOR_DISARM
+
+  event = var=ROUTE_DEPLOY, val=false, time=0
+#ifdef XMODE SIM
+  event = var=STATION_KEEP,    val=false,        time=0
+  event = var=UAV_IS_ARMED,    val=false,        time=0
+  event = var=UAV_LANDED_STATE, val=ON_GROUND,   time=0
+  event = var=NAV_ALTITUDE,    val=0,            time=0
+  event = var=AUTOPILOT_MODE,  val=SIM_DISARMED, time=0
+  event = var=UAV_COMMAND_RESULT, val="id=sim,command=DISARM,status=ACCEPTED,detail=SIMULATED", time=0
+#else
+  event = var=MOOS_MANUAL_OVERRIDE, val=true,  time=0
+  event = var=ARM_UAV,              val=false, time=0
+#endif
+  event = var=UAV_DISARM_REQUEST, val=false, time=0.10
+}
+
+//----------------------------------------------------
+ProcessConfig = uOperatorTakeoff
+{
+  AppTick   = 10
+  CommsTick = 10
+  term_report_interval = 2
+
+  condition     = UAV_TAKEOFF_REQUEST = true
+  upon_awake    = restart
+  script_atomic = true
+  reset_max     = unlimited
+  paused        = false
+  script_name   = OPERATOR_TAKEOFF
+
+#ifdef XMODE SIM
+  event = var=ROUTE_DEPLOY,    val=false,      time=0
+  event = var=STATION_KEEP,    val=false,      time=0
+  event = var=UAV_LANDED_STATE, val=IN_AIR,    time=0
+  event = var=NAV_ALTITUDE,    val=$(TAKEOFF_ALTITUDE), time=0
+  event = var=AUTOPILOT_MODE,  val=SIM_HOLD,   time=0
+  event = var=UAV_COMMAND_RESULT, val="id=sim,command=TAKEOFF,status=COMPLETED,detail=TARGET_ALTITUDE_REACHED", time=0
+#else
+  event = var=ARDU_COMMAND, val=DO_TAKEOFF, time=0
+#endif
+  event = var=UAV_TAKEOFF_REQUEST, val=false, time=0.10
+}
+
+//----------------------------------------------------
+ProcessConfig = uOperatorPrecLand
+{
+  AppTick   = 10
+  CommsTick = 10
+  term_report_interval = 2
+
+  condition     = UAV_PREC_LAND_REQUEST = true
+  upon_awake    = restart
+  script_atomic = true
+  reset_max     = unlimited
+  paused        = false
+  script_name   = OPERATOR_PREC_LAND
+
+  event = var=ROUTE_DEPLOY, val=false, time=0
+#ifdef XMODE SIM
+  event = var=STATION_KEEP,     val=false,      time=0
+  event = var=NAV_ALTITUDE,     val=0,          time=0
+  event = var=UAV_LANDED_STATE, val=ON_GROUND,  time=0
+  event = var=UAV_IS_ARMED,     val=false,      time=0
+  event = var=AUTOPILOT_MODE,   val=SIM_LANDED, time=0
+  event = var=UAV_COMMAND_RESULT, val="id=sim,command=LAND,status=COMPLETED,detail=SIMULATED", time=0
+#else
+  event = var=ROUTE_EXECUTE, val=false,    time=0
+  event = var=ARDU_COMMAND,  val=AUTOLAND, time=0
+#endif
+  event = var=UAV_PREC_LAND_REQUEST, val=false, time=0.10
 }
 
 #ifdef XMODE SIM

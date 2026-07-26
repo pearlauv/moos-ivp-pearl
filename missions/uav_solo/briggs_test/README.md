@@ -116,6 +116,14 @@ converge on the same empty-route state. Because both DEPLOY and CLEAR are
 single ordered commands, their effects cannot be partially delivered as
 independent route variables.
 
+`ARM`, `DISARM`, `TAKEOFF`, and `PREC LAND` also cross the vehicle link as
+single pMediator messages. Each button uses its own request variable so
+pMediator ordering cannot allow a later command type to suppress an earlier
+one. The vehicle expands the received request into the existing SIM or
+ArduCopter actions and resets it locally for later reuse. pMediator confirms
+remote message delivery; `UAV_COMMAND_RESULT` remains the authoritative
+ArduPilot command-status path in SITL/real.
+
 In SIM, the StationKeep behavior has a 1 m inner radius, 3 m outer radius, and
 5 m hibernation radius. It permits passive drift within the hibernation zone
 and restores the vehicle with Helm guidance outside it. In SITL/real, the route

@@ -146,15 +146,8 @@ ProcessConfig = uFldShoreBroker
   bridge = src=ACK_MESSAGE_LOCAL, alias=ACK_MESSAGE
 
 #ifdef XMODE SIM
-  qbridge = AUTOPILOT_MODE
 #else
-  qbridge = ARDU_COMMAND, ARM_UAV, ROUTE_EXECUTE
   qbridge = HEARTBEAT
-#endif
-  qbridge = MOOS_MANUAL_OVERRIDE
-  qbridge = ROUTE_DEPLOY
-#ifdef XMODE SIM
-  qbridge = STATION_KEEP
 #endif
   qbridge = NODE_REPORT
 }
@@ -226,23 +219,12 @@ ProcessConfig = pMarineViewer
 
   left_context[route] = ROUTE_POINT = "x=$[XPOS],y=$[YPOS]"
 
-#ifdef XMODE SIM
-  button_1 = ARM # UAV_IS_ARMED=true # AUTOPILOT_MODE=SIM_ARMED # UAV_COMMAND_RESULT=id=sim,command=ARM,status=ACCEPTED,detail=SIMULATED
-  button_2 = DISARM # ROUTE_DEPLOY_ALL=false # STATION_KEEP_ALL=false # UAV_IS_ARMED=false # UAV_LANDED_STATE=ON_GROUND # NAV_ALTITUDE=0 # AUTOPILOT_MODE=SIM_DISARMED # UAV_COMMAND_RESULT=id=sim,command=DISARM,status=ACCEPTED,detail=SIMULATED # color=red
-  button_3 = TAKEOFF # ROUTE_DEPLOY_ALL=false # STATION_KEEP_ALL=false # UAV_LANDED_STATE=IN_AIR # NAV_ALTITUDE=8 # AUTOPILOT_MODE=SIM_HOLD # UAV_COMMAND_RESULT=id=sim,command=TAKEOFF,status=COMPLETED,detail=TARGET_ALTITUDE_REACHED
-
+  // Each operator action crosses the link as one acknowledged pMediator
+  // message. The vehicle expands the request into mode-specific local posts.
+  button_1 = ARM # NODE_MESSAGE_LOCAL="src_node=shoreside,dest_node=$(VNAMES),var_name=UAV_ARM_REQUEST,string_val=true"
+  button_2 = DISARM # NODE_MESSAGE_LOCAL="src_node=shoreside,dest_node=$(VNAMES),var_name=UAV_DISARM_REQUEST,string_val=true" # color=red
+  button_3 = TAKEOFF # NODE_MESSAGE_LOCAL="src_node=shoreside,dest_node=$(VNAMES),var_name=UAV_TAKEOFF_REQUEST,string_val=true"
   button_4 = DEPLOY # ROUTE_BUFFER_DEPLOY=true
   button_5 = CLEAR # ROUTE_BUFFER_CLEAR=true
-
-  button_6 = PREC LAND # ROUTE_DEPLOY_ALL=false # STATION_KEEP_ALL=false # NAV_ALTITUDE=0 # UAV_LANDED_STATE=ON_GROUND # UAV_IS_ARMED=false # AUTOPILOT_MODE=SIM_LANDED # UAV_COMMAND_RESULT=id=sim,command=LAND,status=COMPLETED,detail=SIMULATED # color=orange
-#else
-  button_1 = ARM # ARM_UAV_ALL=true
-  button_2 = DISARM # ROUTE_DEPLOY_ALL=false # MOOS_MANUAL_OVERRIDE_ALL=true # ARM_UAV_ALL=false # color=red
-  button_3 = TAKEOFF # ARDU_COMMAND_ALL=DO_TAKEOFF
-
-  button_4 = DEPLOY # ROUTE_BUFFER_DEPLOY=true
-  button_5 = CLEAR # ROUTE_BUFFER_CLEAR=true
-
-  button_6 = PREC LAND # ROUTE_EXECUTE_ALL=false # ROUTE_DEPLOY_ALL=false # ARDU_COMMAND_ALL=AUTOLAND # color=orange
-#endif
+  button_6 = PREC LAND # NODE_MESSAGE_LOCAL="src_node=shoreside,dest_node=$(VNAMES),var_name=UAV_PREC_LAND_REQUEST,string_val=true" # color=orange
 }
