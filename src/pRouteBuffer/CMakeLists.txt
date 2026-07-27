@@ -13,6 +13,7 @@ ADD_EXECUTABLE(pRouteBuffer ${SRC})
 
 TARGET_LINK_LIBRARIES(pRouteBuffer
    ${MOOS_LIBRARIES}
+   contacts
    geometry
    apputil
    mbutil

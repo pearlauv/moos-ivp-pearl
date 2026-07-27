@@ -9,6 +9,8 @@
 #include "ACTable.h"
 #include "MBUtils.h"
 #include "NodeMessage.h"
+#include "NodeRecord.h"
+#include "NodeRecordUtils.h"
 #include "XYFormatUtilsPoint.h"
 #include "XYFormatUtilsSegl.h"
 #include "XYSegList.h"
@@ -21,10 +23,12 @@ using namespace std;
 
 RouteBuffer::RouteBuffer()
 {
-  m_role               = "shoreside";
+  m_role               = "";
   m_point_var          = "ROUTE_POINT";
   m_deploy_request_var = "ROUTE_BUFFER_DEPLOY";
   m_clear_request_var  = "ROUTE_BUFFER_CLEAR";
+  m_goto_request_var   = "ROUTE_BUFFER_GOTO";
+  m_node_report_var    = "NODE_REPORT";
   m_command_var        = "ROUTE_BUFFER_COMMAND";
   m_route_update_var   = "ROUTE_UPDATE";
   m_route_deploy_var   = "ROUTE_DEPLOY";
@@ -32,6 +36,7 @@ RouteBuffer::RouteBuffer()
   m_route_ready_var    = "ROUTE_READY";
   m_route_name         = "active";
   m_max_points         = 50;
+  m_contact_max_age    = 3;
 
   m_state                 = "EMPTY";
   m_max_visualized_points = 0;
@@ -71,6 +76,10 @@ bool RouteBuffer::OnNewMail(MOOSMSG_LIST &NewMail)
       handled = handleMailTrigger(msg, "deploy");
     else if((m_role == "shoreside") && (key == m_clear_request_var))
       handled = handleMailTrigger(msg, "clear");
+    else if((m_role == "shoreside") && (key == m_goto_request_var))
+      handled = handleMailGoto(msg);
+    else if((m_role == "shoreside") && (key == m_node_report_var))
+      handled = handleMailNodeReport(msg);
     else if((m_role == "vehicle") && (key == m_command_var))
       handled = handleMailCommand(msg);
     else if((m_role == "vehicle") && (key == m_route_ready_var)) {
@@ -171,6 +180,10 @@ bool RouteBuffer::OnStartUp()
       handled = setNonWhiteVarOnString(m_deploy_request_var, value);
     else if(param == "clear_request_var")
       handled = setNonWhiteVarOnString(m_clear_request_var, value);
+    else if(param == "goto_request_var")
+      handled = setNonWhiteVarOnString(m_goto_request_var, value);
+    else if(param == "node_report_var")
+      handled = setNonWhiteVarOnString(m_node_report_var, value);
     else if(param == "command_var")
       handled = setNonWhiteVarOnString(m_command_var, value);
     else if(param == "route_update_var")
@@ -185,6 +198,8 @@ bool RouteBuffer::OnStartUp()
       handled = setNonWhiteVarOnString(m_route_name, value);
     else if(param == "max_points")
       handled = setUIntOnString(m_max_points, value) && (m_max_points > 0);
+    else if(param == "contact_max_age")
+      handled = setPosDoubleOnString(m_contact_max_age, value);
 
     if(!handled)
       reportUnhandledConfigWarning(orig);
@@ -193,7 +208,11 @@ bool RouteBuffer::OnStartUp()
   if(m_source_node == "")
     m_source_node = m_host_community;
 
-  if((m_role == "shoreside") && (m_destination_node == "")) {
+  if(m_role == "") {
+    reportConfigWarning("role must be shoreside or vehicle");
+    m_config_valid = false;
+  }
+  else if((m_role == "shoreside") && (m_destination_node == "")) {
     reportConfigWarning("destination_node is required for shoreside role");
     m_config_valid = false;
   }
@@ -213,6 +232,8 @@ void RouteBuffer::registerVariables()
     Register(m_point_var, 0);
     Register(m_deploy_request_var, 0);
     Register(m_clear_request_var, 0);
+    Register(m_goto_request_var, 0);
+    Register(m_node_report_var, 0);
   }
   else if(m_role == "vehicle") {
     Register(m_command_var, 0);
@@ -262,6 +283,43 @@ bool RouteBuffer::handleMailTrigger(const CMOOSMsg& msg,
 }
 
 //---------------------------------------------------------
+// Procedure: handleMailGoto()
+
+bool RouteBuffer::handleMailGoto(const CMOOSMsg& msg)
+{
+  if(!msg.IsString())
+    return(false);
+
+  string target = tolower(stripBlankEnds(msg.GetString()));
+  if(target == "") {
+    reportRunWarning("GOTO rejected: empty target node");
+    postState("GOTO_REJECTED_TARGET");
+    return(true);
+  }
+
+  m_pending_actions.push_back("goto:" + target);
+  return(true);
+}
+
+//---------------------------------------------------------
+// Procedure: handleMailNodeReport()
+
+bool RouteBuffer::handleMailNodeReport(const CMOOSMsg& msg)
+{
+  if(!msg.IsString())
+    return(false);
+
+  NodeRecord record = string2NodeRecord(msg.GetString());
+  string target = tolower(record.getName());
+  if((target == "") || !record.isSetXY())
+    return(true);
+
+  m_contact_points[target] = XYPoint(record.getX(), record.getY());
+  m_contact_times[target] = MOOSTime();
+  return(true);
+}
+
+//---------------------------------------------------------
 // Procedure: handleMailCommand()
 
 bool RouteBuffer::handleMailCommand(const CMOOSMsg& msg)
@@ -300,6 +358,38 @@ bool RouteBuffer::processPendingAction()
     m_last_submitted_points = "";
     postState("EMPTY");
     return(sendMediatedCommand("action=clear"));
+  }
+
+  if(strBegins(action, "goto:")) {
+    string target = action.substr(5);
+    if(m_contact_points.count(target) == 0) {
+      postState("GOTO_REJECTED_NO_REPORT");
+      reportRunWarning("GOTO rejected: no report for " + target);
+      return(true);
+    }
+
+    double contact_age = MOOSTime() - m_contact_times[target];
+    if(contact_age > m_contact_max_age) {
+      postState("GOTO_REJECTED_STALE");
+      reportRunWarning("GOTO rejected: stale report for " + target);
+      return(true);
+    }
+
+    clearVisualization();
+    m_points.clear();
+    m_points.push_back(m_contact_points[target]);
+    postPoint(m_points.front(), 1, true);
+    postSegList(true);
+
+    string points = getPointsSpec();
+    string command = "action=deploy # points=" + points;
+    if(!sendMediatedCommand(command))
+      return(false);
+
+    m_last_submitted_points = points;
+    postState("GOTO_SUBMITTED");
+    reportEvent("Submitted GOTO route for " + target);
+    return(true);
   }
 
   if(action != "deploy")
@@ -523,6 +613,8 @@ bool RouteBuffer::buildReport()
   m_msgs << "Destination node: " << m_destination_node << endl;
   m_msgs << "Route points:     " << m_points.size()
          << "/" << m_max_points << endl;
+  m_msgs << "Contacts cached:  " << m_contact_points.size() << endl;
+  m_msgs << "Contact max age:  " << m_contact_max_age << endl;
   m_msgs << "Commands sent:    " << m_commands_sent << endl;
   m_msgs << "Commands received:" << m_commands_received << endl;
   m_msgs << "Commands rejected:" << m_commands_rejected << endl;

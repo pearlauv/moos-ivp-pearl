@@ -9,6 +9,7 @@
 #define RouteBuffer_HEADER
 
 #include <deque>
+#include <map>
 #include <string>
 #include <vector>
 #include "MOOS/libMOOS/Thirdparty/AppCasting/AppCastingMOOSApp.h"
@@ -35,6 +36,8 @@ class RouteBuffer : public AppCastingMOOSApp
  private:
    bool handleMailPoint(const CMOOSMsg&);
    bool handleMailTrigger(const CMOOSMsg&, const std::string&);
+   bool handleMailGoto(const CMOOSMsg&);
+   bool handleMailNodeReport(const CMOOSMsg&);
    bool handleMailCommand(const CMOOSMsg&);
    bool handleConfigRole(const std::string&);
 
@@ -58,6 +61,8 @@ class RouteBuffer : public AppCastingMOOSApp
    std::string  m_point_var;
    std::string  m_deploy_request_var;
    std::string  m_clear_request_var;
+   std::string  m_goto_request_var;
+   std::string  m_node_report_var;
    std::string  m_command_var;
    std::string  m_route_update_var;
    std::string  m_route_deploy_var;
@@ -65,9 +70,12 @@ class RouteBuffer : public AppCastingMOOSApp
    std::string  m_route_ready_var;
    std::string  m_route_name;
    unsigned int m_max_points;
+   double       m_contact_max_age;
 
  private: // State variables
    std::vector<XYPoint> m_points;
+   std::map<std::string, XYPoint> m_contact_points;
+   std::map<std::string, double>  m_contact_times;
    std::deque<std::string> m_pending_actions;
    std::deque<std::string> m_pending_commands;
    std::string          m_state;

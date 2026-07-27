@@ -1,0 +1,9 @@
+//-------------------------------------------------
+// FILE: meta_uav.moos
+// NAME: Charles Benjamin
+//-------------------------------------------------
+// Reuse the qualified UAV field stack while resolving its shared origin plug
+// from this mission directory. "Briggs" names the source mission's field
+// background, not this community's identity.
+
+#include ../../uav_solo/briggs_test/meta_vehicle.moos

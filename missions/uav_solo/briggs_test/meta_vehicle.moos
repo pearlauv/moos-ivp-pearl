@@ -139,7 +139,7 @@ ProcessConfig = pNodeReporter
 
   platform_type   = quadcopter
   platform_color  = $(COLOR)
-  platform_length = 4
+  platform_length = $(PLATFORM_LENGTH=4)
   platform_group  = drone
 
   cross_fill_policy = global
@@ -230,7 +230,7 @@ ProcessConfig = uSimMarineV22
   CommsTick = 10
   term_report_interval = 2
 
-  start_pos = -173, -128, 90
+  start_pos = $(START_POS=-173,-128,90)
   prefix    = NAV
 
   max_speed        = 5

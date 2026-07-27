@@ -5,6 +5,7 @@
 ethan_sim/
 **/targ_*.moos
 **/targ_*.bhv
+**/LOG_*/
 **/XLOG_*/
 **/.LastOpenedMOOSLogDirectory
 .DS_Store

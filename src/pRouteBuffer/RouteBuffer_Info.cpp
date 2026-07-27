@@ -20,10 +20,10 @@ void showSynopsis()
 {
   blk("SYNOPSIS:                                                       ");
   blk("------------------------------------                            ");
-  blk("  pRouteBuffer collects operator-selected route points on the   ");
-  blk("  shoreside and submits one complete route command through      ");
-  blk("  pMediator. Its vehicle role expands the received command into ");
-  blk("  local route update, deploy, or clear publications.            ");
+  blk("  pRouteBuffer collects operator-selected route points or a     ");
+  blk("  fresh named contact position on the shoreside and submits one ");
+  blk("  complete route command through pMediator. Its vehicle role    ");
+  blk("  expands the command into route update, deploy, or clear posts.");
 }
 
 //----------------------------------------------------------------
@@ -74,10 +74,13 @@ void showExampleConfigAndExit()
   blk("  CommsTick = 4                                                 ");
   blk("                                                                ");
   blk("  role               = shoreside                                ");
-  blk("  destination_node   = briggs                                   ");
+  blk("  destination_node   = uav                                      ");
   blk("  point_var          = ROUTE_POINT                              ");
   blk("  deploy_request_var = ROUTE_BUFFER_DEPLOY                      ");
   blk("  clear_request_var  = ROUTE_BUFFER_CLEAR                       ");
+  blk("  goto_request_var   = ROUTE_BUFFER_GOTO                        ");
+  blk("  node_report_var    = NODE_REPORT                              ");
+  blk("  contact_max_age    = 3                                        ");
   blk("  command_var        = ROUTE_BUFFER_COMMAND                     ");
   blk("  max_points         = 50                                       ");
   blk("}                                                               ");
@@ -103,6 +106,8 @@ void showInterfaceAndExit()
   blk("    ROUTE_POINT         = x=-100,y=-50                          ");
   blk("    ROUTE_BUFFER_DEPLOY = true                                  ");
   blk("    ROUTE_BUFFER_CLEAR  = true                                  ");
+  blk("    ROUTE_BUFFER_GOTO   = pearl                                 ");
+  blk("    NODE_REPORT = NAME=pearl,X=-90,Y=-65,...                    ");
   blk("  Vehicle role:                                                 ");
   blk("    ROUTE_BUFFER_COMMAND = action=deploy # points={-100,-50}    ");
   blk("                                                                ");
