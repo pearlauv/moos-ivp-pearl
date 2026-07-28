@@ -26,8 +26,7 @@ LOG_CLEAN="no"
 XLAUNCHED="no"
 NOGUI="no"
 
-UAV_MODE="SIM"
-PEARL_MODE="SIM"
+MODE="SIM"
 UAV_START="10,15,90"
 PEARL_START="-4,-22,0"
 TAKEOFF_ALTITUDE="8"
@@ -50,9 +49,8 @@ for ARGI; do
     echo "$ME [OPTIONS] [time_warp]"
     echo
     echo "Modes:"
-    echo "  --sim                         Simulate both vehicles (default)"
-    echo "  --uav_mode=<SIM|SITL|REAL>    UAV operating mode"
-    echo "  --pearl_mode=<SIM|REAL>        PEARL operating mode"
+    echo "  --sim                         Same as --mode=SIM (default)"
+    echo "  --mode=<SIM|SITL|REAL>        Whole-mission operating mode"
     echo
     echo "Options:"
     echo "  --help, -h                    Show this help message"
@@ -82,8 +80,7 @@ for ARGI; do
     fi
     TIME_WARP=$ARGI
   elif [ "${ARGI}" = "--sim" ]; then
-    UAV_MODE="SIM"
-    PEARL_MODE="SIM"
+    MODE="SIM"
   elif [[ "${ARGI}" = "--verbose" || "${ARGI}" = "-v" ]]; then
     VERBOSE="yes"
   elif [[ "${ARGI}" = "--just_make" || "${ARGI}" = "-j" ]]; then
@@ -94,10 +91,8 @@ for ARGI; do
     XLAUNCHED="yes"
   elif [[ "${ARGI}" = "--nogui" || "${ARGI}" = "-ng" ]]; then
     NOGUI="yes"
-  elif [[ "${ARGI}" == --uav_mode=* ]]; then
-    UAV_MODE="${ARGI#*=}"
-  elif [[ "${ARGI}" == --pearl_mode=* ]]; then
-    PEARL_MODE="${ARGI#*=}"
+  elif [[ "${ARGI}" == --mode=* ]]; then
+    MODE="${ARGI#*=}"
   elif [[ "${ARGI}" == --uav_start=* ]]; then
     UAV_START="${ARGI#*=}"
   elif [[ "${ARGI}" == --pearl_start=* ]]; then
@@ -126,15 +121,16 @@ for ARGI; do
   fi
 done
 
-UAV_MODE=$(echo "$UAV_MODE" | tr '[:lower:]' '[:upper:]')
-PEARL_MODE=$(echo "$PEARL_MODE" | tr '[:lower:]' '[:upper:]')
-if [[ "$UAV_MODE" != "SIM" && "$UAV_MODE" != "SITL" && "$UAV_MODE" != "REAL" ]]; then
-  echo "$ME: --uav_mode must be SIM, SITL, or REAL. Exit Code 1."
+MODE=$(echo "$MODE" | tr '[:lower:]' '[:upper:]')
+if [[ "$MODE" != "SIM" && "$MODE" != "SITL" && "$MODE" != "REAL" ]]; then
+  echo "$ME: --mode must be SIM, SITL, or REAL. Exit Code 1."
   exit 1
 fi
-if [[ "$PEARL_MODE" != "SIM" && "$PEARL_MODE" != "REAL" ]]; then
-  echo "$ME: --pearl_mode must be SIM or REAL. Exit Code 1."
-  exit 1
+
+UAV_MODE="$MODE"
+PEARL_MODE="$MODE"
+if [ "$MODE" = "SITL" ]; then
+  PEARL_MODE="SIM"
 fi
 
 #------------------------------------------------------------
@@ -147,6 +143,7 @@ if [ "$VERBOSE" = "yes" ]; then
   echo "CMD_ARGS =          [${CMD_ARGS}]"
   echo "TIME_WARP =         [${TIME_WARP}]"
   echo "JUST_MAKE =         [${JUST_MAKE}]"
+  echo "MODE =              [${MODE}]"
   echo "UAV_MODE =          [${UAV_MODE}]"
   echo "PEARL_MODE =        [${PEARL_MODE}]"
   echo "UAV_START =         [${UAV_START}]"
@@ -194,7 +191,7 @@ vecho "Launching PEARL: ${PARGS[*]}"
 #------------------------------------------------------------
 #  Part 7: Launch shoreside.
 #------------------------------------------------------------
-SARGS=(--auto "$TIME_WARP" --uav_mode="$UAV_MODE")
+SARGS=(--auto "$TIME_WARP" --mode="$MODE")
 SARGS+=(--mport="$SHORE_MPORT" --pshare="$SHORE_PSHARE")
 [ "$JUST_MAKE" = "yes" ] && SARGS+=(--just_make)
 [ "$VERBOSE" = "yes" ] && SARGS+=(--verbose)

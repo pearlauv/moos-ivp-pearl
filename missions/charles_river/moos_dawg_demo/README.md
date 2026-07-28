@@ -19,24 +19,35 @@ PEARL's latest reported position.
 - UAV: MOOSDB `9001`, pShare `9201`
 - PEARL: MOOSDB `9002`, pShare `9202`
 
-The default top-level launch simulates both vehicles:
+The top-level launcher uses one mission mode:
+
+- `SIM`: UAV SIM and PEARL SIM
+- `SITL`: UAV SITL and PEARL SIM
+- `REAL`: UAV REAL and PEARL REAL
+
+The default simulates both vehicles:
 
 ```bash
-./launch.sh --sim
+./launch.sh --mode=SIM
 ```
 
 Generate targets without launching:
 
 ```bash
-./launch.sh --sim --just_make --nogui 5
+./launch.sh --mode=SIM --just_make --nogui 5
 ```
 
-The UAV may independently use SIM, SITL, or REAL mode. PEARL may independently
-use SIM or REAL mode:
+Exercise the UAV flight-controller integration while retaining simulated
+PEARL:
 
 ```bash
-./launch.sh --uav_mode=SITL --pearl_mode=SIM
-./launch.sh --uav_mode=REAL --pearl_mode=REAL
+./launch.sh --mode=SITL
+```
+
+Launch both hardware vehicles:
+
+```bash
+./launch.sh --mode=REAL
 ```
 
 The top-level launcher is intended for same-host testing. Field operation uses
@@ -45,7 +56,7 @@ network address:
 
 ```bash
 # Shoreside
-./launch_shoreside.sh --ip=<shore-ip> --uav_mode=REAL
+./launch_shoreside.sh --ip=<shore-ip> --mode=REAL
 
 # UAV vehicle computer
 ./launch_uav.sh --auto --mode=REAL \

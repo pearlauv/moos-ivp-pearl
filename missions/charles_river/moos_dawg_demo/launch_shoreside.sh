@@ -23,7 +23,7 @@ VERBOSE="no"
 JUST_MAKE="no"
 AUTO_LAUNCHED="no"
 LAUNCH_GUI="yes"
-UAV_MODE="SIM"
+MODE="SIM"
 
 IP_ADDR="localhost"
 MOOS_PORT="9000"
@@ -41,7 +41,7 @@ for ARGI; do
     echo "  --verbose, -v                 Verbose launch summary"
     echo "  --auto, -a                    Script launch, no uMAC"
     echo "  --nogui, -ng                  No pMarineViewer"
-    echo "  --uav_mode=<SIM|SITL|REAL>    UAV button/heartbeat mode"
+    echo "  --mode=<SIM|SITL|REAL>        Whole-mission operating mode"
     echo "  --ip=<localhost>              Advertised shoreside pShare host"
     echo "  --mport=<9000>                Shoreside MOOSDB port"
     echo "  --pshare=<9200>               Shoreside pShare port"
@@ -60,8 +60,8 @@ for ARGI; do
     AUTO_LAUNCHED="yes"
   elif [[ "${ARGI}" = "--nogui" || "${ARGI}" = "-ng" ]]; then
     LAUNCH_GUI="no"
-  elif [[ "${ARGI}" == --uav_mode=* ]]; then
-    UAV_MODE="${ARGI#*=}"
+  elif [[ "${ARGI}" == --mode=* ]]; then
+    MODE="${ARGI#*=}"
   elif [[ "${ARGI}" == --ip=* ]]; then
     IP_ADDR="${ARGI#*=}"
   elif [[ "${ARGI}" == --mport=* ]]; then
@@ -74,9 +74,9 @@ for ARGI; do
   fi
 done
 
-UAV_MODE=$(echo "$UAV_MODE" | tr '[:lower:]' '[:upper:]')
-if [[ "$UAV_MODE" != "SIM" && "$UAV_MODE" != "SITL" && "$UAV_MODE" != "REAL" ]]; then
-  echo "$ME: --uav_mode must be SIM, SITL, or REAL. Exit Code 1."
+MODE=$(echo "$MODE" | tr '[:lower:]' '[:upper:]')
+if [[ "$MODE" != "SIM" && "$MODE" != "SITL" && "$MODE" != "REAL" ]]; then
+  echo "$ME: --mode must be SIM, SITL, or REAL. Exit Code 1."
   exit 1
 fi
 
@@ -91,7 +91,7 @@ if [ "$VERBOSE" = "yes" ]; then
   echo "TIME_WARP =     [${TIME_WARP}]"
   echo "JUST_MAKE =     [${JUST_MAKE}]"
   echo "LAUNCH_GUI =    [${LAUNCH_GUI}]"
-  echo "UAV_MODE =      [${UAV_MODE}]"
+  echo "MODE =          [${MODE}]"
   echo "IP_ADDR =       [${IP_ADDR}]"
   echo "MOOS_PORT =     [${MOOS_PORT}]"
   echo "PSHARE_PORT =   [${PSHARE_PORT}]"
@@ -105,7 +105,7 @@ NSFLAGS=(--strict --force -x)
 nsplug meta_shoreside.moos targ_shoreside.moos "${NSFLAGS[@]}" \
   WARP="$TIME_WARP" IP_ADDR="$IP_ADDR" MOOS_PORT="$MOOS_PORT" \
   PSHARE_PORT="$PSHARE_PORT" LAUNCH_GUI="$LAUNCH_GUI" \
-  XMODE="$UAV_MODE"
+  XMODE="$MODE"
 
 if [ "$JUST_MAKE" = "yes" ]; then
   echo "$ME: Targ files made; exiting without launch."
