@@ -143,7 +143,7 @@ ProcessConfig = pEchoVar
   Echo = GPS_LONGITUDE    -> NAV_LONG
   Echo = GPS_X            -> NAV_X
   Echo = GPS_Y            -> NAV_Y
-  Echo = GPS_HEADING_DUAL -> NAV_HEADING
+  Echo = GPS_HEADING_GPRMC -> NAV_HEADING
   Echo = IMU_PITCH        -> NAV_PITCH
   Echo = IMU_ROLL         -> NAV_ROLL
   Echo = GPS_SPEED        -> NAV_SPEED
@@ -221,10 +221,8 @@ ProcessConfig = iDualGPS
   AppTick   = 10
   CommsTick = 10
 
-  DUAL_GPS                = false //true
-  PORT_1                  = /dev/ttyAMA4   // Starboard GPS
- // PORT_1                = /dev/ttyAMA5   // Port GPS
- // PORT_2                = /dev/ttyAMA4   // Starboard GPS
+  DUAL_GPS = false
+  PORT_1   = /dev/ttyAMA5   // Port GPS
   BAUDRATE = 9600
   PREFIX   = GPS
 
