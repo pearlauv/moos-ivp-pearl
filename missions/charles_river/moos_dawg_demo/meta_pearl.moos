@@ -222,8 +222,9 @@ ProcessConfig = iDualGPS
   CommsTick = 10
 
   DUAL_GPS = true
-  PORT_1   = /dev/ttyAMA5
-  PORT_2   = /dev/ttyAMA4
+  PORT_1                  = /dev/ttyAMA4   // Starboard GPS
+ // PORT_1                = /dev/ttyAMA5   // Port GPS
+ // PORT_2                = /dev/ttyAMA4   // Starboard GPS
   BAUDRATE = 9600
   PREFIX   = GPS
 
