@@ -412,6 +412,7 @@ ProcessConfig = uOperatorTakeoff
   paused        = false
   script_name   = OPERATOR_TAKEOFF
 
+  event = var=HELM_STATUS, val=true, time=0
 #ifdef XMODE SIM
   event = var=ROUTE_DEPLOY,    val=false,      time=0
   event = var=STATION_KEEP,    val=false,      time=0
