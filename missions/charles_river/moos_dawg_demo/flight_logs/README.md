@@ -132,9 +132,15 @@ The relevant parameters embedded in both recordings are identical:
 
 Observed lessons:
 
-- Bright-sun acquisition is the main weakness. Both unsuccessful sorties had
-  a healthy precision-landing backend (`PL.Heal=1`) but never acquired a target
-  (`PL.TAcq=0`).
+- Both unsuccessful sorties had `PL.TAcq=0`, and the entire recording retained
+  `PL.LastMeasMS=0`, so ArduPilot never accepted a landing-target measurement.
+  The log does not establish why. The target may simply have been outside the
+  downward camera's field of view or not underneath the UAV; other possibilities
+  include occlusion, unsuitable apparent tag size, lighting/exposure, detector
+  failure, or failure to deliver a valid MAVLink measurement. `PL.Heal=1` only
+  shows that the ArduPilot precision-landing backend initialized as healthy; it
+  does not prove that the camera saw the target or that the complete detection
+  pipeline was working.
 - The successful sortie acquired the target near 4.8 m range and maintained
   tracking through most of the descent. After settling, its controller-
   estimated horizontal error was typically 0.10--0.25 m.
@@ -164,9 +170,11 @@ Recommended controlled tests, not yet applied to the aircraft:
    95th-percentile corrected-measurement age, but that includes camera
    processing only if `LANDING_TARGET.time_usec` contains the frame-exposure
    timestamp.
-4. Improve direct-sun detection before more water trials: use a larger matte
-   high-contrast marker, control camera exposure/shutter, and record detection
-   confidence or the processed camera view.
+4. Correlate future misses with vehicle/tag geometry and recorded camera output.
+   First determine whether the tag was actually inside the camera's field of
+   view. If it was visible but not detected, then investigate tag size,
+   occlusion, glare, contrast, camera exposure/shutter, detector confidence, and
+   MAVLink delivery rather than assigning the miss to sunlight alone.
 5. Keep `PLND_STRICT=2` and `PLND_ALT_MIN=0.75` initially. Consider shortening
    `PLND_TIMEOUT` toward 2 s only after reliable acquisition is demonstrated.
 
