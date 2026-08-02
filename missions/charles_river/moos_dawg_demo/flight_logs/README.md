@@ -182,6 +182,25 @@ precision landing to resume after pilot repositioning, and `4` for maintaining
 the faster final descent. Therefore `5` selects moving target plus fast descent;
 it does not enable automatic re-engagement after pilot repositioning.
 
+### Landing-accuracy expectations
+
+The successful sortie's controller-estimated horizontal target error, after
+initial convergence, had a median of approximately 0.16 m, a 95th percentile
+of approximately 0.23 m, and an observed maximum of approximately 0.29 m. These
+figures describe ArduPilot's target-relative estimate, not independently
+surveyed touchdown error. The edge-hanging touchdown geometry prevents a useful
+physical accuracy measurement from this test.
+
+One successful landing is insufficient to establish an accuracy distribution.
+For planning, treat roughly 0.10--0.30 m as the demonstrated tracking-error
+scale when the target is acquired, while allowing substantially larger errors,
+a hover/abort, or no precision landing when acquisition fails. Target
+visibility, camera calibration and latency, wind, platform motion, and the
+blind interval after the final valid measurement will all increase variability.
+Establish operational accuracy with repeated landings on surveyed touchdown
+marks under representative stationary, moving-platform, and lighting
+conditions.
+
 ## Evidence and limitations
 
 The timelines were reconstructed directly from the original DataFlash `ARM`,
