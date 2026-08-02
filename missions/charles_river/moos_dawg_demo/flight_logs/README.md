@@ -151,12 +151,11 @@ Observed lessons:
   `PLND_ALT_MIN=0.75` means the vehicle commits to vertical landing if the
   target is lost below 0.75 m; and `PLND_TIMEOUT=4` permits up to four seconds
   from the last valid target before retry/strict handling applies.
-- The final fresh target measurement occurred at approximately 0.51 m range,
-  close to the landed range of approximately 0.47 m. Losing the marker there
-  is consistent with near-touchdown occlusion.
-- `RNGFND1_GNDCLEAR` was 0.27 m, but the stable landed range was approximately
-  0.47 m. Measure the physical landed sensor height and correct this parameter
-  if the measurement confirms the discrepancy.
+- The final fresh target measurement occurred at approximately 0.51 m range
+  and about 4.4 seconds before `LAND_COMPLETE`. Because the landed aircraft was
+  hanging partly over the platform edge, the final rangefinder readings do not
+  provide a valid ground-clearance calibration or a reliable measurement of
+  deck clearance.
 
 Recommended controlled tests, not yet applied to the aircraft:
 
