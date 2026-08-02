@@ -1,13 +1,29 @@
 # July 30 demo flight logs
 
-This directory contains the two ArduCopter DataFlash recordings from the July
-30 demo tests. The files were downloaded directly from the Pixhawk without
-changing parameters or deleting the onboard copies.
+This directory contains the two ArduCopter DataFlash recordings and all seven
+original shoreside MOOS logs still present from the July 30 demo tests. Three
+of the shoreside logs match the substantial flights summarized below. The
+DataFlash files were downloaded directly from the Pixhawk without changing
+parameters or deleting the onboard copies. The `.alog` files are byte-for-byte
+copies of the original mission logs; no filtered or derived log was substituted.
 
 | Repository file | Pixhawk log | Size | SHA-256 |
 | --- | ---: | ---: | --- |
 | `demo_flight_1.BIN` | 43 | 9,688,533 bytes | `a578903c0b4085c7fedc1e36ebff9a8ddfb7535caa8e20a36fb729ecbfe31e0b` |
 | `demo_flight_2.BIN` | 44 | 3,206,828 bytes | `140f0cc3cdf4356d3a8a46676d78474790e6590b1d8be4ead4989d432cba0840` |
+
+| Repository file | Original shoreside session | Size | SHA-256 |
+| --- | --- | ---: | --- |
+| `demo_flight_1_sortie_1a_shoreside.alog` | `09_46_23` | 3,267,201 bytes | `c26947909c6eb056101da83256458f23a44cf3ebaa8d4bf4c1b847038772641b` |
+| `demo_flight_1_sortie_1b_shoreside.alog` | `09_52_07` | 13,780,175 bytes | `94b872e018808c1b6c1a03e9886801fbe5b980ce701287911b83d6b940708e7a` |
+| `demo_flight_2_sortie_2a_shoreside.alog` | `11_19_37` | 8,374,203 bytes | `77cffafa1956e2d15292cd4ce93653a8144805889523f472d700939412c0f1d4` |
+
+| Additional preserved session | Size | SHA-256 |
+| --- | ---: | --- |
+| `shoreside_session_09_17_29.alog` | 1,420,366 bytes | `d0244627ac2a65e2ec65c7668375ea9492a841a981660a086953cd699d1a5de5` |
+| `shoreside_session_09_19_27.alog` | 513,352 bytes | `4ef5a1af6918e3588c0d665e5daad1992fbd0b3a894c36cd6a852f13cd3d0718` |
+| `shoreside_session_09_27_52.alog` | 5,524,544 bytes | `df0d9fd05b59276a465ef5f636222be2d54d57d5c829647fcdb49cea6b64d298` |
+| `shoreside_session_11_01_34.alog` | 925,925 bytes | `bf08df297268ea0f217ea7a2d5fd6962d4a8f89fa7dc58bffbc5bea9ef44c150` |
 
 ## Important recording detail
 
@@ -17,6 +33,14 @@ takeoff. `demo_flight_2.BIN` contains one substantial armed flight. This
 accounts for the three remembered tests: two flights without a precision-
 landing target acquisition, followed by one successful acquisition and
 landing.
+
+The MOOS-to-DataFlash correlation is based on event timing, not merely file
+order. In sortie 1B, MOOS recorded ARM acceptance at 97.12250 s and LAND
+acceptance at 206.03004 s, an interval of 108.90754 s; DataFlash recorded LAND
+108.910 s after arming. In sortie 2A, the corresponding interval was 29.38137 s
+in MOOS and 29.377 s in DataFlash. MOOS first reported the landing target about
+5.01 s after LAND in sortie 2A, while DataFlash recorded acquisition 5.033 s
+after LAND.
 
 Times below are seconds from the start of each armed interval. Altitudes are
 the flight controller's `CTUN.Alt` estimate. `PL.TAcq=1` is the controller's
@@ -51,6 +75,16 @@ sequence.
 Battery voltage recorded during the armed interval ranged from 23.61 V to
 22.47 V.
 
+The matching shoreside log adds the operator-side route sequence. Four points
+were selected at `(32.8,-2.5)`, `(2.7,-15.9)`, `(25.9,-17.5)`, and
+`(9.2,-5.3)`. DEPLOY was pressed at 184.45480 s; the vehicle reported the route
+staged at 185.21036 s and accepted at 185.46061 s; Helm control became active
+at 185.58982 s; and Guided mode was confirmed at 186.99401 s. Every one of the
+1,582 logged `UAV_LANDING_TARGET_AVAILABLE` samples was zero. There is no LAND
+request in this shoreside session. The radio-failsafe RTL cause is established
+by the Pixhawk log; this shoreside schema did not report unsolicited flight-mode
+changes and therefore does not independently expose that cause.
+
 ### Sortie 1B: Land mode, but no target acquisition
 
 | Flight time | Event |
@@ -73,6 +107,15 @@ Stabilize and subsequent disarm.
 
 Battery voltage recorded during the armed interval ranged from 23.31 V to
 21.66 V.
+
+The matching shoreside log shows three selected route points:
+`(-3.3,-10.6)`, `(19.8,0.4)`, and `(7.4,-4.3)`. DEPLOY occurred at 113.90254 s,
+followed by vehicle-side STAGED at 114.69744 s, DEPLOY_ACCEPTED at 114.94761 s,
+and Helm activation at 115.06941 s. A `HOLD_POSITION` result at 142.15388 s
+marks the route endpoint. LAND was submitted at 205.92985 s and accepted at
+206.03004 s. All 9,312 target-availability samples in the original shoreside
+log were zero, independently agreeing with DataFlash that no landing target was
+accepted during this flight.
 
 ### Non-flight arm cycle
 
@@ -107,6 +150,55 @@ about 2.34 seconds before confirmed landing.
 
 Battery voltage recorded during the armed interval ranged from 22.81 V to
 22.01 V.
+
+The matching shoreside log shows `UAV to PEARL` selected at 248.84231 s. The
+route buffer serialized PEARL's then-current location as the single point
+`(11.5,-5.6)`, reported it staged at 251.75116 s, and received the Guided-mode
+acceptance at 253.03007 s. `HOLD_POSITION` was accepted at 260.25209 s. PREC
+LAND was requested at 264.45153 s and LAND was accepted at 264.96694 s. MOOS
+first reported `UAV_LANDING_TARGET_AVAILABLE=1` at 269.97930 s, briefly reported
+zero at 270.68196 s, reacquired at 270.88265 s, and retained availability until
+the last true sample at 296.95748 s. It changed to zero at 298.36176 s near
+touchdown; the aircraft disarmed at 303.37914 s.
+
+### Additional shoreside sessions
+
+The four unmatched sessions are preserved because they still provide useful
+bench and operator-history evidence, but they are not treated as flight logs:
+
+- `09_17_29` contains one selected route point, `(30.9,-42.8)`, and no DEPLOY
+  or UAV command result.
+- `09_19_27` contains no route or UAV command result.
+- `09_27_52` contains an on-ground ARM/DISARM exercise. Armed telemetry first
+  became true at 83.62084 s; DISARM was accepted at 86.22965 s; an RTL result
+  followed at 86.32993 s because that version of the DISARM action also invoked
+  the manual-override/RTL path; and armed telemetry returned false at
+  89.63931 s. There was no takeoff.
+- `11_01_34` contains no route or UAV command result.
+
+### pMediator observations
+
+The preserved shoreside logs show that pMediator's retries supplied useful
+redundancy and that return acknowledgements were not perfectly reliable:
+
+- In sortie 1A, the TAKEOFF request was transmitted 12 times because its
+  acknowledgement did not return, yet pArduBridge completed takeoff. The route
+  snapshot was acknowledged after two transmissions.
+- In sortie 1B, ARM, TAKEOFF, the route snapshot, and PREC LAND each produced a
+  returned `ACK_MESSAGE`; the route was nevertheless transmitted twice before
+  the first acknowledgement arrived.
+- In sortie 2A, the one-point PEARL route was transmitted 12 times and exhausted
+  the configured retry sequence without a returned acknowledgement, but the
+  vehicle reported STAGED and then accepted Guided flight. This is direct
+  evidence of a lost acknowledgement rather than a lost command. ARM, TAKEOFF,
+  and PREC LAND also produced returned acknowledgements.
+
+These observations do not provide a packet-loss percentage: pMediator retries
+at a fixed interval, and a duplicate may already be queued when an
+acknowledgement arrives. They also do not prove that any first forward command
+was dropped or that a retry rescued it. They establish that the vehicle could
+execute a command despite a missing return acknowledgement and that pMediator
+continued retrying rather than treating silence as success.
 
 ## Precision-landing configuration
 
@@ -203,13 +295,27 @@ conditions.
 
 ## Evidence and limitations
 
-The timelines were reconstructed directly from the original DataFlash `ARM`,
-`MODE`, `EV`, `ERR`, `CTUN`, `BAT`, `PARM`, and `PL` records using `pymavlink`.
-Mode reasons were decoded from the matching ArduPilot source (`RC_COMMAND=1`,
+The DataFlash timelines were reconstructed from the original `ARM`, `MODE`,
+`EV`, `ERR`, `CTUN`, `BAT`, `PARM`, and `PL` records using `pymavlink`. Mode
+reasons were decoded from the matching ArduPilot source (`RC_COMMAND=1`,
 `GCS_COMMAND=2`, and `RADIO_FAILSAFE=3`).
 
-These Pixhawk logs establish the flight-controller sequence and whether the
-landing target was acquired. They do not contain the complete shoreside route
-buffer, mouse-click, pMediator, or MOOS Helm history. Exact waypoint selection,
-delivery, and behavior transitions require the matching original MOOS `.alog`
-files if those are available.
+The shoreside analysis used only the three preserved original `.alog` files.
+The principal commands were:
+
+```sh
+alogscan LOG.alog --nocolor
+aloggrep LOG.alog ROUTE_POINT ROUTE_BUFFER_DEPLOY ROUTE_BUFFER_GOTO \
+  ROUTE_BUFFER_STATE ROUTE_BUFFER_VEHICLE_STATE UAV_COMMAND_RESULT \
+  AUTOPILOT_MODE UAV_LANDING_TARGET_AVAILABLE --tvv --sd -nc -nr
+aloggrep LOG.alog MEDIATED_MESSAGE_LOCAL ACK_MESSAGE --tvv --sd -nc -nr
+aloghelm LOG.alog -l -b -m --nocolor
+```
+
+`aloghelm` found no Helm life-event records in these shoreside logs, so the
+analysis does not infer unlogged behavior-spawn transitions. It uses the
+explicit route-buffer, pArduBridge, target-availability, mediation, and
+acknowledgement records instead. The MOOS logs establish the operator commands,
+route snapshots, and target-availability state received at shoreside; the
+Pixhawk logs remain authoritative for FC mode reasons and the controller's
+precision-landing estimator state.
