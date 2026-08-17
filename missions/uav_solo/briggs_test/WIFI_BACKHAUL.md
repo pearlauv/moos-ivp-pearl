@@ -1,4 +1,13 @@
-# PEARL Wi-Fi backhaul
+# PEARL Wi-Fi backhaul (superseded planning record)
+
+This file records the original July 2026 staging work. The ground-side Alfa was
+subsequently found on Sherlock, not the PEARL navigation Pi, and the final
+routed design uses `PEARL-UAV-BACKHAUL` with Sherlock at `172.22.90.1/30`.
+Current provisioning and field instructions live in
+`missions/charles_river/aug_pearl_uav/RADIO_BACKHAUL.md` and the Rigging
+repository's `docs/wifi-backhaul.md`. The historical observations below explain
+how the two adapters were first identified; do not use them as current rollout
+instructions.
 
 Configuration record for the dedicated wireless link between the ground Pi and
 the UAV Pi. This is separate from the Starlink router SSID, `PEARL Uplink`.
