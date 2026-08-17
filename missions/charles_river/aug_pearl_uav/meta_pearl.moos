@@ -38,6 +38,7 @@ ProcessConfig = ANTLER
   Run = iBlueRoboticsPing  @ NewConsole = false
   Run = iSherlockTelemetry @ NewConsole = false
 #else
+  Run = uTimerScript     @ NewConsole = false ~ uSimTakeoffInputs
   Run = uSimMarineV22      @ NewConsole = false
   Run = pMarinePIDV22      @ NewConsole = false
 #endif
@@ -53,6 +54,10 @@ ProcessConfig = pShare
 #ifdef DIRECT_PEER true
   output = src_name=MEDIATED_MESSAGE_LOCAL, dest_name=MEDIATED_MESSAGE, route=$(UAV_IP):$(UAV_PSHARE)
   output = src_name=ACK_MESSAGE_LOCAL, dest_name=ACK_MESSAGE, route=$(UAV_IP):$(UAV_PSHARE)
+  output = src_name=PEARL_BATTERY_SOC, route=$(UAV_IP):$(UAV_PSHARE)
+  output = src_name=PEARL_BATTERY_DATA_VALID, route=$(UAV_IP):$(UAV_PSHARE)
+  output = src_name=PEARL_WIND_SPEED, route=$(UAV_IP):$(UAV_PSHARE)
+  output = src_name=PEARL_WIND_DATA_VALID, route=$(UAV_IP):$(UAV_PSHARE)
 #endif
 }
 
@@ -106,6 +111,7 @@ ProcessConfig = uLoadWatch
   thresh = app=pPearlPID,      gapthresh=3
   thresh = app=iSherlockTelemetry, gapthresh=8
 #else
+  thresh = app=uSimTakeoffInputs, gapthresh=3
   thresh = app=uSimMarineV22,  gapthresh=3
   thresh = app=pMarinePIDV22,  gapthresh=3
 #endif
@@ -116,6 +122,27 @@ ProcessConfig = uLoadWatch
 
   breach_trigger = 5
 }
+
+//----------------------------------------------------
+#ifdef XMODE REAL
+#else
+ProcessConfig = uSimTakeoffInputs
+{
+  AppTick   = 4
+  CommsTick = 4
+  term_report_interval = 2
+
+  paused     = false
+  reset_max  = unlimited
+  reset_time = 1
+  script_name = SIM_TAKEOFF_INPUTS
+
+  event = var=PEARL_BATTERY_SOC,        val=80,   time=0
+  event = var=PEARL_BATTERY_DATA_VALID, val=true, time=0
+  event = var=PEARL_WIND_SPEED,         val=2,    time=0
+  event = var=PEARL_WIND_DATA_VALID,    val=true, time=0
+}
+#endif
 
 //----------------------------------------------------
 ProcessConfig = pLogger

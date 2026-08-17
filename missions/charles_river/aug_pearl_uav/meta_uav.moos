@@ -28,6 +28,7 @@ ProcessConfig = ANTLER
   Run = uFldMessageHandler @ NewConsole = false
   Run = pMediator      @ NewConsole = false
   Run = pRouteBuffer   @ NewConsole = false
+  Run = pTakeoffGate   @ NewConsole = false
   Run = pRendezvous    @ NewConsole = false
   Run = pHelmIvP       @ NewConsole = false
   Run = uTimerScript   @ NewConsole = false ~ uRouteClear
@@ -37,6 +38,7 @@ ProcessConfig = ANTLER
   Run = uTimerScript   @ NewConsole = false ~ uOperatorTakeoff
   Run = uTimerScript   @ NewConsole = false ~ uOperatorPrecLand
 #ifdef XMODE SIM
+  Run = uTimerScript   @ NewConsole = false ~ uSimUavBattery
   Run = uSimMarineV22  @ NewConsole = false
   Run = pMarinePIDV22  @ NewConsole = false
 #else
@@ -94,12 +96,14 @@ ProcessConfig = uLoadWatch
   term_report_interval = 2
 
 #ifdef XMODE SIM
+  thresh = app=uSimUavBattery, gapthresh=3
   thresh = app=uSimMarineV22, gapthresh=3
   thresh = app=pMarinePIDV22, gapthresh=3
 #else
   thresh = app=pArduBridge,   gapthresh=3
 #endif
   thresh = app=pHelmIvP,      gapthresh=3
+  thresh = app=pTakeoffGate,  gapthresh=3
   thresh = app=pNodeReporter, gapthresh=4
   thresh = app=pHostInfo,     gapthresh=5
   thresh = app=any,           gapthresh=2.0
@@ -208,6 +212,13 @@ ProcessConfig = uFldNodeBroker
   bridge = src=APPCAST
 
   bridge = src=UAV_COMMAND_RESULT
+  bridge = src=UAV_BATTERY_SOC
+  bridge = src=UAV_BATTERY_VOLTAGE
+  bridge = src=UAV_BATTERY_DATA_VALID
+  bridge = src=UAV_BATTERY_DATA_AGE
+  bridge = src=UAV_TAKEOFF_GATE_READY
+  bridge = src=UAV_TAKEOFF_GATE_REASON
+  bridge = src=UAV_TAKEOFF_RESULT
   bridge = src=UAV_IS_ARMED
   bridge = src=UAV_LANDED_STATE
   bridge = src=UAV_LANDING_TARGET_AVAILABLE
@@ -349,6 +360,37 @@ ProcessConfig = uDeployGuard
 }
 
 //----------------------------------------------------
+#ifdef XMODE SIM
+ProcessConfig = uSimUavBattery
+{
+  AppTick   = 4
+  CommsTick = 4
+  term_report_interval = 2
+
+  paused     = false
+  reset_max  = unlimited
+  reset_time = 1
+  script_name = SIM_UAV_BATTERY
+
+  event = var=UAV_BATTERY_SOC,        val=80,   time=0
+  event = var=UAV_BATTERY_DATA_VALID, val=true, time=0
+}
+#endif
+
+//----------------------------------------------------
+ProcessConfig = pTakeoffGate
+{
+  AppTick   = 4
+  CommsTick = 4
+  term_report_interval = 2
+
+  min_uav_soc    = 30
+  min_pearl_soc  = 15
+  max_wind_speed = 4
+  input_max_age  = 3
+}
+
+//----------------------------------------------------
 // Expand each acknowledged operator request inside the vehicle community.
 // Distinct request variables prevent one command type from superseding another
 // in pMediator's per-variable ordering cache.
@@ -411,7 +453,7 @@ ProcessConfig = uOperatorTakeoff
   CommsTick = 10
   term_report_interval = 2
 
-  condition     = UAV_TAKEOFF_REQUEST = true
+  condition     = UAV_TAKEOFF_APPROVED = 1
   upon_awake    = restart
   script_atomic = true
   reset_max     = unlimited
@@ -429,7 +471,7 @@ ProcessConfig = uOperatorTakeoff
 #else
   event = var=ARDU_COMMAND, val=DO_TAKEOFF, time=0
 #endif
-  event = var=UAV_TAKEOFF_REQUEST, val=false, time=0.10
+  event = var=UAV_TAKEOFF_APPROVED, val=0, time=0.10
 }
 
 //----------------------------------------------------

@@ -35,8 +35,8 @@ demonstration policy, not a current-aware or obstacle-aware planner.
 The UAV must have fresh navigation and, outside basic SIM, must be armed,
 airborne, and healthy before it may start. PEARL rejects stale navigation,
 unhealthy requests, malformed proposals, low known battery, and timeouts.
-Battery reserve enforcement is presently disabled because `pArduBridge` does
-not yet publish an authoritative remaining-charge percentage.
+Rendezvous-level battery reserve enforcement remains disabled; takeoff has the
+separate gate described below.
 
 ## Reliable versus periodic transport
 
@@ -70,6 +70,19 @@ UAV controls:
 - `UAV ARM`, `UAV DISARM`, `UAV TAKEOFF`
 - `UAV DEPLOY`, `UAV CLEAR`, `UAV PREC LAND`
 - `UAV TO PEARL`
+
+Each `UAV TAKEOFF` request is consumed on the UAV and approved only when all
+three fresh, valid inputs pass:
+
+- UAV battery SOC is at least 30 percent;
+- PEARL battery SOC is at least 15 percent; and
+- apparent wind over PEARL is no more than 4 m/s.
+
+The gate publishes `UAV_TAKEOFF_GATE_READY`, `UAV_TAKEOFF_GATE_REASON`, and a
+per-request `UAV_TAKEOFF_RESULT`. A rejected request cannot remain pending and
+cause a later takeoff. SIM supplies 80-percent batteries and 2 m/s wind so the
+normal operator sequence remains immediately usable; focused tests may poke
+the same variables to exercise each rejection.
 
 Choose the `route` mouse context and click an ordered route. `UAV DEPLOY` sends
 the stored snapshot. `UAV TO PEARL` instead sends a one-point snapshot of
@@ -184,6 +197,11 @@ through the same HTTP endpoint. Splitting the app would download the same
 roughly 180 KiB metrics document twice and would not isolate endpoint failure.
 The app instead validates and retains the two source snapshots independently:
 missing battery metrics do not suppress fresh wind, and vice versa.
+
+In SITL and REAL, `pArduBridge` publishes the flight controller's primary
+battery estimate as `UAV_BATTERY_SOC` and `UAV_BATTERY_VOLTAGE`, together with
+`UAV_BATTERY_DATA_VALID` and `UAV_BATTERY_DATA_AGE`. The SOC estimate is used
+only when it is finite and no more than three seconds old.
 
 All applications connect to their same-host MOOSDB through
 `ServerHost=localhost`. Each sublauncher's `--ip` is its advertised pShare
