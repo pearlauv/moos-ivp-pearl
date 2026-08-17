@@ -245,10 +245,8 @@ ProcessConfig = uFldNodeBroker
   bridge = src=PEARL_BATTERY_DATA_VALID
   bridge = src=PEARL_BATTERY_DATA_AGE
   bridge = src=PEARL_WIND_SPEED
-  bridge = src=PEARL_WIND_SPEED_APPARENT
-  bridge = src=PEARL_WIND_SPEED_TRUE
   bridge = src=PEARL_WIND_DATA_VALID
-  bridge = src=PEARL_WIND_DATA_AGE
+  bridge = src=PEARL_AIRMAR_DATA_AGE
 }
 
 //----------------------------------------------------
@@ -354,9 +352,9 @@ ProcessConfig = iSherlockTelemetry
   metrics_port    = $(SHERLOCK_METRICS_PORT)
   metrics_path    = /metrics
   poll_interval   = 2
-  http_timeout    = 5
+  http_timeout    = 1
   battery_max_age = 30
-  wind_max_age    = 5
+  airmar_max_age  = 5
 }
 #else
 //----------------------------------------------------

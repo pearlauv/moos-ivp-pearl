@@ -27,7 +27,10 @@ using namespace std;
 namespace {
 
 const size_t MAX_RESPONSE_BYTES = 2 * 1024 * 1024;
+const double PUBLISH_INTERVAL = 1.0;
 const string FETCH_WARNING = "Sherlock metrics unavailable";
+const string BATTERY_WARNING = "Sherlock battery metrics incomplete";
+const string WIND_WARNING = "Sherlock Airmar wind metrics incomplete";
 
 bool connectWithTimeout(int fd, const struct sockaddr* addr,
                         socklen_t addr_len, double timeout)
@@ -68,11 +71,34 @@ bool sendAll(int fd, const string& request)
 {
   size_t sent = 0;
   while(sent < request.size()) {
-    ssize_t count = send(fd, request.data() + sent, request.size() - sent, 0);
+    int flags = 0;
+#ifdef MSG_NOSIGNAL
+    flags = MSG_NOSIGNAL;
+#endif
+    ssize_t count = send(fd, request.data() + sent, request.size() - sent,
+                         flags);
     if(count <= 0)
       return false;
     sent += static_cast<size_t>(count);
   }
+  return true;
+}
+
+bool setPositiveDouble(double& target, const string& value)
+{
+  double parsed = 0;
+  if(!setDoubleOnString(parsed, value) || parsed <= 0)
+    return false;
+  target = parsed;
+  return true;
+}
+
+bool setPort(string& target, const string& value)
+{
+  unsigned int parsed = 0;
+  if(!setUIntOnString(parsed, value) || parsed == 0 || parsed > 65535)
+    return false;
+  target = uintToString(parsed);
   return true;
 }
 
@@ -114,23 +140,29 @@ SherlockTelemetry::SherlockTelemetry()
     m_metrics_port("9273"),
     m_metrics_path("/metrics"),
     m_poll_interval(2.0),
-    m_http_timeout(5.0),
+    m_http_timeout(1.0),
     m_battery_max_age(30.0),
-    m_wind_max_age(5.0),
+    m_airmar_max_age(5.0),
     m_last_poll_time(-1),
-    m_last_success_time(-1),
+    m_last_publish_time(-1),
+    m_last_fetch_success_time(-1),
+    m_battery_received_time(-1),
+    m_wind_received_time(-1),
     m_battery_soc(-1),
     m_battery_charging(0),
     m_battery_source_age(-1),
     m_wind_speed(-1),
-    m_true_wind_speed(-1),
-    m_wind_source_age(-1),
+    m_airmar_source_age(-1),
     m_battery_connected(false),
-    m_wind_source_valid(false),
-    m_true_wind_set(false),
+    m_airmar_up(false),
+    m_wind_measurement_valid(false),
     m_fetch_warning_active(false),
+    m_battery_warning_active(false),
+    m_wind_warning_active(false),
     m_fetch_count(0),
-    m_success_count(0)
+    m_fetch_success_count(0),
+    m_battery_update_count(0),
+    m_wind_update_count(0)
 {
 }
 
@@ -161,23 +193,43 @@ bool SherlockTelemetry::Iterate()
 
   double now = MOOSTime();
   if(m_last_poll_time < 0 || now - m_last_poll_time >= m_poll_interval) {
-    m_last_poll_time = now;
     ++m_fetch_count;
 
     string body;
     string error;
-    if(fetchMetrics(body, error) && parseMetrics(body, error)) {
-      m_last_success_time = now;
-      ++m_success_count;
+    if(fetchMetrics(body, error)) {
+      double completed = MOOSTime();
+      m_last_fetch_success_time = completed;
+      ++m_fetch_success_count;
+      setWarning(FETCH_WARNING, false, m_fetch_warning_active);
+
+      string battery_error;
+      string wind_error;
+      bool battery_ok = parseBatteryMetrics(body, battery_error);
+      bool wind_ok = parseWindMetrics(body, wind_error);
+      setWarning(BATTERY_WARNING, !battery_ok, m_battery_warning_active);
+      setWarning(WIND_WARNING, !wind_ok, m_wind_warning_active);
+
       m_last_error.clear();
-      setFetchWarning(false);
+      if(!battery_ok)
+        m_last_error = battery_error;
+      if(!wind_ok) {
+        if(!m_last_error.empty())
+          m_last_error += "; ";
+        m_last_error += wind_error;
+      }
     } else {
       m_last_error = error;
-      setFetchWarning(true);
+      setWarning(FETCH_WARNING, true, m_fetch_warning_active);
     }
+    m_last_poll_time = MOOSTime();
   }
 
-  publishTelemetry();
+  now = MOOSTime();
+  if(m_last_publish_time < 0 || now - m_last_publish_time >= PUBLISH_INTERVAL) {
+    publishTelemetry();
+    m_last_publish_time = now;
+  }
   AppCastingMOOSApp::PostReport();
   return true;
 }
@@ -200,23 +252,23 @@ bool SherlockTelemetry::OnStartUp()
     bool handled = false;
 
     if(param == "metrics_host") {
-      m_metrics_host = value;
-      handled = !m_metrics_host.empty();
+      handled = !value.empty();
+      if(handled)
+        m_metrics_host = value;
     } else if(param == "metrics_port") {
-      m_metrics_port = value;
-      handled = isNumber(m_metrics_port) && atoi(m_metrics_port.c_str()) > 0 &&
-                atoi(m_metrics_port.c_str()) <= 65535;
+      handled = setPort(m_metrics_port, value);
     } else if(param == "metrics_path") {
-      m_metrics_path = value;
-      handled = strBegins(m_metrics_path, "/");
+      handled = strBegins(value, "/");
+      if(handled)
+        m_metrics_path = value;
     } else if(param == "poll_interval") {
-      handled = setDoubleOnString(m_poll_interval, value) && m_poll_interval > 0;
+      handled = setPositiveDouble(m_poll_interval, value);
     } else if(param == "http_timeout") {
-      handled = setDoubleOnString(m_http_timeout, value) && m_http_timeout > 0;
+      handled = setPositiveDouble(m_http_timeout, value);
     } else if(param == "battery_max_age") {
-      handled = setDoubleOnString(m_battery_max_age, value) && m_battery_max_age > 0;
-    } else if(param == "wind_max_age") {
-      handled = setDoubleOnString(m_wind_max_age, value) && m_wind_max_age > 0;
+      handled = setPositiveDouble(m_battery_max_age, value);
+    } else if(param == "airmar_max_age") {
+      handled = setPositiveDouble(m_airmar_max_age, value);
     }
 
     if(!handled)
@@ -254,6 +306,11 @@ bool SherlockTelemetry::fetchMetrics(string& body, string& error) const
     fd = socket(addr->ai_family, addr->ai_socktype, addr->ai_protocol);
     if(fd < 0)
       continue;
+#ifdef SO_NOSIGPIPE
+    int no_sigpipe = 1;
+    setsockopt(fd, SOL_SOCKET, SO_NOSIGPIPE, &no_sigpipe,
+               sizeof(no_sigpipe));
+#endif
     if(connectWithTimeout(fd, addr->ai_addr, addr->ai_addrlen, m_http_timeout))
       break;
     close(fd);
@@ -320,91 +377,138 @@ bool SherlockTelemetry::fetchMetrics(string& body, string& error) const
 }
 
 //---------------------------------------------------------
-bool SherlockTelemetry::parseMetrics(const string& body, string& error)
+bool SherlockTelemetry::parseBatteryMetrics(const string& body, string& error)
 {
+  double soc = 0;
+  double charging = 0;
   double battery_connected = 0;
-  double wind_valid = 0;
+  double source_age = 0;
 
   bool complete = true;
-  complete &= extractMetric(body, "pearl_cmp_ble_soc_percent_gauge", m_battery_soc);
-  complete &= extractMetric(body, "pearl_cmp_ble_charging_gauge", m_battery_charging);
+  complete &= extractMetric(body, "pearl_cmp_ble_soc_percent_gauge", soc);
+  complete &= extractMetric(body, "pearl_cmp_ble_charging_gauge", charging);
   complete &= extractMetric(body, "pearl_cmp_ble_connected_gauge", battery_connected);
   complete &= extractMetric(body, "pearl_cmp_ble_last_sample_age_seconds_gauge",
-                            m_battery_source_age);
-  complete &= extractMetric(body,
-                            "pearl_airmar_wind_speed_meters_per_second_gauge",
-                            m_wind_speed);
-  complete &= extractMetric(body, "pearl_airmar_wind_valid_gauge", wind_valid);
-  complete &= extractMetric(body, "pearl_airmar_last_sentence_age_seconds_gauge",
-                            m_wind_source_age);
-
-  double true_wind = 0;
-  m_true_wind_set = extractMetric(
-    body, "pearl_airmar_true_wind_speed_meters_per_second_gauge", true_wind);
-  if(m_true_wind_set)
-    m_true_wind_speed = true_wind;
+                            source_age);
 
   if(!complete) {
-    error = "response is missing required battery or wind metrics";
+    error = "response is missing required battery metrics";
     return false;
   }
 
+  m_battery_soc = soc;
+  m_battery_charging = charging;
+  m_battery_source_age = source_age;
   m_battery_connected = battery_connected >= 0.5;
-  m_wind_source_valid = wind_valid >= 0.5;
+  m_battery_received_time = MOOSTime();
+  ++m_battery_update_count;
   return true;
+}
+
+//---------------------------------------------------------
+bool SherlockTelemetry::parseWindMetrics(const string& body, string& error)
+{
+  double wind_speed = 0;
+  double wind_valid = 0;
+  double airmar_up = 0;
+  double source_age = 0;
+
+  bool complete = true;
+  complete &= extractMetric(body,
+                            "pearl_airmar_wind_speed_meters_per_second_gauge",
+                            wind_speed);
+  complete &= extractMetric(body, "pearl_airmar_wind_valid_gauge", wind_valid);
+  complete &= extractMetric(body, "pearl_airmar_up_gauge", airmar_up);
+  complete &= extractMetric(body, "pearl_airmar_last_sentence_age_seconds_gauge",
+                            source_age);
+
+  if(!complete) {
+    error = "response is missing required Airmar wind metrics";
+    return false;
+  }
+
+  m_wind_speed = wind_speed;
+  m_wind_measurement_valid = wind_valid >= 0.5;
+  m_airmar_up = airmar_up >= 0.5;
+  m_airmar_source_age = source_age;
+  m_wind_received_time = MOOSTime();
+  ++m_wind_update_count;
+  return true;
+}
+
+//---------------------------------------------------------
+double SherlockTelemetry::batteryAge(double now) const
+{
+  if(m_battery_received_time < 0 || m_battery_source_age < 0)
+    return -1;
+  return m_battery_source_age + (now - m_battery_received_time);
+}
+
+//---------------------------------------------------------
+double SherlockTelemetry::airmarAge(double now) const
+{
+  if(m_wind_received_time < 0 || m_airmar_source_age < 0)
+    return -1;
+  return m_airmar_source_age + (now - m_wind_received_time);
+}
+
+//---------------------------------------------------------
+bool SherlockTelemetry::batteryValid(double now) const
+{
+  double age = batteryAge(now);
+  return m_battery_received_time >= 0 && m_battery_connected &&
+         m_battery_soc >= 0 && m_battery_soc <= 100 && age >= 0 &&
+         age <= m_battery_max_age;
+}
+
+//---------------------------------------------------------
+bool SherlockTelemetry::windValid(double now) const
+{
+  double age = airmarAge(now);
+  return m_wind_received_time >= 0 && m_airmar_up &&
+         m_wind_measurement_valid && m_wind_speed >= 0 && age >= 0 &&
+         age <= m_airmar_max_age;
 }
 
 //---------------------------------------------------------
 void SherlockTelemetry::publishTelemetry()
 {
-  double elapsed = (m_last_success_time < 0) ? -1 : MOOSTime() - m_last_success_time;
-  double battery_age = (elapsed < 0 || m_battery_source_age < 0) ?
-                       -1 : m_battery_source_age + elapsed;
-  double wind_age = (elapsed < 0 || m_wind_source_age < 0) ?
-                    -1 : m_wind_source_age + elapsed;
+  double now = MOOSTime();
+  double battery_age = batteryAge(now);
+  double airmar_age = airmarAge(now);
 
-  bool battery_valid = m_last_success_time >= 0 && m_battery_connected &&
-                       m_battery_soc >= 0 && m_battery_soc <= 100 &&
-                       battery_age >= 0 && battery_age <= m_battery_max_age;
-  bool wind_valid = m_last_success_time >= 0 && m_wind_source_valid &&
-                    m_wind_speed >= 0 && wind_age >= 0 &&
-                    wind_age <= m_wind_max_age;
-
-  if(m_last_success_time >= 0) {
+  if(m_battery_received_time >= 0) {
     Notify("PEARL_BATTERY_SOC", m_battery_soc);
     Notify("PEARL_BATTERY_CHARGING", m_battery_charging >= 0.5 ? 1.0 : 0.0);
-    Notify("PEARL_WIND_SPEED", m_wind_speed);
-    Notify("PEARL_WIND_SPEED_APPARENT", m_wind_speed);
-    if(m_true_wind_set)
-      Notify("PEARL_WIND_SPEED_TRUE", m_true_wind_speed);
   }
+  if(m_wind_received_time >= 0)
+    Notify("PEARL_WIND_SPEED", m_wind_speed);
 
   Notify("PEARL_BATTERY_DATA_AGE", battery_age);
-  Notify("PEARL_BATTERY_DATA_VALID", battery_valid ? 1.0 : 0.0);
-  Notify("PEARL_WIND_DATA_AGE", wind_age);
-  Notify("PEARL_WIND_DATA_VALID", wind_valid ? 1.0 : 0.0);
+  Notify("PEARL_BATTERY_DATA_VALID", batteryValid(now) ? 1.0 : 0.0);
+  Notify("PEARL_AIRMAR_DATA_AGE", airmar_age);
+  Notify("PEARL_WIND_DATA_VALID", windValid(now) ? 1.0 : 0.0);
 }
 
 //---------------------------------------------------------
-void SherlockTelemetry::setFetchWarning(bool active)
+void SherlockTelemetry::setWarning(const string& warning, bool active,
+                                    bool& warning_active)
 {
-  if(active && !m_fetch_warning_active) {
-    reportRunWarning(FETCH_WARNING);
-    m_fetch_warning_active = true;
-  } else if(!active && m_fetch_warning_active) {
-    retractRunWarning(FETCH_WARNING);
-    m_fetch_warning_active = false;
+  if(active && !warning_active) {
+    reportRunWarning(warning);
+    warning_active = true;
+  } else if(!active && warning_active) {
+    retractRunWarning(warning);
+    warning_active = false;
   }
 }
 
 //------------------------------------------------------------
 bool SherlockTelemetry::buildReport()
 {
-  double elapsed = (m_last_success_time < 0) ? -1 : MOOSTime() - m_last_success_time;
-  double battery_age = (elapsed < 0 || m_battery_source_age < 0) ?
-                       -1 : m_battery_source_age + elapsed;
-  double wind_age = (elapsed < 0 || m_wind_source_age < 0) ?
-                    -1 : m_wind_source_age + elapsed;
+  double now = MOOSTime();
+  double battery_age = batteryAge(now);
+  double airmar_age = airmarAge(now);
 
   m_msgs << "Configuration" << endl;
   m_msgs << "  metrics_host:    " << m_metrics_host << endl;
@@ -413,26 +517,26 @@ bool SherlockTelemetry::buildReport()
   m_msgs << "  poll_interval:   " << m_poll_interval << " s" << endl;
   m_msgs << "  http_timeout:    " << m_http_timeout << " s" << endl;
   m_msgs << "  battery_max_age: " << m_battery_max_age << " s" << endl;
-  m_msgs << "  wind_max_age:    " << m_wind_max_age << " s" << endl;
+  m_msgs << "  airmar_max_age:  " << m_airmar_max_age << " s" << endl;
   m_msgs << endl;
 
   ACTable table(4);
   table << "Source | Value | Age (s) | Valid";
   table.addHeaderLines();
-  bool battery_valid = m_last_success_time >= 0 && m_battery_connected &&
-                       m_battery_soc >= 0 && m_battery_soc <= 100 &&
-                       battery_age >= 0 && battery_age <= m_battery_max_age;
-  bool wind_valid = m_last_success_time >= 0 && m_wind_source_valid &&
-                    m_wind_speed >= 0 && wind_age >= 0 && wind_age <= m_wind_max_age;
   table << "Battery SOC" << doubleToStringX(m_battery_soc, 1)
-        << doubleToStringX(battery_age, 2) << boolToString(battery_valid);
+        << doubleToStringX(battery_age, 2) << boolToString(batteryValid(now));
   table << "Apparent wind" << doubleToStringX(m_wind_speed, 2)
-        << doubleToStringX(wind_age, 2) << boolToString(wind_valid);
-  table << "True wind" << (m_true_wind_set ? doubleToStringX(m_true_wind_speed, 2) : "n/a")
-        << doubleToStringX(wind_age, 2) << boolToString(wind_valid && m_true_wind_set);
+        << doubleToStringX(airmar_age, 2) << boolToString(windValid(now));
   m_msgs << table.getFormattedString() << endl;
   m_msgs << "Charging: " << boolToString(m_battery_charging >= 0.5) << endl;
-  m_msgs << "Fetches: " << m_fetch_count << ", successes: " << m_success_count << endl;
+  m_msgs << "Fetches: " << m_fetch_count
+         << ", HTTP successes: " << m_fetch_success_count << endl;
+  double fetch_age = (m_last_fetch_success_time < 0) ?
+                     -1 : now - m_last_fetch_success_time;
+  m_msgs << "Last HTTP success age: " << doubleToStringX(fetch_age, 2)
+         << " s" << endl;
+  m_msgs << "Battery updates: " << m_battery_update_count
+         << ", wind updates: " << m_wind_update_count << endl;
   if(!m_last_error.empty())
     m_msgs << "Last error: " << m_last_error << endl;
 

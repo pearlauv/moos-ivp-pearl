@@ -165,12 +165,25 @@ Telegraf endpoint over the direct PEARL Ethernet network at
   --sherlock_metrics_host=100.64.194.59 --sherlock_metrics_port=9273
 ```
 
-The interface publishes `PEARL_BATTERY_SOC`, `PEARL_BATTERY_CHARGING`,
-`PEARL_WIND_SPEED` (apparent wind, m/s), and `PEARL_WIND_SPEED_TRUE`. Consumers
-must also check `PEARL_BATTERY_DATA_VALID` or `PEARL_WIND_DATA_VALID`; the
-matching `*_DATA_AGE` variables report source age in seconds. Selected values
-are bridged to shoreside as ordinary latest-state telemetry, not mediated
-commands.
+The interface publishes `PEARL_BATTERY_SOC`, `PEARL_BATTERY_CHARGING`, and
+`PEARL_WIND_SPEED`. Wind speed means apparent wind over the moving PEARL deck,
+which is the airflow relevant to UAV landing. The mission does not currently
+publish a second apparent-wind alias or true wind because neither adds a new
+input to the present landing decision.
+
+Consumers must also check `PEARL_BATTERY_DATA_VALID` or
+`PEARL_WIND_DATA_VALID`. `PEARL_BATTERY_DATA_AGE` is the CMP sample age;
+`PEARL_AIRMAR_DATA_AGE` is the age of the latest valid sentence from the Airmar
+feed. The current Airmar exporter does not provide a wind-sentence-specific
+age, so wind validity combines the latest MWV validity status with overall
+Airmar feed freshness. Selected values are bridged to shoreside as ordinary
+latest-state telemetry, not mediated commands.
+
+Battery and wind remain in one interface app because Sherlock exposes both
+through the same HTTP endpoint. Splitting the app would download the same
+roughly 180 KiB metrics document twice and would not isolate endpoint failure.
+The app instead validates and retains the two source snapshots independently:
+missing battery metrics do not suppress fresh wind, and vice versa.
 
 All applications connect to their same-host MOOSDB through
 `ServerHost=localhost`. Each sublauncher's `--ip` is its advertised pShare

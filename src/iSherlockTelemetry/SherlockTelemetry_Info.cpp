@@ -22,8 +22,8 @@ void showSynopsis()
   blk("------------------------------------                            ");
   blk("  iSherlockTelemetry polls Sherlock's Prometheus endpoint and   ");
   blk("  publishes PEARL battery state and Airmar wind measurements.   ");
-  blk("  Source-provided ages and validity are preserved so consumers  ");
-  blk("  can distinguish fresh telemetry from retained values.         ");
+  blk("  Battery and wind snapshots are validated independently so one ");
+  blk("  unavailable source does not suppress the other.               ");
   blk("                                                                ");
 }
 
@@ -78,9 +78,9 @@ void showExampleConfigAndExit()
   blk("  metrics_port    = 9273                                        ");
   blk("  metrics_path    = /metrics                                    ");
   blk("  poll_interval   = 2                                          ");
-  blk("  http_timeout    = 5                                          ");
+  blk("  http_timeout    = 1                                          ");
   blk("  battery_max_age = 30                                         ");
-  blk("  wind_max_age    = 5                                          ");
+  blk("  airmar_max_age  = 5                                          ");
   blk("}                                                               ");
   blk("                                                                ");
   exit(0);
@@ -109,11 +109,10 @@ void showInterfaceAndExit()
   blk("  PEARL_BATTERY_DATA_VALID  1 when connected and sufficiently  ");
   blk("                            fresh                               ");
   blk("  PEARL_BATTERY_DATA_AGE    Source sample age, seconds          ");
-  blk("  PEARL_WIND_SPEED          Apparent wind speed, m/s            ");
-  blk("  PEARL_WIND_SPEED_APPARENT Apparent wind speed, m/s            ");
-  blk("  PEARL_WIND_SPEED_TRUE     True wind speed, m/s, when present  ");
-  blk("  PEARL_WIND_DATA_VALID     1 when Airmar data is valid/fresh   ");
-  blk("  PEARL_WIND_DATA_AGE       Source sentence age, seconds        ");
+  blk("  PEARL_WIND_SPEED          Apparent wind over PEARL, m/s       ");
+  blk("  PEARL_WIND_DATA_VALID     1 when latest MWV status is valid   ");
+  blk("                            and the Airmar feed is fresh        ");
+  blk("  PEARL_AIRMAR_DATA_AGE     Age of latest Airmar sentence, s    ");
   blk("                                                                ");
   exit(0);
 }

@@ -251,9 +251,8 @@ ProcessConfig = pMarineViewer
   scope = PEARL_BATTERY_DATA_VALID
   scope = PEARL_BATTERY_DATA_AGE
   scope = PEARL_WIND_SPEED
-  scope = PEARL_WIND_SPEED_TRUE
   scope = PEARL_WIND_DATA_VALID
-  scope = PEARL_WIND_DATA_AGE
+  scope = PEARL_AIRMAR_DATA_AGE
 
   // Route selection and buttons 1-6 retain the proven UAV operator workflow.
   left_context[route] = ROUTE_POINT = "x=$[XPOS],y=$[YPOS]"
