@@ -24,6 +24,7 @@ SimAttachment::SimAttachment()
     m_detach_heading(0.0),
     m_last_state(""),
     m_last_state_post(-1.0),
+    m_last_enable_post(-1.0),
     m_attach_count(0),
     m_detach_count(0)
 {
@@ -67,6 +68,15 @@ bool SimAttachment::Iterate()
 {
   AppCastingMOOSApp::Iterate();
 
+  // Reassert detached ownership so an app restart cannot leave the local
+  // simulator disabled by an earlier attachment session.
+  if(!m_attachment_requested && !m_attached && !m_detaching &&
+     ((m_last_enable_post < 0.0) ||
+      ((MOOSTime() - m_last_enable_post) >= 1.0))) {
+    Notify("USM_ENABLED", "true");
+    m_last_enable_post = MOOSTime();
+  }
+
   if(m_attachment_requested && !m_attached && !m_detaching && poseFresh()) {
     Notify("USM_ENABLED", "false");
     m_attached = true;
@@ -90,6 +100,7 @@ bool SimAttachment::Iterate()
   else if(m_detaching) {
     postPose(m_detach_x, m_detach_y, m_detach_heading, 0.0);
     Notify("USM_ENABLED", "true");
+    m_last_enable_post = MOOSTime();
     m_attached = false;
     m_detaching = false;
     ++m_detach_count;
@@ -154,8 +165,11 @@ bool SimAttachment::handleMailDouble(const CMOOSMsg &msg, TimedValue &target)
 bool SimAttachment::handleMailAttachment(const CMOOSMsg &msg)
 {
   bool requested = false;
-  if(msg.IsDouble())
+  if(msg.IsDouble()) {
+    if(!std::isfinite(msg.GetDouble()))
+      return false;
     requested = (msg.GetDouble() != 0.0);
+  }
   else if(msg.IsString()) {
     if(!setBooleanOnString(requested, msg.GetString()))
       return false;
@@ -231,6 +245,8 @@ bool SimAttachment::buildReport()
   m_msgs << "  Input max age: " << doubleToStringX(m_input_max_age, 1)
          << " s" << endl;
   m_msgs << "  Initially attached: " << boolToString(m_initially_attached)
+         << endl;
+  m_msgs << "Attachment requested: " << boolToString(m_attachment_requested)
          << endl;
   m_msgs << "State: " << stateString() << endl;
   m_msgs << "Attach/detach count: " << m_attach_count << "/"

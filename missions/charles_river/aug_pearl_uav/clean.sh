@@ -1,7 +1,7 @@
 #!/bin/bash
 #--------------------------------------------------------------
 #   Script: clean.sh
-#  Mission: moos_dawg_demo
+#  Mission: aug_pearl_uav
 #   Author: Charles Benjamin
 #--------------------------------------------------------------
 RM_FLAGS=()

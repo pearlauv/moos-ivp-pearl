@@ -1,7 +1,7 @@
 #!/bin/bash
 #------------------------------------------------------------
 #   Script: launch.sh
-#  Mission: moos_dawg_demo
+#  Mission: aug_pearl_uav
 #   Author: Charles Benjamin
 #------------------------------------------------------------
 #  Part 1: Set convenience functions and catch SIGINT.
@@ -129,8 +129,11 @@ fi
 
 UAV_MODE="$MODE"
 PEARL_MODE="$MODE"
+SIM_ATTACHMENT="false"
 if [ "$MODE" = "SITL" ]; then
   PEARL_MODE="SIM"
+elif [ "$MODE" = "SIM" ]; then
+  SIM_ATTACHMENT="true"
 fi
 
 #------------------------------------------------------------
@@ -146,6 +149,7 @@ if [ "$VERBOSE" = "yes" ]; then
   echo "MODE =              [${MODE}]"
   echo "UAV_MODE =          [${UAV_MODE}]"
   echo "PEARL_MODE =        [${PEARL_MODE}]"
+  echo "SIM_ATTACHMENT =    [${SIM_ATTACHMENT}]"
   echo "UAV_START =         [${UAV_START}]"
   echo "PEARL_START =       [${PEARL_START}]"
   echo "SHORE_MPORT =       [${SHORE_MPORT}]"
@@ -182,6 +186,7 @@ PARGS=(--auto "$TIME_WARP" --mode="$PEARL_MODE")
 PARGS+=(--mport="$PEARL_MPORT" --pshare="$PEARL_PSHARE")
 PARGS+=(--shore_pshare="$SHORE_PSHARE" --start_pos="$PEARL_START")
 PARGS+=(--uav_ip=localhost --uav_pshare="$UAV_PSHARE")
+PARGS+=(--sim_attachment="$SIM_ATTACHMENT")
 [ "$JUST_MAKE" = "yes" ] && PARGS+=(--just_make)
 [ "$VERBOSE" = "yes" ] && PARGS+=(--verbose)
 

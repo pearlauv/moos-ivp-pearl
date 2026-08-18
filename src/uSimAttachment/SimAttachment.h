@@ -58,6 +58,7 @@ private:
 
   std::string m_last_state;
   double m_last_state_post;
+  double m_last_enable_post;
   unsigned int m_attach_count;
   unsigned int m_detach_count;
 };

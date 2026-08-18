@@ -1,7 +1,7 @@
 #!/bin/bash
 #------------------------------------------------------------
 #   Script: launch_uav.sh
-#  Mission: moos_dawg_demo
+#  Mission: aug_pearl_uav
 #   Author: Charles Benjamin
 #------------------------------------------------------------
 #  Part 1: Set convenience functions and catch SIGINT.

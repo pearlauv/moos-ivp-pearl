@@ -124,8 +124,14 @@ pose and request variables. This mission maps PEARL navigation into that
 interface and aliases the generic status outputs to `UAV_SIM_ATTACHED` and
 `UAV_SIM_ATTACHMENT_STATE` for operator display.
 
+If the attachment pose becomes stale, the UAV freezes at the last received
+pose and reports `ATTACHED_POSE_STALE`. While detached, the app reasserts local
+simulator ownership so restarting the attachment helper cannot leave the UAV
+simulator disabled.
+
 This visual attachment is SIM-only. SITL and REAL continue to use flight-
-controller navigation and do not launch `uSimAttachment`.
+controller navigation, do not launch `uSimAttachment`, and do not forward the
+PEARL attachment-pose stream.
 
 ## Layout and launch modes
 
