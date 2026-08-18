@@ -58,6 +58,12 @@ ProcessConfig = pShare
   output = src_name=PEARL_BATTERY_DATA_VALID, route=$(UAV_IP):$(UAV_PSHARE)
   output = src_name=PEARL_WIND_SPEED, route=$(UAV_IP):$(UAV_PSHARE)
   output = src_name=PEARL_WIND_DATA_VALID, route=$(UAV_IP):$(UAV_PSHARE)
+#ifdef XMODE SIM
+  output = src_name=NAV_X,       dest_name=PEARL_NAV_X,       route=$(UAV_IP):$(UAV_PSHARE)
+  output = src_name=NAV_Y,       dest_name=PEARL_NAV_Y,       route=$(UAV_IP):$(UAV_PSHARE)
+  output = src_name=NAV_HEADING, dest_name=PEARL_NAV_HEADING, route=$(UAV_IP):$(UAV_PSHARE)
+  output = src_name=NAV_SPEED,   dest_name=PEARL_NAV_SPEED,   route=$(UAV_IP):$(UAV_PSHARE)
+#endif
 #endif
 }
 

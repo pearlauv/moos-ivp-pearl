@@ -105,6 +105,23 @@ The normal sequence is:
 4. Let the coordinated workflow request precision landing, or press
    `RNDV ABORT` to hold both vehicles.
 
+## SIM landing attachment
+
+SIM visually carries the UAV with PEARL after a precision landing. When the
+SIM precision-land sequence completes, `uSimAttachment` disables the UAV's
+`uSimMarineV22` navigation output and publishes the current PEARL position,
+heading, and speed as the UAV navigation solution. The two icons therefore
+move together without running two competing UAV navigation publishers.
+
+The next SIM takeoff detaches the UAV automatically. Before re-enabling
+`uSimMarineV22`, the app resets it to PEARL's latest position and heading, so
+the UAV resumes independent flight from the platform instead of jumping back
+to its pre-landing position. `UAV_SIM_ATTACHED` and
+`UAV_SIM_ATTACHMENT_STATE` expose the current handoff state.
+
+This visual attachment is SIM-only. SITL and REAL continue to use flight-
+controller navigation and do not launch `uSimAttachment`.
+
 ## Layout and launch modes
 
 - Map: `MIT_SP.tif`

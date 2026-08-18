@@ -39,6 +39,7 @@ ProcessConfig = ANTLER
   Run = uTimerScript   @ NewConsole = false ~ uOperatorPrecLand
 #ifdef XMODE SIM
   Run = uTimerScript   @ NewConsole = false ~ uSimUavBattery
+  Run = uSimAttachment @ NewConsole = false
   Run = uSimMarineV22  @ NewConsole = false
   Run = pMarinePIDV22  @ NewConsole = false
 #else
@@ -97,6 +98,7 @@ ProcessConfig = uLoadWatch
 
 #ifdef XMODE SIM
   thresh = app=uSimUavBattery, gapthresh=3
+  thresh = app=uSimAttachment, gapthresh=3
   thresh = app=uSimMarineV22, gapthresh=3
   thresh = app=pMarinePIDV22, gapthresh=3
 #else
@@ -232,6 +234,8 @@ ProcessConfig = uFldNodeBroker
   bridge = src=NAV_ALTITUDE
 #ifdef XMODE SIM
   bridge = src=STATION_KEEP
+  bridge = src=UAV_SIM_ATTACHED
+  bridge = src=UAV_SIM_ATTACHMENT_STATE
 #else
   bridge = src=DESIRED_HEADING
   bridge = src=DESIRED_SPEED
@@ -378,6 +382,18 @@ ProcessConfig = uSimUavBattery
 #endif
 
 //----------------------------------------------------
+#ifdef XMODE SIM
+ProcessConfig = uSimAttachment
+{
+  AppTick   = 10
+  CommsTick = 10
+  term_report_interval = 2
+
+  input_max_age = 2
+}
+#endif
+
+//----------------------------------------------------
 ProcessConfig = pTakeoffGate
 {
   AppTick   = 4
@@ -462,12 +478,13 @@ ProcessConfig = uOperatorTakeoff
 
   event = var=MOOS_MANUAL_OVERRIDE, val=false, time=0
 #ifdef XMODE SIM
-  event = var=ROUTE_DEPLOY,    val=false,      time=0
-  event = var=STATION_KEEP,    val=false,      time=0
-  event = var=UAV_LANDED_STATE, val=IN_AIR,    time=0
-  event = var=NAV_ALTITUDE,    val=$(TAKEOFF_ALTITUDE), time=0
-  event = var=AUTOPILOT_MODE,  val=SIM_HOLD,   time=0
-  event = var=UAV_COMMAND_RESULT, val="id=sim,command=TAKEOFF,status=COMPLETED,detail=TARGET_ALTITUDE_REACHED", time=0
+  event = var=UAV_SIM_ATTACHMENT, val=false,       time=0
+  event = var=ROUTE_DEPLOY,       val=false,       time=0.25
+  event = var=STATION_KEEP,       val=false,       time=0.25
+  event = var=UAV_LANDED_STATE,   val=IN_AIR,      time=0.25
+  event = var=NAV_ALTITUDE,       val=$(TAKEOFF_ALTITUDE), time=0.25
+  event = var=AUTOPILOT_MODE,     val=SIM_HOLD,    time=0.25
+  event = var=UAV_COMMAND_RESULT, val="id=sim,command=TAKEOFF,status=COMPLETED,detail=TARGET_ALTITUDE_REACHED", time=0.25
 #else
   event = var=ARDU_COMMAND, val=DO_TAKEOFF, time=0
 #endif
@@ -496,6 +513,7 @@ ProcessConfig = uOperatorPrecLand
   event = var=UAV_IS_ARMED,     val=false,      time=0
   event = var=AUTOPILOT_MODE,   val=SIM_LANDED, time=0
   event = var=UAV_COMMAND_RESULT, val="id=sim,command=LAND,status=COMPLETED,detail=SIMULATED", time=0
+  event = var=UAV_SIM_ATTACHMENT, val=true,     time=0
 #else
   event = var=ROUTE_EXECUTE, val=false,    time=0
   event = var=ARDU_COMMAND,  val=AUTOLAND, time=0
