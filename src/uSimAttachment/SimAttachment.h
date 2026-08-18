@@ -34,21 +34,27 @@ private:
   bool handleMailAttachment(const CMOOSMsg &msg);
   bool isFresh(const TimedValue &value) const;
   bool poseFresh() const;
+  void postPose(double x, double y, double heading, double speed);
   void postAttachedPose();
   void postState();
-  std::string resetSpec() const;
+  std::string resetSpec(double x, double y, double heading) const;
   std::string stateString() const;
 
 private:
   double m_input_max_age;
+  bool m_initially_attached;
   bool m_attachment_requested;
   bool m_attached;
   bool m_detaching;
 
-  TimedValue m_pearl_x;
-  TimedValue m_pearl_y;
-  TimedValue m_pearl_heading;
-  TimedValue m_pearl_speed;
+  double m_detach_x;
+  double m_detach_y;
+  double m_detach_heading;
+
+  TimedValue m_source_x;
+  TimedValue m_source_y;
+  TimedValue m_source_heading;
+  TimedValue m_source_speed;
 
   std::string m_last_state;
   double m_last_state_post;

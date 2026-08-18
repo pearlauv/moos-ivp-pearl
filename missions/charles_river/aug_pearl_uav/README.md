@@ -107,17 +107,22 @@ The normal sequence is:
 
 ## SIM landing attachment
 
-SIM visually carries the UAV with PEARL after a precision landing. When the
-SIM precision-land sequence completes, `uSimAttachment` disables the UAV's
-`uSimMarineV22` navigation output and publishes the current PEARL position,
-heading, and speed as the UAV navigation solution. The two icons therefore
-move together without running two competing UAV navigation publishers.
+SIM starts with the UAV visually attached to PEARL. Once fresh PEARL pose data
+arrives, `uSimAttachment` disables the UAV's `uSimMarineV22` navigation output
+and publishes the PEARL position, heading, and speed as the UAV navigation
+solution. The two icons therefore move together without running two competing
+UAV navigation publishers.
 
-The next SIM takeoff detaches the UAV automatically. Before re-enabling
-`uSimMarineV22`, the app resets it to PEARL's latest position and heading, so
-the UAV resumes independent flight from the platform instead of jumping back
-to its pre-landing position. `UAV_SIM_ATTACHED` and
-`UAV_SIM_ATTACHMENT_STATE` expose the current handoff state.
+An approved SIM takeoff detaches the UAV automatically. The app captures one
+final platform position and heading, resets `uSimMarineV22` to that exact pose,
+and then returns navigation ownership to the simulator. The UAV therefore
+resumes independent flight from the takeoff point without jumping. SIM
+precision landing reattaches it, and the cycle may repeat.
+
+The app interface is vehicle-name agnostic: it consumes generic attachment
+pose and request variables. This mission maps PEARL navigation into that
+interface and aliases the generic status outputs to `UAV_SIM_ATTACHED` and
+`UAV_SIM_ATTACHMENT_STATE` for operator display.
 
 This visual attachment is SIM-only. SITL and REAL continue to use flight-
 controller navigation and do not launch `uSimAttachment`.

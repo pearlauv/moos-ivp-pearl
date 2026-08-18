@@ -15,8 +15,8 @@ using namespace std;
 void showSynopsis()
 {
   blk("SYNOPSIS:                                                       ");
-  blk("  uSimAttachment temporarily owns simulated UAV navigation and   ");
-  blk("  follows PEARL's pose. On detach it returns uSimMarineV22 to    ");
+  blk("  uSimAttachment temporarily owns local simulator navigation and");
+  blk("  follows an external pose. On detach it returns uSimMarineV22 to");
   blk("  normal propagation at the final attached position.             ");
 }
 
@@ -46,6 +46,7 @@ void showExampleConfigAndExit()
   blk("  CommsTick = 10                                                ");
   blk("                                                                ");
   blk("  input_max_age = 2                                             ");
+  blk("  initially_attached = false                                    ");
   blk("}                                                               ");
   exit(0);
 }
@@ -57,12 +58,12 @@ void showInterfaceAndExit()
   blu("=============================================================== ");
   showSynopsis();
   blk("SUBSCRIPTIONS:                                                  ");
-  blk("  UAV_SIM_ATTACHMENT       Desired attached state               ");
-  blk("  PEARL_NAV_X/Y/HEADING/SPEED                                  ");
+  blk("  SIM_ATTACHMENT_REQUEST        Desired attached state           ");
+  blk("  ATTACHMENT_NAV_X/Y/HEADING/SPEED                             ");
   blk("PUBLICATIONS:                                                   ");
   blk("  NAV_X/Y/HEADING/SPEED, NAV_ALTITUDE                          ");
   blk("  USM_ENABLED, USM_RESET                                       ");
-  blk("  UAV_SIM_ATTACHED, UAV_SIM_ATTACHMENT_STATE                   ");
+  blk("  SIM_ATTACHMENT_ATTACHED, SIM_ATTACHMENT_STATE                ");
   exit(0);
 }
 
