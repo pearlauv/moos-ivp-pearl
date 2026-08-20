@@ -30,9 +30,9 @@ MODE="SIM"
 IP_ADDR="localhost"
 MOOS_PORT="9000"
 PSHARE_PORT="9200"
-UAV_RELAY_ENABLE="no"
-UAV_RELAY_IP=""
-UAV_RELAY_PSHARE="9201"
+UAV_DIRECT_ENABLE="no"
+UAV_IP=""
+UAV_PSHARE="9201"
 
 #------------------------------------------------------------
 #  Part 3: Parse command-line arguments.
@@ -50,8 +50,8 @@ for ARGI; do
     echo "  --ip=<localhost>              Advertised shoreside pShare host"
     echo "  --mport=<9000>                Shoreside MOOSDB port"
     echo "  --pshare=<9200>               Shoreside pShare port"
-    echo "  --uav_relay_ip=<host>         Fixed UAV/PEARL relay destination"
-    echo "  --uav_relay_pshare=<9201>     Fixed UAV/PEARL relay pShare port"
+    echo "  --uav_ip=<host>               Direct UAV Tailnet address"
+    echo "  --uav_pshare=<9201>           Direct UAV pShare port"
     exit 0
   elif [[ "${ARGI}" =~ ^[0-9]+$ && "$TIME_WARP" = 1 ]]; then
     if [ "$ARGI" -lt 1 ]; then
@@ -75,11 +75,11 @@ for ARGI; do
     MOOS_PORT="${ARGI#*=}"
   elif [[ "${ARGI}" == --pshare=* ]]; then
     PSHARE_PORT="${ARGI#*=}"
-  elif [[ "${ARGI}" == --uav_relay_ip=* ]]; then
-    UAV_RELAY_IP="${ARGI#*=}"
-    UAV_RELAY_ENABLE="yes"
-  elif [[ "${ARGI}" == --uav_relay_pshare=* ]]; then
-    UAV_RELAY_PSHARE="${ARGI#*=}"
+  elif [[ "${ARGI}" == --uav_ip=* ]]; then
+    UAV_IP="${ARGI#*=}"
+    UAV_DIRECT_ENABLE="yes"
+  elif [[ "${ARGI}" == --uav_pshare=* ]]; then
+    UAV_PSHARE="${ARGI#*=}"
   else
     echo "$ME: Bad Arg:[$ARGI]. Exit Code 1."
     exit 1
@@ -107,9 +107,9 @@ if [ "$VERBOSE" = "yes" ]; then
   echo "IP_ADDR =       [${IP_ADDR}]"
   echo "MOOS_PORT =     [${MOOS_PORT}]"
   echo "PSHARE_PORT =   [${PSHARE_PORT}]"
-  echo "UAV_RELAY =     [${UAV_RELAY_ENABLE}]"
-  echo "UAV_RELAY_IP =  [${UAV_RELAY_IP}]"
-  echo "UAV_RELAY_PORT = [${UAV_RELAY_PSHARE}]"
+  echo "UAV_DIRECT =    [${UAV_DIRECT_ENABLE}]"
+  echo "UAV_IP =        [${UAV_IP}]"
+  echo "UAV_PSHARE =    [${UAV_PSHARE}]"
 fi
 
 #------------------------------------------------------------
@@ -120,8 +120,8 @@ NSFLAGS=(--strict --force -x)
 nsplug meta_shoreside.moos targ_shoreside.moos "${NSFLAGS[@]}" \
   WARP="$TIME_WARP" IP_ADDR="$IP_ADDR" MOOS_PORT="$MOOS_PORT" \
   PSHARE_PORT="$PSHARE_PORT" LAUNCH_GUI="$LAUNCH_GUI" \
-  UAV_RELAY_ENABLE="$UAV_RELAY_ENABLE" UAV_RELAY_IP="$UAV_RELAY_IP" \
-  UAV_RELAY_PSHARE="$UAV_RELAY_PSHARE" \
+  UAV_DIRECT_ENABLE="$UAV_DIRECT_ENABLE" UAV_IP="$UAV_IP" \
+  UAV_PSHARE="$UAV_PSHARE" \
   XMODE="$MODE"
 
 if [ "$JUST_MAKE" = "yes" ]; then

@@ -38,12 +38,11 @@ ProcessConfig = pShare
   CommsTick = 4
 
   input = route = localhost:$(PSHARE_PORT)
-#ifdef UAV_RELAY_ENABLE yes
-  // A fixed route is useful when the UAV is represented by a UDP relay on
-  // PEARL. The broker may add the same logical route dynamically; pMediator
-  // de-duplicates acknowledged envelopes at the receiver.
-  output = src_name=MEDIATED_MESSAGE_LOCAL, dest_name=MEDIATED_MESSAGE, route=$(UAV_RELAY_IP):$(UAV_RELAY_PSHARE)
-  output = src_name=ACK_MESSAGE_LOCAL, dest_name=ACK_MESSAGE, route=$(UAV_RELAY_IP):$(UAV_RELAY_PSHARE)
+#ifdef UAV_DIRECT_ENABLE yes
+  // Keep a deterministic shoreside-to-UAV path on the UAV's Tailnet address.
+  // This is ordinary pShare unicast, not a PEARL relay.
+  output = src_name=MEDIATED_MESSAGE_LOCAL, dest_name=MEDIATED_MESSAGE, route=$(UAV_IP):$(UAV_PSHARE)
+  output = src_name=ACK_MESSAGE_LOCAL, dest_name=ACK_MESSAGE, route=$(UAV_IP):$(UAV_PSHARE)
 #endif
 }
 
@@ -256,6 +255,27 @@ ProcessConfig = pMarineViewer
   scope = PEARL_MANUAL_OVERRIDE
   scope = UAV_RENDEZVOUS_STATE
   scope = PEARL_RENDEZVOUS_STATE
+  scope = UAV_RENDEZVOUS_PHASE
+  scope = PEARL_RENDEZVOUS_PHASE
+  scope = UAV_RENDEZVOUS_SESSION
+  scope = PEARL_RENDEZVOUS_SESSION
+  scope = UAV_LANDING_GATE_READY
+  scope = UAV_LANDING_GATE_REASON
+  scope = UAV_LANDING_TARGET_LOCK_AGE
+  scope = UAV_LANDING_APPROACH_POINT
+  scope = UAV_PEER_DISTANCE
+  scope = UAV_PREC_LAND_RESULT
+  scope = PEARL_LANDING_GATE_READY
+  scope = PEARL_LANDING_GATE_REASON
+  scope = PEARL_UAV_SEPARATION
+  scope = UAV_LANDING_TARGET_AVAILABLE
+  scope = UAV_LANDING_TARGET_AGE
+  scope = UAV_LANDING_TARGET_TARGET_NUM
+  scope = UAV_LANDING_TARGET_POSITION_VALID
+  scope = UAV_LANDING_TARGET_ANGLE_X
+  scope = UAV_LANDING_TARGET_ANGLE_Y
+  scope = UAV_LANDING_TARGET_X
+  scope = UAV_LANDING_TARGET_Y
   scope = RENDEZVOUS_POINT
   scope = PEARL_BATTERY_SOC
   scope = PEARL_BATTERY_CHARGING
@@ -277,7 +297,8 @@ ProcessConfig = pMarineViewer
   scope = ALFA_DATA_AGE
   scope = ALFA_SIGNAL_DATA_VALID
 
-  // Route selection and buttons 1-6 retain the proven UAV operator workflow.
+  // Precision landing is committed only by pRendezvous after clearance and
+  // target-lock gates pass; there is intentionally no direct landing button.
   left_context[route] = ROUTE_POINT = "x=$[XPOS],y=$[YPOS]"
 
   button_1 = UAV ARM # NODE_MESSAGE_LOCAL="src_node=shoreside,dest_node=uav,var_name=UAV_ARM_REQUEST,string_val=true"
@@ -285,10 +306,8 @@ ProcessConfig = pMarineViewer
   button_3 = UAV TAKEOFF # NODE_MESSAGE_LOCAL="src_node=shoreside,dest_node=uav,var_name=UAV_TAKEOFF_REQUEST,string_val=true"
   button_4 = UAV DEPLOY # ROUTE_BUFFER_DEPLOY=true
   button_5 = UAV CLEAR # ROUTE_BUFFER_CLEAR=true
-  button_6 = UAV PREC LAND # NODE_MESSAGE_LOCAL="src_node=shoreside,dest_node=uav,var_name=UAV_PREC_LAND_REQUEST,string_val=true" # color=orange
-
   // PEARL keeps the May test-run waypoint/station/return behavior.
-  // PEARL RETURN is distinct from the UAV TO PEARL snapshot route.
+  // PEARL RETURN is distinct from coordinated target acquisition.
   button_7 = PEARL DEPLOY # PEARL_DEPLOY_PEARL=true # PEARL_RETURN_PEARL=false # PEARL_STATION_KEEP_PEARL=false # PEARL_MANUAL_OVERRIDE_PEARL=false
   button_8 = PEARL RETURN # PEARL_DEPLOY_PEARL=true # PEARL_RETURN_PEARL=true # PEARL_STATION_KEEP_PEARL=false # PEARL_MANUAL_OVERRIDE_PEARL=false
   button_9 = PEARL STATION # PEARL_DEPLOY_PEARL=true # PEARL_RETURN_PEARL=false # PEARL_STATION_KEEP_PEARL=true # PEARL_MANUAL_OVERRIDE_PEARL=false

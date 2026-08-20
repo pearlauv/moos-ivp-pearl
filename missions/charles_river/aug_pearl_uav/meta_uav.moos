@@ -59,6 +59,7 @@ ProcessConfig = pShare
 #ifdef DIRECT_PEER true
   output = src_name=MEDIATED_MESSAGE_LOCAL, dest_name=MEDIATED_MESSAGE, route=$(PEARL_IP):$(PEARL_PSHARE)
   output = src_name=ACK_MESSAGE_LOCAL, dest_name=ACK_MESSAGE, route=$(PEARL_IP):$(PEARL_PSHARE)
+  output = src_name=NODE_REPORT_LOCAL, dest_name=NODE_REPORT, route=$(PEARL_IP):$(PEARL_PSHARE)
 #endif
 }
 
@@ -229,12 +230,26 @@ ProcessConfig = uFldNodeBroker
   bridge = src=UAV_LANDED_STATE
   bridge = src=UAV_LANDING_TARGET_AVAILABLE
   bridge = src=UAV_LANDING_TARGET_AGE
+  bridge = src=UAV_LANDING_TARGET_TARGET_NUM
+  bridge = src=UAV_LANDING_TARGET_POSITION_VALID
+  bridge = src=UAV_LANDING_TARGET_ANGLE_X
+  bridge = src=UAV_LANDING_TARGET_ANGLE_Y
+  bridge = src=UAV_LANDING_TARGET_X
+  bridge = src=UAV_LANDING_TARGET_Y
+  bridge = src=UAV_LANDING_GATE_READY
+  bridge = src=UAV_LANDING_GATE_REASON
+  bridge = src=UAV_LANDING_TARGET_LOCK_AGE
+  bridge = src=UAV_LANDING_APPROACH_POINT
+  bridge = src=UAV_PEER_DISTANCE
+  bridge = src=UAV_PREC_LAND_RESULT
   bridge = src=AUTOPILOT_MODE
   bridge = src=CONTROL_AUTHORITY
   bridge = src=IVPHELM_STATE
   bridge = src=PROC_WATCH_ALL_OK, alias=VEHICLE_PROC_WATCH_ALL_OK
   bridge = src=ROUTE_BUFFER_VEHICLE_STATE
   bridge = src=UAV_RENDEZVOUS_STATE
+  bridge = src=UAV_RENDEZVOUS_PHASE
+  bridge = src=UAV_RENDEZVOUS_SESSION
   bridge = src=NAV_ALTITUDE
 #ifdef XMODE SIM
   bridge = src=STATION_KEEP
@@ -503,7 +518,7 @@ ProcessConfig = uOperatorPrecLand
   CommsTick = 10
   term_report_interval = 2
 
-  condition     = UAV_PREC_LAND_REQUEST = true
+  condition     = UAV_PREC_LAND_COMMIT = true
   upon_awake    = restart
   script_atomic = true
   reset_max     = unlimited
@@ -523,7 +538,7 @@ ProcessConfig = uOperatorPrecLand
   event = var=ROUTE_EXECUTE, val=false,    time=0
   event = var=ARDU_COMMAND,  val=AUTOLAND, time=0
 #endif
-  event = var=UAV_PREC_LAND_REQUEST, val=false, time=0.10
+  event = var=UAV_PREC_LAND_COMMIT, val=false, time=0.10
 }
 
 #ifdef XMODE SIM
@@ -623,4 +638,18 @@ ProcessConfig = pRendezvous
   transit_timeout  = 180
   arrival_radius   = 5
   arrival_dwell    = 2
+  max_peer_separation = 3
+#ifdef XMODE SIM
+  require_landing_target = false
+#else
+  require_landing_target = true
+#endif
+  landing_target_max_age        = 0.5
+  landing_target_lock_dwell     = 2
+  landing_target_acquire_timeout = 30
+  landing_target_max_offset     = 1.5
+  landing_target_max_angle      = 0.20
+  expected_target_num           = 0
+  reacquire_update_interval     = 2
+  reacquire_update_distance     = 1
 }

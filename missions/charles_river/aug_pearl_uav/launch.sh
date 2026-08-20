@@ -200,7 +200,7 @@ vecho "Launching PEARL: ${PARGS[*]}"
 #------------------------------------------------------------
 SARGS=(--auto "$TIME_WARP" --mode="$MODE")
 SARGS+=(--mport="$SHORE_MPORT" --pshare="$SHORE_PSHARE")
-SARGS+=(--uav_relay_ip=localhost --uav_relay_pshare="$UAV_PSHARE")
+SARGS+=(--uav_ip=localhost --uav_pshare="$UAV_PSHARE")
 [ "$JUST_MAKE" = "yes" ] && SARGS+=(--just_make)
 [ "$VERBOSE" = "yes" ] && SARGS+=(--verbose)
 [ "$NOGUI" = "yes" ] && SARGS+=(--nogui)

@@ -33,10 +33,20 @@ Rendezvous::Rendezvous()
   m_transit_timeout     = 180.0;
   m_arrival_radius      = 4.0;
   m_arrival_dwell       = 2.0;
+  m_max_peer_separation = 3.0;
+  m_landing_target_max_age = 0.5;
+  m_landing_target_lock_dwell = 2.0;
+  m_landing_target_acquire_timeout = 30.0;
+  m_landing_target_max_offset = 1.5;
+  m_landing_target_max_angle = 0.20;
+  m_reacquire_update_interval = 2.0;
+  m_reacquire_update_distance = 1.0;
+  m_expected_target_num = 0;
   m_state_post_interval = 1.0;
   m_require_health      = true;
   m_require_battery     = false;
   m_require_flight_state = true;
+  m_require_landing_target = true;
 
   m_state                = "IDLE";
   m_reason               = "startup";
@@ -52,9 +62,27 @@ Rendezvous::Rendezvous()
   m_battery_time         = 0.0;
   m_target_x             = 0.0;
   m_target_y             = 0.0;
-  m_uav_report_x         = 0.0;
-  m_uav_report_y         = 0.0;
-  m_uav_report_time      = 0.0;
+  m_peer_report_x        = 0.0;
+  m_peer_report_y        = 0.0;
+  m_peer_report_time     = 0.0;
+  m_acquisition_start_time = 0.0;
+  m_target_lock_start_time = 0.0;
+  m_last_reacquire_route_time = 0.0;
+  m_last_reacquire_x     = 0.0;
+  m_last_reacquire_y     = 0.0;
+  m_landing_target_available_time = 0.0;
+  m_landing_target_age   = 0.0;
+  m_landing_target_age_time = 0.0;
+  m_landing_target_num   = 0.0;
+  m_landing_target_num_time = 0.0;
+  m_landing_target_position_valid = 0.0;
+  m_landing_target_position_valid_time = 0.0;
+  m_landing_target_x     = 0.0;
+  m_landing_target_y     = 0.0;
+  m_landing_target_position_time = 0.0;
+  m_landing_target_angle_x = 0.0;
+  m_landing_target_angle_y = 0.0;
+  m_landing_target_angle_time = 0.0;
   m_pearl_activation_time = 0.0;
   m_arrival_start_time   = 0.0;
   m_nav_x_set            = false;
@@ -71,6 +99,8 @@ Rendezvous::Rendezvous()
   m_pearl_arrived        = false;
   m_uav_arrived          = false;
   m_clearance_received   = false;
+  m_landing_target_available = false;
+  m_landing_target_gate_ready = false;
   m_completion_sent      = false;
   m_config_valid         = true;
   m_requests_sent        = 0;
@@ -108,8 +138,10 @@ bool Rendezvous::OnNewMail(MOOSMSG_LIST &NewMail)
       handled = handleMailResponse(msg);
     else if((m_role == "uav") && (key == "LANDING_CLEARANCE"))
       handled = handleMailClearance(msg);
-    else if((m_role == "pearl") && (key == "NODE_REPORT"))
+    else if(key == "NODE_REPORT")
       handled = handleMailNodeReport(msg);
+    else if((m_role == "uav") && (key == "UAV_PREC_LAND_REQUEST"))
+      handled = handleMailPrecisionLandRequest(msg);
     else if(key == "NAV_X")
       handled = handleMailDouble(msg, m_nav_x, m_nav_x_time) &&
                 (m_nav_x_set = true);
@@ -132,6 +164,35 @@ bool Rendezvous::OnNewMail(MOOSMSG_LIST &NewMail)
         handled = true;
       }
     }
+    else if((m_role == "uav") &&
+            (key == "UAV_LANDING_TARGET_AVAILABLE")) {
+      m_landing_target_available = mailIsTrue(msg);
+      m_landing_target_available_time = m_curr_time;
+      handled = true;
+    }
+    else if((m_role == "uav") && (key == "UAV_LANDING_TARGET_AGE"))
+      handled = handleMailDouble(msg, m_landing_target_age,
+                                 m_landing_target_age_time);
+    else if((m_role == "uav") &&
+            (key == "UAV_LANDING_TARGET_TARGET_NUM"))
+      handled = handleMailDouble(msg, m_landing_target_num,
+                                 m_landing_target_num_time);
+    else if((m_role == "uav") &&
+            (key == "UAV_LANDING_TARGET_POSITION_VALID"))
+      handled = handleMailDouble(msg, m_landing_target_position_valid,
+                                 m_landing_target_position_valid_time);
+    else if((m_role == "uav") && (key == "UAV_LANDING_TARGET_X"))
+      handled = handleMailDouble(msg, m_landing_target_x,
+                                 m_landing_target_position_time);
+    else if((m_role == "uav") && (key == "UAV_LANDING_TARGET_Y"))
+      handled = handleMailDouble(msg, m_landing_target_y,
+                                 m_landing_target_position_time);
+    else if((m_role == "uav") && (key == "UAV_LANDING_TARGET_ANGLE_X"))
+      handled = handleMailDouble(msg, m_landing_target_angle_x,
+                                 m_landing_target_angle_time);
+    else if((m_role == "uav") && (key == "UAV_LANDING_TARGET_ANGLE_Y"))
+      handled = handleMailDouble(msg, m_landing_target_angle_y,
+                                 m_landing_target_angle_time);
     else if((m_role == "uav") && (key == "ROUTE_BUFFER_VEHICLE_STATE")) {
       if(msg.IsString()) {
         m_route_state = toupper(stripBlankEnds(msg.GetString()));
@@ -140,8 +201,7 @@ bool Rendezvous::OnNewMail(MOOSMSG_LIST &NewMail)
       }
     }
     else if((m_role == "pearl") && (key == "PEARL_RENDEZVOUS_ARRIVED")) {
-      if(mailIsTrue(msg))
-        m_pearl_arrived = true;
+      m_pearl_arrived = mailIsTrue(msg);
       handled = true;
     }
     else if(key == "APPCAST_REQ")
@@ -230,6 +290,29 @@ bool Rendezvous::OnStartUp()
       handled = setPosDoubleOnString(m_arrival_radius, value);
     else if(param == "arrival_dwell")
       handled = setNonNegDoubleOnString(m_arrival_dwell, value);
+    else if(param == "max_peer_separation")
+      handled = setPosDoubleOnString(m_max_peer_separation, value);
+    else if(param == "landing_target_max_age")
+      handled = setPosDoubleOnString(m_landing_target_max_age, value);
+    else if(param == "landing_target_lock_dwell")
+      handled = setNonNegDoubleOnString(m_landing_target_lock_dwell, value);
+    else if(param == "landing_target_acquire_timeout")
+      handled = setPosDoubleOnString(m_landing_target_acquire_timeout, value);
+    else if(param == "landing_target_max_offset")
+      handled = setPosDoubleOnString(m_landing_target_max_offset, value);
+    else if(param == "landing_target_max_angle")
+      handled = setPosDoubleOnString(m_landing_target_max_angle, value);
+    else if(param == "reacquire_update_interval")
+      handled = setPosDoubleOnString(m_reacquire_update_interval, value);
+    else if(param == "reacquire_update_distance")
+      handled = setPosDoubleOnString(m_reacquire_update_distance, value);
+    else if(param == "expected_target_num") {
+      double expected = 0;
+      handled = setNonNegDoubleOnString(expected, value) &&
+                (expected <= 255) && (floor(expected) == expected);
+      if(handled)
+        m_expected_target_num = static_cast<unsigned int>(expected);
+    }
     else if(param == "state_post_interval")
       handled = setPosDoubleOnString(m_state_post_interval, value);
     else if(param == "require_health")
@@ -238,6 +321,8 @@ bool Rendezvous::OnStartUp()
       handled = setBooleanOnString(m_require_battery, value);
     else if(param == "require_flight_state")
       handled = setBooleanOnString(m_require_flight_state, value);
+    else if(param == "require_landing_target")
+      handled = setBooleanOnString(m_require_landing_target, value);
 
     if(!handled)
       reportUnhandledConfigWarning(orig);
@@ -278,7 +363,17 @@ void Rendezvous::registerVariables()
     Register("UAV_HEALTH_ALL_OK", 0);
     Register("UAV_IS_ARMED", 0);
     Register("UAV_LANDED_STATE", 0);
+    Register("UAV_PREC_LAND_REQUEST", 0);
+    Register("UAV_LANDING_TARGET_AVAILABLE", 0);
+    Register("UAV_LANDING_TARGET_AGE", 0);
+    Register("UAV_LANDING_TARGET_TARGET_NUM", 0);
+    Register("UAV_LANDING_TARGET_POSITION_VALID", 0);
+    Register("UAV_LANDING_TARGET_X", 0);
+    Register("UAV_LANDING_TARGET_Y", 0);
+    Register("UAV_LANDING_TARGET_ANGLE_X", 0);
+    Register("UAV_LANDING_TARGET_ANGLE_Y", 0);
     Register("RENDEZVOUS_RESPONSE", 0);
+    Register("NODE_REPORT", 0);
   }
   else if(m_role == "pearl") {
     Register("RENDEZVOUS_REQUEST", 0);
@@ -297,7 +392,7 @@ bool Rendezvous::handleMailStart(const CMOOSMsg& msg)
     return(true);
 
   if((m_state == "REQUESTING") || (m_state == "RENDEZVOUS") ||
-     (m_state == "LANDING")) {
+     (m_state == "ACQUIRING_TARGET") || (m_state == "LANDING")) {
     reportRunWarning("Rendezvous start rejected: mission already active");
     return(true);
   }
@@ -332,7 +427,7 @@ bool Rendezvous::handleMailRequest(const CMOOSMsg& msg)
   }
 
   if((m_state == "REQUESTING") || (m_state == "RENDEZVOUS") ||
-     (m_state == "LANDING")) {
+     (m_state == "ACQUIRING_TARGET") || (m_state == "LANDING")) {
     string response = "id=" + id + "#status=rejected#reason=busy";
     sendMessage(m_peer_node, "RENDEZVOUS_RESPONSE", response);
     return(true);
@@ -378,6 +473,8 @@ bool Rendezvous::handleMailResponse(const CMOOSMsg& msg)
     activatePearlTransit();
     transitionTo("RENDEZVOUS", "proposal_accepted");
   }
+  else if((status == "landing") && (m_state == "ACQUIRING_TARGET"))
+    transitionTo("LANDING", "uav_landing_committed");
   else if(status == "complete") {
     transitionTo("COMPLETE", "uav_landed");
     publishPoint(false);
@@ -395,14 +492,20 @@ bool Rendezvous::handleMailClearance(const CMOOSMsg& msg)
 
   string clearance = msg.GetString();
   string id = tokStringParse(clearance, "id", '#', '=');
+  string status = tolower(tokStringParse(clearance, "status", '#', '='));
+  string sx = tokStringParse(clearance, "x", '#', '=');
+  string sy = tokStringParse(clearance, "y", '#', '=');
   if((id != m_session_id) || (m_state != "RENDEZVOUS")) {
     reportRunWarning("Ignored stale or unexpected landing clearance");
     return(true);
   }
+  if((status != "cleared") || !isNumber(sx) || !isNumber(sy)) {
+    abortMission("invalid_landing_clearance");
+    return(true);
+  }
 
   m_clearance_received = true;
-  if(m_uav_arrived)
-    beginPrecisionLanding();
+  beginTargetAcquisition(atof(sx.c_str()), atof(sy.c_str()));
   return(true);
 }
 
@@ -427,9 +530,24 @@ bool Rendezvous::handleMailNodeReport(const CMOOSMsg& msg)
   if(!isNumber(sx) || !isNumber(sy))
     return(true);
 
-  m_uav_report_x = atof(sx.c_str());
-  m_uav_report_y = atof(sy.c_str());
-  m_uav_report_time = m_curr_time;
+  m_peer_report_x = atof(sx.c_str());
+  m_peer_report_y = atof(sy.c_str());
+  m_peer_report_time = m_curr_time;
+  return(true);
+}
+
+bool Rendezvous::handleMailPrecisionLandRequest(const CMOOSMsg& msg)
+{
+  if(!mailIsTrue(msg))
+    return(true);
+
+  // Precision landing is a state-machine commit, not an operator bypass.
+  // The coordinated flow will publish UAV_PREC_LAND_COMMIT after every gate
+  // has remained true for the configured lock dwell.
+  Notify("UAV_PREC_LAND_RESULT",
+         "status=rejected#reason=coordinated_clearance_required");
+  Notify("UAV_PREC_LAND_REQUEST", "false");
+  reportRunWarning("Precision-land request rejected: use rendezvous clearance");
   return(true);
 }
 
@@ -438,9 +556,12 @@ bool Rendezvous::handleMailDouble(const CMOOSMsg& msg, double& value,
 {
   if(!msg.IsDouble())
     return(false);
-  value = msg.GetDouble();
+  double candidate = msg.GetDouble();
+  if(!std::isfinite(candidate))
+    return(false);
+  value = candidate;
   value_time = m_curr_time;
-  return(std::isfinite(value));
+  return(true);
 }
 
 bool Rendezvous::handleMailBool(const CMOOSMsg& msg, bool& value,
@@ -494,9 +615,9 @@ void Rendezvous::iterateUAV()
       return;
     }
     checkUAVArrival();
-    if(m_clearance_received && m_uav_arrived)
-      beginPrecisionLanding();
   }
+  else if(m_state == "ACQUIRING_TARGET")
+    updateTargetAcquisition();
   else if((m_state == "LANDING") && m_uav_landed_set && !m_uav_in_air &&
           !m_completion_sent) {
     string response = "id=" + m_session_id + "#status=complete";
@@ -523,8 +644,7 @@ void Rendezvous::iteratePearl()
       abortMission("pearl_navigation_stale");
       return;
     }
-    if((m_uav_report_time <= 0) ||
-       ((m_curr_time - m_uav_report_time) > m_nav_stale_thresh)) {
+    if(!peerReportIsFresh()) {
       if(elapsed > m_nav_stale_thresh)
         abortMission("uav_report_stale");
       return;
@@ -535,11 +655,25 @@ void Rendezvous::iteratePearl()
     }
 
     checkPearlArrival();
-    double uav_dist = hypot(m_uav_report_x - m_target_x,
-                            m_uav_report_y - m_target_y);
+    double uav_dist = hypot(m_peer_report_x - m_target_x,
+                            m_peer_report_y - m_target_y);
     m_uav_arrived = (uav_dist <= m_arrival_radius);
+    double peer_dist = hypot(m_peer_report_x - m_nav_x,
+                             m_peer_report_y - m_nav_y);
+    bool gate_ready = m_pearl_arrived && m_uav_arrived &&
+                      (peer_dist <= m_max_peer_separation);
+    string gate_reason = "ready";
+    if(!m_pearl_arrived)
+      gate_reason = "pearl_outside_rendezvous";
+    else if(!m_uav_arrived)
+      gate_reason = "uav_outside_rendezvous";
+    else if(peer_dist > m_max_peer_separation)
+      gate_reason = "peer_separation_too_large";
+    Notify("PEARL_UAV_SEPARATION", peer_dist);
+    Notify("PEARL_LANDING_GATE_READY", gate_ready ? 1.0 : 0.0);
+    Notify("PEARL_LANDING_GATE_REASON", gate_reason);
 
-    if(m_pearl_arrived && m_uav_arrived) {
+    if(gate_ready) {
       if(m_arrival_start_time <= 0)
         m_arrival_start_time = m_curr_time;
       if((m_curr_time - m_arrival_start_time) >= m_arrival_dwell)
@@ -547,6 +681,14 @@ void Rendezvous::iteratePearl()
     }
     else
       m_arrival_start_time = 0;
+  }
+  else if(m_state == "ACQUIRING_TARGET") {
+    if(!navIsFresh())
+      abortMission("pearl_navigation_stale");
+    else if(!peerReportIsFresh())
+      abortMission("uav_report_stale");
+    else if(elapsed > (m_landing_target_acquire_timeout + 5.0))
+      abortMission("uav_landing_commit_timeout");
   }
 }
 
@@ -568,6 +710,10 @@ bool Rendezvous::beginRequest()
   m_arrival_start_time = 0;
   m_uav_arrived = false;
   m_clearance_received = false;
+  m_acquisition_start_time = 0;
+  m_target_lock_start_time = 0;
+  m_last_reacquire_route_time = 0;
+  m_landing_target_gate_ready = false;
   m_completion_sent = false;
 
   string battery = m_battery_set ? doubleToStringX(m_battery, 1) : "unknown";
@@ -716,10 +862,12 @@ void Rendezvous::activatePearlTransit()
 
 void Rendezvous::checkPearlArrival()
 {
-  if(!m_target_set)
+  if(!m_target_set) {
+    m_pearl_arrived = false;
     return;
-  if(hypot(m_nav_x - m_target_x, m_nav_y - m_target_y) <= m_arrival_radius)
-    m_pearl_arrived = true;
+  }
+  m_pearl_arrived =
+    (hypot(m_nav_x - m_target_x, m_nav_y - m_target_y) <= m_arrival_radius);
 }
 
 void Rendezvous::checkUAVArrival()
@@ -749,17 +897,119 @@ void Rendezvous::grantLandingClearance()
   Notify("PEARL_MANUAL_OVERRIDE", "false");
 
   string clearance = "id=" + m_session_id + "#status=cleared";
+  clearance += "#x=" + doubleToStringX(m_nav_x, 2);
+  clearance += "#y=" + doubleToStringX(m_nav_y, 2);
   sendMessage(m_peer_node, "LANDING_CLEARANCE", clearance);
   m_clearances_sent++;
-  transitionTo("LANDING", "clearance_sent");
+  transitionTo("ACQUIRING_TARGET", "clearance_sent");
+}
+
+void Rendezvous::beginTargetAcquisition(double pearl_x, double pearl_y)
+{
+  m_peer_report_x = pearl_x;
+  m_peer_report_y = pearl_y;
+  m_peer_report_time = m_curr_time;
+  m_acquisition_start_time = m_curr_time;
+  m_target_lock_start_time = 0;
+  m_last_reacquire_route_time = 0;
+  m_landing_target_gate_ready = false;
+  Notify("UAV_LANDING_GATE_READY", 0.0);
+  Notify("UAV_LANDING_GATE_REASON", "acquiring_target");
+  routeToPearl(true);
+  transitionTo("ACQUIRING_TARGET", "clearance_received");
+}
+
+void Rendezvous::updateTargetAcquisition()
+{
+  string readiness_reason;
+  if(!uavIsReady(readiness_reason)) {
+    abortMission(readiness_reason);
+    return;
+  }
+  if((m_curr_time - m_acquisition_start_time) >
+     m_landing_target_acquire_timeout) {
+    abortMission("landing_target_timeout");
+    return;
+  }
+  if(!peerReportIsFresh()) {
+    m_target_lock_start_time = 0;
+    m_landing_target_gate_ready = false;
+    Notify("UAV_LANDING_GATE_READY", 0.0);
+    Notify("UAV_LANDING_GATE_REASON", "pearl_report_stale");
+    if((m_curr_time - m_peer_report_time) > m_nav_stale_thresh)
+      abortMission("pearl_report_stale");
+    return;
+  }
+
+  routeToPearl(false);
+  double separation = hypot(m_nav_x - m_peer_report_x,
+                            m_nav_y - m_peer_report_y);
+  Notify("UAV_PEER_DISTANCE", separation);
+
+  string gate_reason;
+  bool gate_ready = (separation <= m_max_peer_separation);
+  if(!gate_ready)
+    gate_reason = "peer_separation_too_large";
+  else
+    gate_ready = landingTargetIsReady(gate_reason);
+
+  if(gate_ready) {
+    if(m_target_lock_start_time <= 0)
+      m_target_lock_start_time = m_curr_time;
+    double lock_age = m_curr_time - m_target_lock_start_time;
+    m_landing_target_gate_ready =
+      (lock_age >= m_landing_target_lock_dwell);
+    Notify("UAV_LANDING_GATE_READY",
+           m_landing_target_gate_ready ? 1.0 : 0.0);
+    Notify("UAV_LANDING_GATE_REASON",
+           m_landing_target_gate_ready ? "ready" : "target_lock_dwell");
+    Notify("UAV_LANDING_TARGET_LOCK_AGE", lock_age);
+    if(m_landing_target_gate_ready)
+      beginPrecisionLanding();
+  }
+  else {
+    m_target_lock_start_time = 0;
+    m_landing_target_gate_ready = false;
+    Notify("UAV_LANDING_GATE_READY", 0.0);
+    Notify("UAV_LANDING_GATE_REASON", gate_reason);
+    Notify("UAV_LANDING_TARGET_LOCK_AGE", 0.0);
+  }
+}
+
+void Rendezvous::routeToPearl(bool force)
+{
+  if(!peerReportIsFresh())
+    return;
+
+  double moved = hypot(m_peer_report_x - m_last_reacquire_x,
+                       m_peer_report_y - m_last_reacquire_y);
+  bool interval_ok = ((m_curr_time - m_last_reacquire_route_time) >=
+                      m_reacquire_update_interval);
+  if(!force && (!interval_ok || (moved < m_reacquire_update_distance)))
+    return;
+
+  string command = "action=deploy # points={";
+  command += doubleToStringX(m_peer_report_x, 2) + ",";
+  command += doubleToStringX(m_peer_report_y, 2) + "}";
+  Notify("ROUTE_BUFFER_COMMAND", command);
+  m_route_command_time = m_curr_time;
+  m_last_reacquire_route_time = m_curr_time;
+  m_last_reacquire_x = m_peer_report_x;
+  m_last_reacquire_y = m_peer_report_y;
+  Notify("UAV_LANDING_APPROACH_POINT",
+         pointString(m_peer_report_x, m_peer_report_y));
 }
 
 void Rendezvous::beginPrecisionLanding()
 {
-  if(m_state != "RENDEZVOUS")
+  if((m_state != "ACQUIRING_TARGET") || !m_landing_target_gate_ready)
     return;
-  Notify("UAV_PREC_LAND_REQUEST", "true");
-  transitionTo("LANDING", "clearance_received");
+  Notify("ROUTE_BUFFER_COMMAND", "action=clear");
+  Notify("UAV_PREC_LAND_COMMIT", "true");
+  Notify("UAV_PREC_LAND_RESULT", "status=committed#reason=landing_gate_ready");
+  string response = "id=" + m_session_id + "#status=landing";
+  sendMessage(m_peer_node, "RENDEZVOUS_RESPONSE", response);
+  transitionTo("LANDING", "landing_gate_ready");
 }
 
 void Rendezvous::abortMission(const string& reason, bool notify_peer)
@@ -768,8 +1018,11 @@ void Rendezvous::abortMission(const string& reason, bool notify_peer)
     return;
 
   if(m_role == "uav") {
-    if((m_state == "RENDEZVOUS") || (m_route_command_time > 0))
+    if((m_state == "RENDEZVOUS") || (m_state == "ACQUIRING_TARGET") ||
+       (m_route_command_time > 0))
       Notify("ROUTE_BUFFER_COMMAND", "action=clear");
+    Notify("UAV_LANDING_GATE_READY", 0.0);
+    Notify("UAV_LANDING_GATE_REASON", reason);
   }
   else if(m_role == "pearl") {
     m_pearl_activation_pending = false;
@@ -778,6 +1031,8 @@ void Rendezvous::abortMission(const string& reason, bool notify_peer)
     Notify("PEARL_RETURN", "false");
     Notify("PEARL_STATION_KEEP", "true");
     Notify("PEARL_MANUAL_OVERRIDE", "false");
+    Notify("PEARL_LANDING_GATE_READY", 0.0);
+    Notify("PEARL_LANDING_GATE_REASON", reason);
     publishPoint(false);
   }
 
@@ -818,6 +1073,12 @@ void Rendezvous::publishState(bool force)
   string state_var = (m_role == "uav") ? "UAV_RENDEZVOUS_STATE" :
                                           "PEARL_RENDEZVOUS_STATE";
   Notify(state_var, state);
+  string phase_var = (m_role == "uav") ? "UAV_RENDEZVOUS_PHASE" :
+                                          "PEARL_RENDEZVOUS_PHASE";
+  string session_var = (m_role == "uav") ? "UAV_RENDEZVOUS_SESSION" :
+                                            "PEARL_RENDEZVOUS_SESSION";
+  Notify(phase_var, m_state);
+  Notify(session_var, m_session_id);
   m_last_state_post_time = m_curr_time;
 }
 
@@ -858,6 +1119,65 @@ bool Rendezvous::navIsFresh() const
   return((m_curr_time - latest) <= m_nav_stale_thresh);
 }
 
+bool Rendezvous::peerReportIsFresh() const
+{
+  return((m_peer_report_time > 0) &&
+         ((m_curr_time - m_peer_report_time) <= m_nav_stale_thresh));
+}
+
+bool Rendezvous::landingTargetIsReady(string& reason) const
+{
+  if(!m_require_landing_target) {
+    reason = "ready";
+    return(true);
+  }
+
+  double mail_max_age = m_landing_target_max_age + 0.5;
+  if((m_landing_target_available_time <= 0) ||
+     ((m_curr_time - m_landing_target_available_time) > mail_max_age))
+    reason = "landing_target_status_stale";
+  else if(!m_landing_target_available)
+    reason = "landing_target_unavailable";
+  else if((m_landing_target_age_time <= 0) ||
+          ((m_curr_time - m_landing_target_age_time) > mail_max_age))
+    reason = "landing_target_age_stale";
+  else if((m_landing_target_age < 0) ||
+          (m_landing_target_age > m_landing_target_max_age))
+    reason = "landing_target_too_old";
+  else if((m_landing_target_num_time <= 0) ||
+          ((m_curr_time - m_landing_target_num_time) > mail_max_age))
+    reason = "landing_target_identity_stale";
+  else if((m_landing_target_num < 0) ||
+          (fabs(m_landing_target_num - m_expected_target_num) > 0.1))
+    reason = "unexpected_landing_target";
+  else if((m_landing_target_position_valid_time <= 0) ||
+          ((m_curr_time - m_landing_target_position_valid_time) > mail_max_age))
+    reason = "landing_target_geometry_stale";
+  else if(m_landing_target_position_valid > 0.5) {
+    if((m_landing_target_position_time <= 0) ||
+       ((m_curr_time - m_landing_target_position_time) > mail_max_age))
+      reason = "landing_target_position_stale";
+    else if(hypot(m_landing_target_x, m_landing_target_y) >
+            m_landing_target_max_offset)
+      reason = "landing_target_offset_too_large";
+    else {
+      reason = "ready";
+      return(true);
+    }
+  }
+  else if((m_landing_target_angle_time <= 0) ||
+          ((m_curr_time - m_landing_target_angle_time) > mail_max_age))
+    reason = "landing_target_angle_stale";
+  else if(hypot(m_landing_target_angle_x, m_landing_target_angle_y) >
+          m_landing_target_max_angle)
+    reason = "landing_target_angle_too_large";
+  else {
+    reason = "ready";
+    return(true);
+  }
+  return(false);
+}
+
 bool Rendezvous::uavIsReady(string& reason) const
 {
   if(!navIsFresh())
@@ -881,8 +1201,10 @@ bool Rendezvous::uavIsReady(string& reason) const
 
 bool Rendezvous::mailIsTrue(const CMOOSMsg& msg) const
 {
-  if(msg.IsDouble())
-    return(msg.GetDouble() != 0);
+  if(msg.IsDouble()) {
+    double value = msg.GetDouble();
+    return(std::isfinite(value) && (value != 0));
+  }
   string value = tolower(stripBlankEnds(msg.GetString()));
   return((value == "true") || (value == "1") || (value == "on"));
 }
@@ -931,13 +1253,20 @@ bool Rendezvous::buildReport()
     m_msgs << "Route state:        " << m_route_state << endl;
     m_msgs << "At rendezvous:      " << boolToString(m_uav_arrived) << endl;
     m_msgs << "Clearance received: " << boolToString(m_clearance_received) << endl;
+    m_msgs << "PEARL report fresh: " << boolToString(peerReportIsFresh()) << endl;
+    m_msgs << "Landing gate ready: "
+           << boolToString(m_landing_target_gate_ready) << endl;
+    string target_reason;
+    bool target_ready = landingTargetIsReady(target_reason);
+    m_msgs << "Landing target:     " << boolToString(target_ready)
+           << " (" << target_reason << ")" << endl;
   }
   else {
     m_msgs << "PEARL arrived:      " << boolToString(m_pearl_arrived) << endl;
     m_msgs << "UAV arrived:        " << boolToString(m_uav_arrived) << endl;
     m_msgs << "UAV report age:     ";
-    if(m_uav_report_time > 0)
-      m_msgs << doubleToStringX(m_curr_time - m_uav_report_time, 2) << endl;
+    if(m_peer_report_time > 0)
+      m_msgs << doubleToStringX(m_curr_time - m_peer_report_time, 2) << endl;
     else
       m_msgs << "n/a" << endl;
   }

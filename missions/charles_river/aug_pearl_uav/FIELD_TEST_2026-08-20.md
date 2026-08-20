@@ -46,6 +46,15 @@ This is a successful close-range qualification. It is not an operational
 range qualification; the failed obstructed 50 m placement from 2026-08-13
 still requires a clearer launch position and a fresh under-load range test.
 
+A later walking test on the same setup exercised the transition from healthy
+to unusable and back. Roughly -39 to -65 dBm remained healthy with zero
+observed packet loss. Around -70 dBm, latency and packet loss became marginal.
+At sustained -77 to -82 dBm, packet probes had 100% loss even though the Alfa
+driver sometimes still reported `link=1`; `ALFA_INACTIVE_MS` continued rising
+and correctly showed that the association was not carrying traffic. Moving
+closer restored the association, packets, and telemetry without manual
+intervention. These are signal observations, not a qualified distance range.
+
 ### Reboot recovery
 
 Sherlock and the UAV Pi were rebooted independently after the mission test;
@@ -115,12 +124,20 @@ published, as expected with the Pixhawk disconnected.
 
 ## Remaining flight qualification
 
+The continuous-separation and landing-target acquisition gate was implemented
+after these physical logs were collected. Its automated MOOS integration
+tests cover wrong identity, brief lock loss, timeout, and successful sustained
+lock, but this field report does not claim a live camera/Pixhawk landing-gate
+test.
+
 The following items were intentionally not claimed by this test:
 
 - actual Pixhawk UAV battery percentage and its validity/age;
 - actual Pixhawk health, GPS, armed, and landed-state telemetry;
 - propellers-off arm-policy and real flight-controller command checks;
-- outdoor arm/takeoff to 8 m and coordinated landing; and
+- outdoor arm/takeoff to 8 m and coordinated landing;
+- live `LANDING_TARGET` identity, freshness, centering, and deliberate
+  target-loss behavior with `PLND_STRICT=2`; and
 - packet loss, signal, retry, and throughput at the intended launch position.
 
 Connect the Pixhawk with propellers removed before repeating the sensor and

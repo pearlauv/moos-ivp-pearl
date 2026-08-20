@@ -71,23 +71,10 @@ Starlink, remote shoreside, SSH, and other Tailscale traffic may cross
 Starlink. The explicit PEARL/UAV private-address path never needs Starlink or
 Tailscale.
 
-PEARL retains these systemd-managed fallback relay endpoints for operation
-without working UAV Tailscale:
-
-| Direction | PEARL listener | Destination |
-| --- | --- | --- |
-| Shore to UAV | `100.69.111.61:9201` | `172.22.90.2:9201` |
-| UAV to shore | `192.168.88.253:9300` | `100.127.231.65:9200` |
-
-Rigging manages both fallback relays as systemd services. If shoreside moves
-to a different Tailnet address, update Rigging's PEARL relay destination before
-using the fallback. There is no separate operator relay command: the services
-are enabled at boot.
-
-The direct UAV/PEARL pShare outputs and the shoreside path provide two
-pMediator delivery paths at the MOOS application layer. Both still depend on
-Sherlock when UAV Tailscale is carried by Alfa, so they are not physically
-independent.
+Shoreside sends ordinary pShare traffic directly to the UAV's Tailnet address.
+PEARL does not relay shoreside traffic. Rigging retires and removes the old
+`wifi-backhaul-udp-relay-*` services and executable when its PEARL route role
+is applied. The only mission UDP listeners are ports `9200`-`9202`.
 
 ## Bench-prepared state
 
@@ -251,7 +238,7 @@ Use:
 # Shoreside
 ./launch_shoreside.sh --auto --mode=REAL \
   --ip=100.127.231.65 \
-  --uav_relay_ip=100.70.189.91 --uav_relay_pshare=9201
+  --uav_ip=100.70.189.91 --uav_pshare=9201
 
 # UAV Pi
 ./launch_uav.sh --auto --mode=REAL \
@@ -270,8 +257,8 @@ Here, each `--ip` value is the address advertised to shoreside. The explicit
 `--pearl_ip` and `--uav_ip` values keep vehicle-to-vehicle traffic on the direct
 Alfa path. The required mission UDP listeners are shoreside `9200`, UAV `9201`,
 and PEARL `9202`. MOOSDB ports remain host-local and should not be used as the
-inter-host route. PEARL's systemd UDP relays remain available as a fallback for
-a UAV without working Tailscale; the preferred path does not require them.
+inter-host route. There is no PEARL UDP relay and port `9300` is not part of
+the current topology.
 
 ## Three-computer dock simulation
 
@@ -287,7 +274,7 @@ and UAV Pi. Isolated ports `19100`-`19102`, `19200`-`19202`, and `19300` kept
 the run separate from other work. The generated UAV target contained no
 `pArduBridge` or hardware interface applications.
 
-The observed end-to-end sequence was:
+The observed end-to-end sequence used the original, now-retired relay design:
 
 1. Shoreside submitted a route through the PEARL UDP relay.
 2. The UAV received `MEDIATED_MESSAGE`, published `ROUTE_UPDATE`, accepted
@@ -303,6 +290,9 @@ The observed end-to-end sequence was:
    `UAV_LANDED_STATE=ON_GROUND`, and `NAV_ALTITUDE=0`.
 
 All isolated communities and temporary relays were stopped after the test.
+That result remains historical evidence; current shoreside commands address
+the UAV Tailnet node directly.
+
 This proves application routing and the state-machine sequence at dock range;
 it does not qualify radio range or replace the REAL-mode flight checklist.
 
@@ -326,6 +316,16 @@ mission. See
 [`FIELD_TEST_2026-08-20.md`](FIELD_TEST_2026-08-20.md) for exact results,
 limitations, log locations, and hashes.
 
+A same-day walking test exercised loss and recovery while watching Sherlock's
+live collector. Nearby readings from roughly -39 to -65 dBm carried traffic
+with zero observed loss. Around -70 dBm, latency and loss became noticeably
+less reliable. Sustained readings around -77 to -82 dBm produced 100% packet
+loss even while the driver sometimes still reported an association; rising
+`ALFA_INACTIVE_MS` exposed that unusable state. Walking back toward Sherlock
+restored association, packets, and fresh telemetry automatically. This is a
+useful qualitative threshold, not a distance rating: antenna placement and
+obstructions dominated the earlier 50 m result.
+
 ## Mission qualification
 
 Before REAL operation:
@@ -334,9 +334,9 @@ Before REAL operation:
 2. Run each community in SIM mode on its intended host over the radio path.
 3. Confirm both vehicle brokers complete all connection phases.
 4. Confirm periodic `NODE_REPORT` traffic reaches shoreside and PEARL.
-5. Stop the shoreside relay temporarily and prove bidirectional pMediator
-   delivery over the explicit UAV/PEARL routes.
-6. Restore the relay and test a rendezvous with controlled packet loss.
+5. Prove bidirectional pMediator and `NODE_REPORT` delivery over the explicit
+   UAV/PEARL private routes without shoreside participation.
+6. Test a rendezvous with controlled packet loss on the direct vehicle path.
 7. Reboot all three Pis and repeat the route and association checks.
 
 The repository test proves parsing and stale-data behavior without the radios.

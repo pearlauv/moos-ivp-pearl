@@ -8,7 +8,8 @@ the PEARL surface vehicle. It combines the qualified UAV operator workflow from
 The UAV may still fly operator-selected routes. The additional `RENDEZVOUS`
 workflow is deliberately small: after the UAV is airborne, PEARL chooses one
 meeting point, the UAV validates it, both vehicles travel there, PEARL grants
-landing clearance, and the UAV requests precision landing.
+landing clearance, and the UAV acquires PEARL's landing target before it
+commits precision landing.
 
 ## Implemented rendezvous state machine
 
@@ -27,8 +28,9 @@ demonstration policy, not a current-aware or obstacle-aware planner.
 | --- | --- |
 | `IDLE` | Wait for an airborne operator request. |
 | `REQUESTING` | UAV sends position, speed, health, and available battery data. PEARL proposes one session-tagged point. UAV accepts only after its complete one-point route is staged locally. |
-| `RENDEZVOUS` | PEARL activates its dedicated rendezvous waypoint and the UAV follows its existing Helm route. Both must remain inside the 5 m capture zone for the configured dwell. |
-| `LANDING` | PEARL enters StationKeep and sends session-tagged clearance. The UAV requests precision landing only after both clearance and its own arrival are true. |
+| `RENDEZVOUS` | PEARL activates its rendezvous waypoint and the UAV follows its existing Helm route. Both must be inside the 5 m capture zone, no more than 3 m apart, and continuously satisfy the clearance gate for 2 s. |
+| `ACQUIRING_TARGET` | PEARL is in StationKeep. The UAV follows PEARL's fresh reported position horizontally at the existing mission altitude and waits for the landing-target gates below. It aborts after 30 s without a valid lock. |
+| `LANDING` | The target lock has remained valid for 2 s and the UAV has issued the internal precision-landing commit. ArduPilot now owns descent and target-loss handling. |
 | `COMPLETE` | UAV reports landed; both coordinators publish completion. |
 | `ABORT` | Cancel the UAV route, put the UAV in its configured hold, and put PEARL in StationKeep. |
 
@@ -43,7 +45,7 @@ separate gate described below.
 `pMediator` carries the actions that must survive an occasional dropped UDP
 datagram:
 
-- operator ARM, DISARM, TAKEOFF, PREC LAND, route DEPLOY, route CLEAR,
+- operator ARM, DISARM, TAKEOFF, route DEPLOY, route CLEAR,
   RENDEZVOUS, and RNDV ABORT;
 - UAV request, PEARL proposal, UAV acceptance/completion, and PEARL landing
   clearance;
@@ -54,10 +56,10 @@ Mouse clicks remain shoreside-local until DEPLOY sends one complete route
 snapshot. Periodic state such as node reports, health, rendezvous status, and
 navigation uses ordinary broker/pShare routing. RealmCast bridging is disabled.
 
-UAV and PEARL pMediator envelopes also use a direct unicast pShare route on
-their shared vehicle network. The existing shoreside relay remains active as a
-redundant path. Both paths carry the same message ID, so pMediator acknowledges
-the first arrival and suppresses duplicate execution.
+UAV and PEARL pMediator envelopes and node reports also use direct unicast
+pShare routes on their shared vehicle network. Shoreside uses the UAV's
+Tailnet address directly. There is no PEARL UDP relay or automatic alternate
+runtime path.
 
 PEARL and the UAV intentionally use different platform groups, so
 `uFldNodeComms` group filtering is disabled for this mission; otherwise PEARL
@@ -68,8 +70,7 @@ would not receive the UAV reports required to grant clearance.
 UAV controls:
 
 - `UAV ARM`, `UAV DISARM`, `UAV TAKEOFF`
-- `UAV DEPLOY`, `UAV CLEAR`, `UAV PREC LAND`
-- `UAV TO PEARL`
+- `UAV DEPLOY`, `UAV CLEAR`
 
 Each `UAV TAKEOFF` request is consumed on the UAV and approved only when all
 three fresh, valid inputs pass:
@@ -85,8 +86,9 @@ normal operator sequence remains immediately usable; focused tests may poke
 the same variables to exercise each rejection.
 
 Choose the `route` mouse context and click an ordered route. `UAV DEPLOY` sends
-the stored snapshot. `UAV TO PEARL` instead sends a one-point snapshot of
-PEARL's most recent reported position; it is not continuous pursuit.
+the stored snapshot. During coordinated landing-target acquisition,
+`pRendezvous` automatically maintains a one-point route to PEARL's fresh
+position. This is not a separate operator button.
 
 PEARL controls:
 
@@ -104,6 +106,46 @@ The normal sequence is:
 3. Monitor `UAV_RENDEZVOUS_STATE` and `PEARL_RENDEZVOUS_STATE`.
 4. Let the coordinated workflow request precision landing, or press
    `RNDV ABORT` to hold both vehicles.
+
+## Landing assurance
+
+Landing is intentionally fail-closed. PEARL grants clearance only while both
+vehicles have fresh navigation, both are inside the rendezvous capture zone,
+and their current horizontal separation is no more than 3 m for 2 continuous
+seconds. Arrival is recomputed on every iteration; moving apart resets the
+dwell instead of leaving an old decision latched.
+
+Clearance carries PEARL's current local `x,y` position derived from its GPS.
+The UAV also receives PEARL `NODE_REPORT` updates directly over the Alfa path.
+While acquiring the target, it updates a one-point horizontal route when
+PEARL moves at least 1 m, no faster than once every 2 s. The normal REAL UAV
+behavior holds the configured mission altitude during this approach; this
+route does not command descent.
+
+The internal `UAV_PREC_LAND_COMMIT` is published only after all of these have
+remained true for 2 continuous seconds:
+
+- the UAV-to-PEARL reported separation is no more than 3 m;
+- `UAV_LANDING_TARGET_AVAILABLE=1` and target age is no more than 0.5 s;
+- MAVLink landing `target_num` is the configured PEARL target, currently `0`;
+- a position-valid target is within 1.5 m horizontally, or an angle-only
+  target is within 0.20 rad of the camera center.
+
+Loss of any input before commit resets the target-lock dwell. Failure to
+acquire in 30 s clears the route, commands the normal hold, aborts the session,
+and tells PEARL to remain in StationKeep. The old external
+`UAV_PREC_LAND_REQUEST` path is rejected, so an operator message cannot bypass
+the coordinated gates.
+
+After commit, ArduPilot owns the landing. Before every REAL flight verify the
+Pixhawk precision-landing parameters, especially `PLND_ENABLED=1`, the correct
+backend, moving-target option, and `PLND_STRICT=2` so target loss retries and
+then hovers instead of silently continuing a blind descent. The successful
+hardware flight recorded in [`flight_logs/README.md`](flight_logs/README.md)
+used `PLND_TYPE=1`, `PLND_OPTIONS=1`, `PLND_STRICT=2`, and a 4 s timeout. Also
+verify that the vision source labels PEARL as `target_num=0`. See the
+[ArduPilot precision-landing documentation](https://ardupilot.org/copter/docs/precision-landing-and-loiter.html)
+and [MAVLink `LANDING_TARGET`](https://mavlink.io/en/messages/common.html#LANDING_TARGET).
 
 ## SIM landing attachment
 
@@ -182,7 +224,7 @@ and verification.
 # Shoreside
 ./launch_shoreside.sh --auto --mode=REAL \
   --ip=100.127.231.65 \
-  --uav_relay_ip=100.70.189.91 --uav_relay_pshare=9201
+  --uav_ip=100.70.189.91 --uav_pshare=9201
 
 # UAV vehicle computer
 ./launch_uav.sh --auto --mode=REAL \
@@ -275,10 +317,9 @@ DERP relay. At deployments where Sherlock's upstream is Starlink, remote
 shoreside and management traffic may therefore cross Starlink. Explicit
 PEARL/UAV peer traffic does not.
 
-PEARL's managed UDP relays on ports `9201` and `9300` remain enabled as a
-fallback for operation without UAV Tailscale. They are not used by the
-preferred commands above. Normally allow UDP ports `9200`-`9202`; the fallback
-also requires `9300`. Disable wireless client isolation.
+The retired PEARL UDP relays and their port `9300` path are removed by
+Rigging's `wifi_backhaul` role. Allow the ordinary mission UDP ports
+`9200`-`9202` and disable wireless client isolation.
 
 ## Validation performed
 
@@ -291,15 +332,15 @@ also requires `9300`. Disable wireless client isolation.
 - Start while disarmed rejected without movement.
 - SIM with 50% `uFldNodeComms` message loss; the workflow completed after
   observed pMediator retransmissions.
-- Bidirectional direct pMediator delivery in SIM with shoreside relay stopped,
-  plus bidirectional shoreside-relay delivery with direct routes omitted.
-- Live ArduCopter SITL telemetry and direct UAV-to-PEARL mediation with the
-  shoreside relay stopped. REAL targets were generated and checked with custom
+- Historical bidirectional pMediator tests covered both direct delivery and
+  the now-retired relay topology before the setup was simplified.
+- Live ArduCopter SITL telemetry and direct UAV-to-PEARL mediation. REAL
+  targets were generated and checked with custom
   vehicle, peer, and shoreside addresses.
 - ArduCopter SITL arm, takeoff to 8 m, Guided Helm transit, endpoint hold,
   coordinated clearance, Land, touchdown, and disarm.
-- Three-computer dock SIM across shoreside, PEARL, and the UAV Pi over the
-  Tailscale-to-PEARL relay and Alfa link. A shore route command reached the
+- Historical three-computer dock SIM across shoreside, PEARL, and the UAV Pi
+  used the original PEARL relay and Alfa link. A shore route command reached the
   UAV, both simulated vehicles moved, rendezvous session
   `uav_1786659149728036` completed at `(3.32,-5.63)`, and the simulated UAV
   finished disarmed, on ground, at zero altitude. Isolated ports were used and
@@ -316,6 +357,11 @@ also requires `9300`. Disable wireless client isolation.
 - The automated Alfa telemetry integration test covers connected,
   disconnected, collector-failed, and stale samples using a temporary MOOSDB:
   `python3 src/iSherlockTelemetry/tests/test_alfa_telemetry.py`.
+- The automated rendezvous integration test proves continuous PEARL/UAV
+  separation, non-latching arrival, rejection of the old manual landing path,
+  wrong-target rejection, target-loss dwell reset, successful sustained lock,
+  and fail-closed acquisition timeout:
+  `python3 src/pRendezvous/tests/test_landing_gate.py`.
 - On 2026-08-20, all three communities ran concurrently in REAL mode over the
   close-range physical Alfa link. Bidirectional packet tests had zero loss;
   the PEARL log recorded -52 to -40 dBm, zero TX retries/failures, and actual
