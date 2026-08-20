@@ -306,6 +306,21 @@ All isolated communities and temporary relays were stopped after the test.
 This proves application routing and the state-machine sequence at dock range;
 it does not qualify radio range or replace the REAL-mode flight checklist.
 
+## Close-range REAL qualification
+
+On 2026-08-20, the physical radios and all three ordinary REAL communities
+were tested concurrently at approximately 2-3 m. Bidirectional PEARL/UAV
+packet tests had zero loss, the PEARL `.alog` recorded 757 linked samples from
+-52 to -40 dBm with zero TX retries or failures, and actual PEARL battery and
+wind reached the UAV takeoff gate over the direct Alfa route.
+
+The run also proved the fail-closed telemetry path, the acknowledged
+shoreside-to-UAV operator path, and the no-navigation rendezvous guard. The UAV
+Pixhawk was disconnected, so actual UAV battery/health/navigation and real
+arm/takeoff were not tested. See
+[`FIELD_TEST_2026-08-20.md`](FIELD_TEST_2026-08-20.md) for exact results,
+limitations, log locations, and hashes.
+
 ## Mission qualification
 
 Before REAL operation:
@@ -320,10 +335,13 @@ Before REAL operation:
 7. Reboot all three Pis and repeat the route and association checks.
 
 The repository test proves parsing and stale-data behavior without the radios.
-Before flight, one short in-person dock check is still required to prove the
-two physical radios associate in their actual placement and that signal,
-packet loss, retries, and bidirectional mission traffic remain usable under
-load. It does not need to repeat the entire software-development exercise.
+The 2026-08-20 close-range REAL test now proves physical association, signal
+logging, zero-loss bidirectional mission connectivity, and the fail-closed
+gate/operator path. Before flight, repeat packet-loss, signal, retry, and
+throughput checks at the intended launch position with clear line of sight;
+the earlier obstructed 50 m placement remains unqualified. Connect the Pixhawk
+with propellers removed and prove actual UAV battery, health, GPS, armed, and
+landed-state telemetry before any outdoor arm/takeoff test.
 
 The rendezvous coordinator aborts when navigation or UAV reports become stale,
 so a successful ping alone is not sufficient qualification.

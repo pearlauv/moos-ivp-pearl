@@ -295,8 +295,7 @@ also requires `9300`. Disable wireless client isolation.
   plus bidirectional shoreside-relay delivery with direct routes omitted.
 - Live ArduCopter SITL telemetry and direct UAV-to-PEARL mediation with the
   shoreside relay stopped. REAL targets were generated and checked with custom
-  vehicle, peer, and shoreside addresses; no live two-vehicle REAL test has yet
-  been performed for the direct link.
+  vehicle, peer, and shoreside addresses.
 - ArduCopter SITL arm, takeoff to 8 m, Guided Helm transit, endpoint hold,
   coordinated clearance, Land, touchdown, and disarm.
 - Three-computer dock SIM across shoreside, PEARL, and the UAV Pi over the
@@ -317,6 +316,16 @@ also requires `9300`. Disable wireless client isolation.
 - The automated Alfa telemetry integration test covers connected,
   disconnected, collector-failed, and stale samples using a temporary MOOSDB:
   `python3 src/iSherlockTelemetry/tests/test_alfa_telemetry.py`.
+- On 2026-08-20, all three communities ran concurrently in REAL mode over the
+  close-range physical Alfa link. Bidirectional packet tests had zero loss;
+  the PEARL log recorded -52 to -40 dBm, zero TX retries/failures, and actual
+  battery/wind delivery to the UAV. Telemetry loss rejected takeoff as stale,
+  a shoreside takeoff message was acknowledged then rejected on the actual
+  low PEARL battery, and a shoreside rendezvous request safely aborted on
+  missing Pixhawk navigation. After PEARL charged to its real 15% threshold,
+  the gate reached READY with only the disconnected UAV battery synthesized.
+  No flight-controller command was posted. See
+  [`FIELD_TEST_2026-08-20.md`](FIELD_TEST_2026-08-20.md).
 
 ## PEARL stack
 
