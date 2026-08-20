@@ -317,7 +317,12 @@ wind reached the UAV takeoff gate over the direct Alfa route.
 The run also proved the fail-closed telemetry path, the acknowledged
 shoreside-to-UAV operator path, and the no-navigation rendezvous guard. The UAV
 Pixhawk was disconnected, so actual UAV battery/health/navigation and real
-arm/takeoff were not tested. See
+arm/takeoff were not tested. Independent Sherlock and UAV Pi reboots also
+restored the AP/client association, private routes, Tailscale, upstream
+internet, and fresh metrics automatically. Sherlock's AP returned first, but
+its NAT and Telegraf units remained queued behind `network-online.target` for
+roughly two minutes; wait for a fresh port `9273` timestamp before launching a
+mission. See
 [`FIELD_TEST_2026-08-20.md`](FIELD_TEST_2026-08-20.md) for exact results,
 limitations, log locations, and hashes.
 

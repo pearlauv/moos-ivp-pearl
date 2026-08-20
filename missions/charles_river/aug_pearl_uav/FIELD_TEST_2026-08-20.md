@@ -46,6 +46,31 @@ This is a successful close-range qualification. It is not an operational
 range qualification; the failed obstructed 50 m placement from 2026-08-13
 still requires a clearer launch position and a fresh under-load range test.
 
+### Reboot recovery
+
+Sherlock and the UAV Pi were rebooted independently after the mission test;
+no network or service setting was changed by hand during recovery.
+
+- Sherlock returned over Tailscale in 63 seconds. `hostapd` restored the AP
+  address and the still-running UAV reassociated automatically after about 36
+  seconds. `systemd-networkd-wait-online` held `network-online.target` until
+  approximately two minutes after boot, so Telegraf and the NAT service were
+  initially queued rather than failed. Both then started automatically. PEARL
+  received a newer collector timestamp, and the UAV again had DNS, public
+  internet, and a direct Tailscale path to PEARL.
+- The UAV Pi returned over direct Ethernet in 34 seconds. NetworkManager
+  reported `pearl-uav-backhaul-client` connected with `AUTOCONNECT=yes`,
+  `wlan1=172.22.90.2/30`, `wlan0` down, and the only default route through
+  `172.22.90.1`. Five packets in each PEARL/UAV direction had zero loss.
+  PEARL's Tailscale probe reached the UAV directly via
+  `172.22.90.2:41641`, and Sherlock again exposed fresh linked telemetry with
+  one station, -48 dBm, and zero retries or failures.
+
+Operationally, allow roughly two minutes after a Sherlock reboot before
+launching the mission. Association alone is not the readiness signal: confirm
+the port `9273` sample timestamp is advancing and that the UAV has upstream
+connectivity.
+
 ### REAL mission and safety gates
 
 All three communities ran concurrently in REAL mode. Shoreside broker state

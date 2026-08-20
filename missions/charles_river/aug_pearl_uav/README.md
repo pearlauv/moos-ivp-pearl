@@ -324,7 +324,11 @@ also requires `9300`. Disable wireless client isolation.
   low PEARL battery, and a shoreside rendezvous request safely aborted on
   missing Pixhawk navigation. After PEARL charged to its real 15% threshold,
   the gate reached READY with only the disconnected UAV battery synthesized.
-  No flight-controller command was posted. See
+  No flight-controller command was posted. Subsequent independent Sherlock
+  and UAV Pi reboots restored Alfa association, routes, Tailscale, upstream
+  internet, and fresh signal telemetry without manual intervention; Sherlock
+  requires roughly two minutes for its network-online-dependent NAT and
+  Telegraf services to start. See
   [`FIELD_TEST_2026-08-20.md`](FIELD_TEST_2026-08-20.md).
 
 ## PEARL stack
