@@ -153,7 +153,11 @@ ProcessConfig = pNodeReporter
   platform_length = $(PLATFORM_LENGTH=4)
   platform_group  = drone
 
+#ifdef XMODE SIM
+  cross_fill_policy = local
+#else
   cross_fill_policy = global
+#endif
   report_cog        = true
 }
 
