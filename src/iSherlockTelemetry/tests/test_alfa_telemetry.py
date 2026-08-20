@@ -132,6 +132,7 @@ class AlfaTelemetryIntegrationTest(unittest.TestCase):
 
         cls.temp_dir = tempfile.TemporaryDirectory(prefix="alfa-telemetry-")
         cls.mission_path = Path(cls.temp_dir.name) / "alfa_test.moos"
+        cls.antler_log_path = Path(cls.temp_dir.name) / "pAntler.log"
         mission = f"""ServerHost = 127.0.0.1
 ServerPort = {cls.moos_port}
 Community  = alfa_test
@@ -158,11 +159,12 @@ ProcessConfig = iSherlockTelemetry
 }}
 """
         cls.mission_path.write_text(mission, encoding="utf-8")
+        cls.antler_log = cls.antler_log_path.open("w", encoding="utf-8")
         cls.antler = subprocess.Popen(
             [str(MOOS_BIN_DIR / "pAntler"), str(cls.mission_path)],
             cwd=cls.temp_dir.name,
-            stdout=subprocess.DEVNULL,
-            stderr=subprocess.DEVNULL,
+            stdout=cls.antler_log,
+            stderr=subprocess.STDOUT,
             start_new_session=True,
         )
         cls.wait_for_moosdb()
@@ -177,6 +179,9 @@ ProcessConfig = iSherlockTelemetry
             except subprocess.TimeoutExpired:
                 os.killpg(antler.pid, signal.SIGKILL)
                 antler.wait(timeout=3)
+        antler_log = getattr(cls, "antler_log", None)
+        if antler_log is not None:
+            antler_log.close()
         server = getattr(cls, "metrics_server", None)
         if server is not None:
             server.shutdown()
@@ -204,18 +209,27 @@ ProcessConfig = iSherlockTelemetry
         conditions = condition.split(" and ")
         command = [
             str(MOOS_BIN_DIR / "uQueryDB"),
+            str(self.mission_path),
             *(f"--condition={item}" for item in conditions),
-            "--host=127.0.0.1",
-            f"--port={self.moos_port}",
             "--wait=5",
         ]
-        result = subprocess.run(
-            command,
-            capture_output=True,
-            text=True,
-            timeout=8,
-            check=False,
-        )
+        try:
+            result = subprocess.run(
+                command,
+                capture_output=True,
+                text=True,
+                timeout=8,
+                check=False,
+            )
+        except subprocess.TimeoutExpired as error:
+            antler_output = self.antler_log_path.read_text(
+                encoding="utf-8", errors="replace"
+            )
+            self.fail(
+                f"uQueryDB timed out for condition: {condition}\n"
+                f"stdout:\n{error.stdout or ''}\nstderr:\n{error.stderr or ''}\n"
+                f"pAntler output:\n{antler_output}"
+            )
         if result.returncode != 0:
             self.fail(
                 f"MOOS condition did not become true: {condition}\n"
