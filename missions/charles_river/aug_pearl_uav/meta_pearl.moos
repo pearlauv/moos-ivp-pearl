@@ -282,6 +282,18 @@ ProcessConfig = uFldNodeBroker
   bridge = src=PEARL_WIND_SPEED
   bridge = src=PEARL_WIND_DATA_VALID
   bridge = src=PEARL_AIRMAR_DATA_AGE
+  bridge = src=ALFA_LINK_UP
+  bridge = src=ALFA_STATION_COUNT
+  bridge = src=ALFA_SIGNAL_DBM
+  bridge = src=ALFA_SIGNAL_AVG_DBM
+  bridge = src=ALFA_TX_BITRATE_MBPS
+  bridge = src=ALFA_RX_BITRATE_MBPS
+  bridge = src=ALFA_TX_RETRIES_TOTAL
+  bridge = src=ALFA_TX_FAILED_TOTAL
+  bridge = src=ALFA_INACTIVE_MS
+  bridge = src=ALFA_DATA_VALID
+  bridge = src=ALFA_DATA_AGE
+  bridge = src=ALFA_SIGNAL_DATA_VALID
 }
 
 //----------------------------------------------------
@@ -390,6 +402,7 @@ ProcessConfig = iSherlockTelemetry
   http_timeout    = 1
   battery_max_age = 30
   airmar_max_age  = 5
+  alfa_max_age    = 10
 }
 #else
 //----------------------------------------------------

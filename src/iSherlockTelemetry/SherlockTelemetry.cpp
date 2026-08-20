@@ -31,6 +31,15 @@ const double PUBLISH_INTERVAL = 1.0;
 const string FETCH_WARNING = "Sherlock metrics unavailable";
 const string BATTERY_WARNING = "Sherlock battery metrics incomplete";
 const string WIND_WARNING = "Sherlock Airmar wind metrics incomplete";
+const string ALFA_WARNING = "Sherlock Alfa metrics unavailable";
+
+double wallTimeSeconds()
+{
+  struct timeval tv;
+  gettimeofday(&tv, NULL);
+  return static_cast<double>(tv.tv_sec) +
+         static_cast<double>(tv.tv_usec) / 1000000.0;
+}
 
 bool connectWithTimeout(int fd, const struct sockaddr* addr,
                         socklen_t addr_len, double timeout)
@@ -143,26 +152,42 @@ SherlockTelemetry::SherlockTelemetry()
     m_http_timeout(1.0),
     m_battery_max_age(30.0),
     m_airmar_max_age(5.0),
+    m_alfa_max_age(10.0),
     m_last_poll_time(-1),
     m_last_publish_time(-1),
     m_last_fetch_success_time(-1),
     m_battery_received_time(-1),
     m_wind_received_time(-1),
+    m_alfa_received_time(-1),
+    m_alfa_sample_time(-1),
     m_battery_soc(-1),
     m_battery_charging(0),
     m_battery_source_age(-1),
     m_wind_speed(-1),
     m_airmar_source_age(-1),
+    m_alfa_signal_dbm(-1),
+    m_alfa_signal_avg_dbm(-1),
+    m_alfa_tx_bitrate_mbps(-1),
+    m_alfa_rx_bitrate_mbps(-1),
+    m_alfa_tx_retries_total(-1),
+    m_alfa_tx_failed_total(-1),
+    m_alfa_inactive_ms(-1),
+    m_alfa_station_count(0),
     m_battery_connected(false),
     m_airmar_up(false),
     m_wind_measurement_valid(false),
+    m_alfa_collector_ok(false),
+    m_alfa_link_up(false),
+    m_alfa_measurement_complete(false),
     m_fetch_warning_active(false),
     m_battery_warning_active(false),
     m_wind_warning_active(false),
+    m_alfa_warning_active(false),
     m_fetch_count(0),
     m_fetch_success_count(0),
     m_battery_update_count(0),
-    m_wind_update_count(0)
+    m_wind_update_count(0),
+    m_alfa_update_count(0)
 {
 }
 
@@ -205,10 +230,14 @@ bool SherlockTelemetry::Iterate()
 
       string battery_error;
       string wind_error;
+      string alfa_error;
       bool battery_ok = parseBatteryMetrics(body, battery_error);
       bool wind_ok = parseWindMetrics(body, wind_error);
+      bool alfa_parsed = parseAlfaMetrics(body, alfa_error);
+      bool alfa_ok = alfa_parsed && m_alfa_collector_ok;
       setWarning(BATTERY_WARNING, !battery_ok, m_battery_warning_active);
       setWarning(WIND_WARNING, !wind_ok, m_wind_warning_active);
+      setWarning(ALFA_WARNING, !alfa_ok, m_alfa_warning_active);
 
       m_last_error.clear();
       if(!battery_ok)
@@ -217,6 +246,12 @@ bool SherlockTelemetry::Iterate()
         if(!m_last_error.empty())
           m_last_error += "; ";
         m_last_error += wind_error;
+      }
+      if(!alfa_ok) {
+        if(!m_last_error.empty())
+          m_last_error += "; ";
+        m_last_error += alfa_error.empty() ?
+                        "Alfa collector reported failure" : alfa_error;
       }
     } else {
       m_last_error = error;
@@ -269,6 +304,8 @@ bool SherlockTelemetry::OnStartUp()
       handled = setPositiveDouble(m_battery_max_age, value);
     } else if(param == "airmar_max_age") {
       handled = setPositiveDouble(m_airmar_max_age, value);
+    } else if(param == "alfa_max_age") {
+      handled = setPositiveDouble(m_alfa_max_age, value);
     }
 
     if(!handled)
@@ -437,6 +474,65 @@ bool SherlockTelemetry::parseWindMetrics(const string& body, string& error)
 }
 
 //---------------------------------------------------------
+bool SherlockTelemetry::parseAlfaMetrics(const string& body, string& error)
+{
+  double collector_ok = 0;
+  double link_up = 0;
+  double station_count = 0;
+  double sample_time = 0;
+
+  bool complete = true;
+  complete &= extractMetric(body, "pearl_wifi_backhaul_collector_ok",
+                            collector_ok);
+  complete &= extractMetric(body, "pearl_wifi_backhaul_link_up", link_up);
+  complete &= extractMetric(body, "pearl_wifi_backhaul_station_count",
+                            station_count);
+  complete &= extractMetric(body, "pearl_wifi_backhaul_sample_time_seconds",
+                            sample_time);
+  if(!complete) {
+    error = "response is missing required Alfa status metrics";
+    return false;
+  }
+  if(sample_time <= 0) {
+    error = "response has an invalid Alfa sample timestamp";
+    return false;
+  }
+
+  m_alfa_collector_ok = collector_ok >= 0.5;
+  m_alfa_link_up = link_up >= 0.5;
+  m_alfa_station_count = station_count;
+  m_alfa_sample_time = sample_time;
+  m_alfa_measurement_complete = true;
+  m_alfa_received_time = MOOSTime();
+  ++m_alfa_update_count;
+
+  if(!m_alfa_collector_ok)
+    return true;
+  if(!m_alfa_link_up)
+    return true;
+
+  complete = true;
+  complete &= extractMetric(body, "pearl_wifi_backhaul_signal_dbm",
+                            m_alfa_signal_dbm);
+  complete &= extractMetric(body, "pearl_wifi_backhaul_signal_avg_dbm",
+                            m_alfa_signal_avg_dbm);
+  complete &= extractMetric(body, "pearl_wifi_backhaul_tx_bitrate_mbps",
+                            m_alfa_tx_bitrate_mbps);
+  complete &= extractMetric(body, "pearl_wifi_backhaul_rx_bitrate_mbps",
+                            m_alfa_rx_bitrate_mbps);
+  complete &= extractMetric(body, "pearl_wifi_backhaul_tx_retries_total",
+                            m_alfa_tx_retries_total);
+  complete &= extractMetric(body, "pearl_wifi_backhaul_tx_failed_total",
+                            m_alfa_tx_failed_total);
+  complete &= extractMetric(body, "pearl_wifi_backhaul_inactive_ms",
+                            m_alfa_inactive_ms);
+  m_alfa_measurement_complete = complete;
+  if(!complete)
+    error = "response is missing connected Alfa station metrics";
+  return complete;
+}
+
+//---------------------------------------------------------
 double SherlockTelemetry::batteryAge(double now) const
 {
   if(m_battery_received_time < 0 || m_battery_source_age < 0)
@@ -450,6 +546,15 @@ double SherlockTelemetry::airmarAge(double now) const
   if(m_wind_received_time < 0 || m_airmar_source_age < 0)
     return -1;
   return m_airmar_source_age + (now - m_wind_received_time);
+}
+
+//---------------------------------------------------------
+double SherlockTelemetry::alfaAge(double now) const
+{
+  (void)now;
+  if(m_alfa_received_time < 0 || m_alfa_sample_time < 0)
+    return -1;
+  return wallTimeSeconds() - m_alfa_sample_time;
 }
 
 //---------------------------------------------------------
@@ -471,11 +576,20 @@ bool SherlockTelemetry::windValid(double now) const
 }
 
 //---------------------------------------------------------
+bool SherlockTelemetry::alfaValid(double now) const
+{
+  double age = alfaAge(now);
+  return m_alfa_received_time >= 0 && m_alfa_collector_ok &&
+         m_alfa_measurement_complete && age >= 0 && age <= m_alfa_max_age;
+}
+
+//---------------------------------------------------------
 void SherlockTelemetry::publishTelemetry()
 {
   double now = MOOSTime();
   double battery_age = batteryAge(now);
   double airmar_age = airmarAge(now);
+  double alfa_age = alfaAge(now);
 
   if(m_battery_received_time >= 0) {
     Notify("PEARL_BATTERY_SOC", m_battery_soc);
@@ -488,6 +602,24 @@ void SherlockTelemetry::publishTelemetry()
   Notify("PEARL_BATTERY_DATA_VALID", batteryValid(now) ? 1.0 : 0.0);
   Notify("PEARL_AIRMAR_DATA_AGE", airmar_age);
   Notify("PEARL_WIND_DATA_VALID", windValid(now) ? 1.0 : 0.0);
+
+  if(m_alfa_received_time >= 0) {
+    Notify("ALFA_LINK_UP", m_alfa_link_up ? 1.0 : 0.0);
+    Notify("ALFA_STATION_COUNT", m_alfa_station_count);
+  }
+  if(m_alfa_link_up && m_alfa_measurement_complete) {
+    Notify("ALFA_SIGNAL_DBM", m_alfa_signal_dbm);
+    Notify("ALFA_SIGNAL_AVG_DBM", m_alfa_signal_avg_dbm);
+    Notify("ALFA_TX_BITRATE_MBPS", m_alfa_tx_bitrate_mbps);
+    Notify("ALFA_RX_BITRATE_MBPS", m_alfa_rx_bitrate_mbps);
+    Notify("ALFA_TX_RETRIES_TOTAL", m_alfa_tx_retries_total);
+    Notify("ALFA_TX_FAILED_TOTAL", m_alfa_tx_failed_total);
+    Notify("ALFA_INACTIVE_MS", m_alfa_inactive_ms);
+  }
+  bool signal_valid = alfaValid(now) && m_alfa_link_up;
+  Notify("ALFA_DATA_AGE", alfa_age);
+  Notify("ALFA_DATA_VALID", alfaValid(now) ? 1.0 : 0.0);
+  Notify("ALFA_SIGNAL_DATA_VALID", signal_valid ? 1.0 : 0.0);
 }
 
 //---------------------------------------------------------
@@ -509,6 +641,7 @@ bool SherlockTelemetry::buildReport()
   double now = MOOSTime();
   double battery_age = batteryAge(now);
   double airmar_age = airmarAge(now);
+  double alfa_age = alfaAge(now);
 
   m_msgs << "Configuration" << endl;
   m_msgs << "  metrics_host:    " << m_metrics_host << endl;
@@ -518,6 +651,7 @@ bool SherlockTelemetry::buildReport()
   m_msgs << "  http_timeout:    " << m_http_timeout << " s" << endl;
   m_msgs << "  battery_max_age: " << m_battery_max_age << " s" << endl;
   m_msgs << "  airmar_max_age:  " << m_airmar_max_age << " s" << endl;
+  m_msgs << "  alfa_max_age:    " << m_alfa_max_age << " s" << endl;
   m_msgs << endl;
 
   ACTable table(4);
@@ -527,8 +661,27 @@ bool SherlockTelemetry::buildReport()
         << doubleToStringX(battery_age, 2) << boolToString(batteryValid(now));
   table << "Apparent wind" << doubleToStringX(m_wind_speed, 2)
         << doubleToStringX(airmar_age, 2) << boolToString(windValid(now));
+  table << "Alfa link" << (m_alfa_link_up ? "up" : "down")
+        << doubleToStringX(alfa_age, 2) << boolToString(alfaValid(now));
   m_msgs << table.getFormattedString() << endl;
   m_msgs << "Charging: " << boolToString(m_battery_charging >= 0.5) << endl;
+  m_msgs << "Alfa collector: " << boolToString(m_alfa_collector_ok)
+         << ", stations: " << doubleToStringX(m_alfa_station_count, 0) << endl;
+  m_msgs << "Alfa signal valid: "
+         << boolToString(alfaValid(now) && m_alfa_link_up) << endl;
+  if(m_alfa_link_up && m_alfa_measurement_complete) {
+    m_msgs << "Alfa signal: " << doubleToStringX(m_alfa_signal_dbm, 1)
+           << " dBm, average: " << doubleToStringX(m_alfa_signal_avg_dbm, 1)
+           << " dBm" << endl;
+    m_msgs << "Alfa bitrate TX/RX: "
+           << doubleToStringX(m_alfa_tx_bitrate_mbps, 1) << "/"
+           << doubleToStringX(m_alfa_rx_bitrate_mbps, 1) << " Mbit/s" << endl;
+    m_msgs << "Alfa retries/failed: "
+           << doubleToStringX(m_alfa_tx_retries_total, 0) << "/"
+           << doubleToStringX(m_alfa_tx_failed_total, 0)
+           << ", inactive: " << doubleToStringX(m_alfa_inactive_ms, 0)
+           << " ms" << endl;
+  }
   m_msgs << "Fetches: " << m_fetch_count
          << ", HTTP successes: " << m_fetch_success_count << endl;
   double fetch_age = (m_last_fetch_success_time < 0) ?
@@ -536,7 +689,8 @@ bool SherlockTelemetry::buildReport()
   m_msgs << "Last HTTP success age: " << doubleToStringX(fetch_age, 2)
          << " s" << endl;
   m_msgs << "Battery updates: " << m_battery_update_count
-         << ", wind updates: " << m_wind_update_count << endl;
+         << ", wind updates: " << m_wind_update_count
+         << ", Alfa updates: " << m_alfa_update_count << endl;
   if(!m_last_error.empty())
     m_msgs << "Last error: " << m_last_error << endl;
 

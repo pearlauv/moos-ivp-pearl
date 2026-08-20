@@ -182,6 +182,56 @@ Do not treat the close-range association as an operational range test. Repeat
 the packet-loss, signal, and retry checks with the UAV in its intended launch
 position before flight.
 
+## Mission signal logging
+
+Sherlock's Ansible-managed Telegraf collector samples the configured UAV
+station every two seconds. PEARL REAL mode reads those measurements through
+`iSherlockTelemetry`; wildcard `pLogger` logging stores them in PEARL's
+mission `.alog`, and `uFldNodeBroker` sends them to shoreside.
+
+The primary variables are:
+
+| Variable | Meaning |
+| --- | --- |
+| `ALFA_LINK_UP` | The configured UAV station is associated with Sherlock |
+| `ALFA_SIGNAL_DBM` | Latest UAV signal received by Sherlock |
+| `ALFA_SIGNAL_AVG_DBM` | Driver-reported average UAV signal |
+| `ALFA_TX_BITRATE_MBPS` | Sherlock-to-UAV negotiated bitrate |
+| `ALFA_RX_BITRATE_MBPS` | UAV-to-Sherlock negotiated bitrate |
+| `ALFA_TX_RETRIES_TOTAL` | Cumulative retries since association |
+| `ALFA_TX_FAILED_TOTAL` | Cumulative failures since association |
+| `ALFA_INACTIVE_MS` | Time since Sherlock last received a UAV packet |
+| `ALFA_STATION_COUNT` | Number of stations currently visible to the AP |
+| `ALFA_DATA_VALID` | Collector data exists, is healthy, and is fresh |
+| `ALFA_DATA_AGE` | Seconds since Sherlock actually measured the radio |
+| `ALFA_SIGNAL_DATA_VALID` | Signal and bitrate values are fresh and the UAV is linked |
+
+A disconnected UAV is a valid observation: `ALFA_LINK_UP=0` with
+`ALFA_DATA_VALID=1`. A failed or stale collector reports
+`ALFA_DATA_VALID=0`. MOOSDB retains the last numeric signal after a disconnect,
+so only use signal and bitrate values while `ALFA_SIGNAL_DATA_VALID=1`. This
+explicit flag becomes zero when the link drops, the collector fails, or the
+measurement ages out.
+
+The collector embeds its wall-clock measurement timestamp in every result.
+PEARL calculates `ALFA_DATA_AGE` from that timestamp rather than from the time
+it re-read Telegraf's page, so cached samples cannot become fresh again.
+Sherlock collects and Telegraf flushes every two seconds. Normal clock
+synchronization on Sherlock and PEARL is therefore also a mission prerequisite.
+
+The repository integration test starts a temporary MOOSDB and feeds known
+connected, disconnected, collector-failed, and stale Prometheus samples through
+the real `iSherlockTelemetry` binary. Run it after building the repository:
+
+```sh
+python3 src/iSherlockTelemetry/tests/test_alfa_telemetry.py
+```
+
+The disconnected path was also verified live on 2026-08-19 after deploying the
+collector to Sherlock and rebuilding `iSherlockTelemetry` on PEARL. A
+telemetry-only MOOS community on isolated port 19402 published healthy, fresh
+link-down data, and pLogger recorded it.
+
 For the management-path qualification, retain direct Ethernet as recovery,
 associate Alfa, and temporarily disconnect the UAV's normal `wlan0` profile.
 Verify that the metric-2000 default route uses `wlan1`, Tailscale remains
@@ -268,6 +318,12 @@ Before REAL operation:
    delivery over the explicit UAV/PEARL routes.
 6. Restore the relay and test a rendezvous with controlled packet loss.
 7. Reboot all three Pis and repeat the route and association checks.
+
+The repository test proves parsing and stale-data behavior without the radios.
+Before flight, one short in-person dock check is still required to prove the
+two physical radios associate in their actual placement and that signal,
+packet loss, retries, and bidirectional mission traffic remain usable under
+load. It does not need to repeat the entire software-development exercise.
 
 The rendezvous coordinator aborts when navigation or UAV reports become stale,
 so a successful ping alone is not sufficient qualification.

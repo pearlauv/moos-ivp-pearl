@@ -264,6 +264,18 @@ ProcessConfig = pMarineViewer
   scope = PEARL_WIND_SPEED
   scope = PEARL_WIND_DATA_VALID
   scope = PEARL_AIRMAR_DATA_AGE
+  scope = ALFA_LINK_UP
+  scope = ALFA_STATION_COUNT
+  scope = ALFA_SIGNAL_DBM
+  scope = ALFA_SIGNAL_AVG_DBM
+  scope = ALFA_TX_BITRATE_MBPS
+  scope = ALFA_RX_BITRATE_MBPS
+  scope = ALFA_TX_RETRIES_TOTAL
+  scope = ALFA_TX_FAILED_TOTAL
+  scope = ALFA_INACTIVE_MS
+  scope = ALFA_DATA_VALID
+  scope = ALFA_DATA_AGE
+  scope = ALFA_SIGNAL_DATA_VALID
 
   // Route selection and buttons 1-6 retain the proven UAV operator workflow.
   left_context[route] = ROUTE_POINT = "x=$[XPOS],y=$[YPOS]"

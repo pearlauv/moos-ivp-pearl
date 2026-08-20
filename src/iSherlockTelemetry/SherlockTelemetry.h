@@ -30,11 +30,14 @@ class SherlockTelemetry : public AppCastingMOOSApp
   bool fetchMetrics(std::string& body, std::string& error) const;
   bool parseBatteryMetrics(const std::string& body, std::string& error);
   bool parseWindMetrics(const std::string& body, std::string& error);
+  bool parseAlfaMetrics(const std::string& body, std::string& error);
   void publishTelemetry();
   double batteryAge(double now) const;
   double airmarAge(double now) const;
+  double alfaAge(double now) const;
   bool batteryValid(double now) const;
   bool windValid(double now) const;
+  bool alfaValid(double now) const;
   void setWarning(const std::string& warning, bool active, bool& warning_active);
 
  private: // Configuration
@@ -45,6 +48,7 @@ class SherlockTelemetry : public AppCastingMOOSApp
   double m_http_timeout;
   double m_battery_max_age;
   double m_airmar_max_age;
+  double m_alfa_max_age;
 
  private: // State
   double m_last_poll_time;
@@ -52,22 +56,37 @@ class SherlockTelemetry : public AppCastingMOOSApp
   double m_last_fetch_success_time;
   double m_battery_received_time;
   double m_wind_received_time;
+  double m_alfa_received_time;
+  double m_alfa_sample_time;
   double m_battery_soc;
   double m_battery_charging;
   double m_battery_source_age;
   double m_wind_speed;
   double m_airmar_source_age;
+  double m_alfa_signal_dbm;
+  double m_alfa_signal_avg_dbm;
+  double m_alfa_tx_bitrate_mbps;
+  double m_alfa_rx_bitrate_mbps;
+  double m_alfa_tx_retries_total;
+  double m_alfa_tx_failed_total;
+  double m_alfa_inactive_ms;
+  double m_alfa_station_count;
   bool m_battery_connected;
   bool m_airmar_up;
   bool m_wind_measurement_valid;
+  bool m_alfa_collector_ok;
+  bool m_alfa_link_up;
+  bool m_alfa_measurement_complete;
   bool m_fetch_warning_active;
   bool m_battery_warning_active;
   bool m_wind_warning_active;
+  bool m_alfa_warning_active;
   std::string m_last_error;
   unsigned int m_fetch_count;
   unsigned int m_fetch_success_count;
   unsigned int m_battery_update_count;
   unsigned int m_wind_update_count;
+  unsigned int m_alfa_update_count;
 };
 
 #endif

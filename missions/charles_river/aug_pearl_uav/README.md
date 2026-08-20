@@ -206,25 +206,43 @@ Telegraf endpoint over the direct PEARL Ethernet network at
   --sherlock_metrics_host=100.64.194.59 --sherlock_metrics_port=9273
 ```
 
-The interface publishes `PEARL_BATTERY_SOC`, `PEARL_BATTERY_CHARGING`, and
-`PEARL_WIND_SPEED`. Wind speed means apparent wind over the moving PEARL deck,
-which is the airflow relevant to UAV landing. The mission does not currently
-publish a second apparent-wind alias or true wind because neither adds a new
-input to the present landing decision.
+The interface publishes PEARL battery state, apparent wind, and Alfa backhaul
+health. Wind speed means apparent wind over the moving PEARL deck, which is the
+airflow relevant to UAV landing. The mission does not currently publish a
+second apparent-wind alias or true wind because neither adds a new input to the
+present landing decision.
 
 Consumers must also check `PEARL_BATTERY_DATA_VALID` or
 `PEARL_WIND_DATA_VALID`. `PEARL_BATTERY_DATA_AGE` is the CMP sample age;
 `PEARL_AIRMAR_DATA_AGE` is the age of the latest valid sentence from the Airmar
 feed. The current Airmar exporter does not provide a wind-sentence-specific
 age, so wind validity combines the latest MWV validity status with overall
-Airmar feed freshness. Selected values are bridged to shoreside as ordinary
-latest-state telemetry, not mediated commands.
+Airmar feed freshness.
 
-Battery and wind remain in one interface app because Sherlock exposes both
-through the same HTTP endpoint. Splitting the app would download the same
-roughly 180 KiB metrics document twice and would not isolate endpoint failure.
-The app instead validates and retains the two source snapshots independently:
-missing battery metrics do not suppress fresh wind, and vice versa.
+Sherlock polls the configured UAV station every two seconds. `ALFA_LINK_UP`
+reports association independently from `ALFA_DATA_VALID`, which reports that
+the collector itself is healthy and fresh. When linked, the interface also
+publishes `ALFA_SIGNAL_DBM`, `ALFA_SIGNAL_AVG_DBM`,
+`ALFA_TX_BITRATE_MBPS`, `ALFA_RX_BITRATE_MBPS`,
+`ALFA_TX_RETRIES_TOTAL`, `ALFA_TX_FAILED_TOTAL`, and `ALFA_INACTIVE_MS`.
+TX is Sherlock-to-UAV and RX is UAV-to-Sherlock; signal is the UAV signal as
+received by Sherlock. Retry and failure values are cumulative since the
+current association. `ALFA_DATA_AGE` is the age of the latest collector
+observation as measured on Sherlock, and `ALFA_STATION_COUNT` helps detect an
+unexpected client. Since MOOSDB retains the last numeric values after a link
+drops, consumers must require `ALFA_SIGNAL_DATA_VALID=1` before interpreting
+signal or bitrate. Sherlock's collector and Telegraf endpoint both update on a
+two-second interval.
+
+Selected battery, wind, and Alfa values are bridged to shoreside as ordinary
+latest-state telemetry, not mediated commands. PEARL's wildcard `pLogger`
+records every published Alfa variable in the mission `.alog`.
+
+Battery, wind, and Alfa telemetry remain in one interface app because Sherlock
+exposes them through the same HTTP endpoint. Splitting the app would download
+the same roughly 180 KiB metrics document repeatedly and would not isolate
+endpoint failure. The app instead validates and retains all three source
+snapshots independently: one missing source does not suppress the others.
 
 In SITL and REAL, `pArduBridge` publishes the flight controller's primary
 battery estimate as `UAV_BATTERY_SOC` and `UAV_BATTERY_VOLTAGE`, together with
@@ -291,6 +309,14 @@ also requires `9300`. Disable wireless client isolation.
   and direct Alfa peer addresses. Shoreside saw both nodes, process watch was
   healthy, and a shoreside route was accepted by and moved the simulated UAV.
   No arm request or hardware interface application was launched.
+- On 2026-08-19, the deployed Sherlock collector reported a healthy AP with
+  no UAV associated. An isolated PEARL MOOS test on port 19402 published
+  `ALFA_LINK_UP=0`, `ALFA_DATA_VALID=1`, `ALFA_STATION_COUNT=0`, and fresh
+  `ALFA_DATA_AGE`; wildcard pLogger logging recorded all four in an `.alog`.
+  No helm, actuator, or vehicle hardware process was launched.
+- The automated Alfa telemetry integration test covers connected,
+  disconnected, collector-failed, and stale samples using a temporary MOOSDB:
+  `python3 src/iSherlockTelemetry/tests/test_alfa_telemetry.py`.
 
 ## PEARL stack
 

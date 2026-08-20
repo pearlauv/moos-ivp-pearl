@@ -21,9 +21,9 @@ void showSynopsis()
   blk("SYNOPSIS:                                                       ");
   blk("------------------------------------                            ");
   blk("  iSherlockTelemetry polls Sherlock's Prometheus endpoint and   ");
-  blk("  publishes PEARL battery state and Airmar wind measurements.   ");
-  blk("  Battery and wind snapshots are validated independently so one ");
-  blk("  unavailable source does not suppress the other.               ");
+  blk("  publishes PEARL battery, Airmar wind, and Alfa backhaul data. ");
+  blk("  Source snapshots are validated independently so one missing  ");
+  blk("  source does not suppress the others.                          ");
   blk("                                                                ");
 }
 
@@ -81,6 +81,7 @@ void showExampleConfigAndExit()
   blk("  http_timeout    = 1                                          ");
   blk("  battery_max_age = 30                                         ");
   blk("  airmar_max_age  = 5                                          ");
+  blk("  alfa_max_age    = 10                                         ");
   blk("}                                                               ");
   blk("                                                                ");
   exit(0);
@@ -113,6 +114,18 @@ void showInterfaceAndExit()
   blk("  PEARL_WIND_DATA_VALID     1 when latest MWV status is valid   ");
   blk("                            and the Airmar feed is fresh        ");
   blk("  PEARL_AIRMAR_DATA_AGE     Age of latest Airmar sentence, s    ");
+  blk("  ALFA_LINK_UP              1 when the configured UAV is seen   ");
+  blk("  ALFA_STATION_COUNT        Stations currently seen by Sherlock");
+  blk("  ALFA_SIGNAL_DBM           Latest UAV signal at Sherlock, dBm  ");
+  blk("  ALFA_SIGNAL_AVG_DBM       Average UAV signal at Sherlock, dBm ");
+  blk("  ALFA_TX_BITRATE_MBPS      Sherlock-to-UAV bitrate, Mbit/s     ");
+  blk("  ALFA_RX_BITRATE_MBPS      UAV-to-Sherlock bitrate, Mbit/s     ");
+  blk("  ALFA_TX_RETRIES_TOTAL     TX retries since association        ");
+  blk("  ALFA_TX_FAILED_TOTAL      TX failures since association       ");
+  blk("  ALFA_INACTIVE_MS          Time since latest UAV packet, ms    ");
+  blk("  ALFA_DATA_VALID           1 when collector data is fresh      ");
+  blk("  ALFA_DATA_AGE             Collector observation age, seconds ");
+  blk("  ALFA_SIGNAL_DATA_VALID    1 when linked signal data is fresh  ");
   blk("                                                                ");
   exit(0);
 }
