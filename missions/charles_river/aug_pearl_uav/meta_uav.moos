@@ -609,8 +609,8 @@ ProcessConfig = pArduBridge
 
 //----------------------------------------------------
 // Validate PEARL's proposal and route the accepted meeting point through the
-// existing vehicle-local route buffer. Battery is optional until pArduBridge
-// publishes an authoritative remaining-charge scalar.
+// existing vehicle-local route buffer. Low UAV battery raises recovery
+// priority instead of rejecting the aircraft that most needs to land.
 ProcessConfig = pRendezvous
 {
   AppTick   = 4
@@ -624,7 +624,9 @@ ProcessConfig = pRendezvous
   uav_speed       = 3
   pearl_speed     = 0.5
   min_battery     = 25
-  require_battery = false
+  critical_battery = 15
+  battery_max_age = 3
+  require_battery = true
 #ifdef XMODE SIM
   require_health  = false
 #else
@@ -639,6 +641,15 @@ ProcessConfig = pRendezvous
   arrival_radius   = 5
   arrival_dwell    = 2
   max_peer_separation = 3
+#ifdef XMODE SIM
+  require_platform_ready  = false
+#else
+  require_platform_ready  = true
+#endif
+  require_platform_health = true
+  min_pearl_battery        = 15
+  max_landing_wind_speed   = 4
+  platform_data_max_age    = 3
 #ifdef XMODE SIM
   require_landing_target = false
 #else

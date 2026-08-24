@@ -36,9 +36,9 @@ demonstration policy, not a current-aware or obstacle-aware planner.
 
 The UAV must have fresh navigation and, outside basic SIM, must be armed,
 airborne, and healthy before it may start. PEARL rejects stale navigation,
-unhealthy requests, malformed proposals, low known battery, and timeouts.
-Rendezvous-level battery reserve enforcement remains disabled; takeoff has the
-separate gate described below.
+unhealthy requests, malformed proposals, invalid or stale battery data, and
+timeouts. A low valid UAV battery raises recovery priority rather than
+rejecting the aircraft; takeoff has the separate reserve gate described below.
 
 ## Reliable versus periodic transport
 
@@ -115,6 +115,22 @@ and their current horizontal separation is no more than 3 m for 2 continuous
 seconds. Arrival is recomputed on every iteration; moving apart resets the
 dwell instead of leaving an old decision latched.
 
+In SITL and REAL modes the same pre-commit gate also requires PEARL process
+health, fresh valid PEARL battery and wind telemetry, at least 15% PEARL
+battery, and wind no greater than 4 m/s. SITL supplies those inputs from the
+PEARL simulator; REAL uses live PEARL telemetry. These conditions are evaluated
+again during target acquisition; passing the takeoff gate is not treated as
+proof that the conditions are still safe at landing time. Deck motion and
+automatic landing-area clearance are not currently measured and are therefore
+not claimed as software predicates.
+
+The UAV battery inputs are `UAV_BATTERY_SOC` and
+`UAV_BATTERY_DATA_VALID`. They must be valid and fresh, but a low value does
+not reject recovery. `pRendezvous` instead publishes
+`UAV_RECOVERY_PRIORITY=NORMAL` at or above 25%, `URGENT` from 15% to 25%, and
+`EMERGENCY` below 15%, so low energy increases operational priority without
+waiving the landing-safety gates.
+
 Clearance carries PEARL's current local `x,y` position derived from its GPS.
 The UAV also receives PEARL `NODE_REPORT` updates directly over the Alfa path.
 While acquiring the target, it updates a one-point horizontal route when
@@ -137,8 +153,27 @@ and tells PEARL to remain in StationKeep. The old external
 `UAV_PREC_LAND_REQUEST` path is rejected, so an operator message cannot bypass
 the coordinated gates.
 
-After commit, ArduPilot owns the landing. Before every REAL flight verify the
-Pixhawk precision-landing parameters, especially `PLND_ENABLED=1`, the correct
+The operational authority handoff is explicit. The current MOOS state names
+are shown in parentheses where they differ from the authority-model label:
+
+1. `APPROACH` / `ACQUIRING_TARGET`: `pRendezvous` may wait, update the
+   horizontal route, or abort; no descent has been commanded.
+2. `AUTHORIZED_TO_COMMIT`: every platform, separation, and visual-target gate
+   has remained true for the lock dwell.
+3. `COMMITTED_TO_ARDUPILOT` (`LANDING`): `UAV_PREC_LAND_COMMIT=true` has
+   selected LAND and ArduPilot owns the descent and target-loss response.
+4. `COMPLETE` / `FAILED`: landed-state and ArduPilot/safety-pilot outcomes
+   close the attempt. `pRendezvous` autonomously publishes `COMPLETE` from the
+   landed state; a failed post-commit attempt remains an ArduPilot/safety-pilot
+   outcome that must be recorded in the experiment log.
+
+Operator abort is intentionally ignored after `COMMITTED_TO_ARDUPILOT`;
+changing flight modes during terminal descent is not treated as a safe
+supervisor action. From that boundary onward, ArduPilot failsafes and the
+safety pilot own recovery.
+
+Before every REAL flight, verify the Pixhawk precision-landing parameters,
+especially `PLND_ENABLED=1`, the correct
 backend, moving-target option, and `PLND_STRICT=2` so target loss retries and
 then hovers instead of silently continuing a blind descent. The successful
 hardware flight recorded in [`flight_logs/README.md`](flight_logs/README.md)
@@ -201,17 +236,27 @@ Generate targets without launching:
 ./launch.sh --mode=SIM --just_make --nogui 5
 ```
 
-For SITL, start ArduCopter first and then start the mission:
+For SITL, start ArduCopter first and then start the mission. On macOS or in a
+headless environment, `--direct` avoids `sim_vehicle.py` opening another
+terminal and uses the already-built ArduCopter binary:
 
 ```bash
-./launch_sitl.sh --no_rebuild
+./launch_sitl.sh --direct --no_rebuild
 ./launch.sh --mode=SITL
 ```
 
-The included precision target matches the default SITL UAV home and default
-PEARL start. If those positions change, update `SIM_PLD_LAT` and
-`SIM_PLD_LON` in `sitl.parm` before treating precision-landing results as
-meaningful.
+`launch_sitl.sh` starts `sitl_landing_target.py`, which publishes a centered
+MAVLink 2 `LANDING_TARGET` on ArduCopter's SERIAL2 connection as the
+reproducible stand-in for the real vision source. Use `--no_landing_target` to
+verify that acquisition fails closed. The ArduPilot precision-landing target
+in `sitl.parm` matches the default SITL UAV home and default PEARL start. If
+those positions change, update `SIM_PLD_LAT` and `SIM_PLD_LON` before treating
+precision-landing results as meaningful.
+
+SITL uses PEARL's simulated battery, wind, and process-health telemetry to
+exercise the same pre-commit platform gate enabled in REAL. Basic SIM keeps
+that gate disabled so its lightweight attachment workflow remains immediately
+usable.
 
 Field operation uses the sublaunchers independently:
 
@@ -334,11 +379,15 @@ Rigging's `wifi_backhaul` role. Allow the ordinary mission UDP ports
   observed pMediator retransmissions.
 - Historical bidirectional pMediator tests covered both direct delivery and
   the now-retired relay topology before the setup was simplified.
-- Live ArduCopter SITL telemetry and direct UAV-to-PEARL mediation. REAL
-  targets were generated and checked with custom
-  vehicle, peer, and shoreside addresses.
-- ArduCopter SITL arm, takeoff to 8 m, Guided Helm transit, endpoint hold,
-  coordinated clearance, Land, touchdown, and disarm.
+- On 2026-08-24, an isolated three-community ArduCopter SITL run used the
+  direct launcher and its built-in landing-target publisher with the platform
+  gate enabled. Fresh PEARL process health, 80% battery, 2 m/s wind, and a
+  valid landing target authorized commit after acquisition; the mission then
+  progressed through Land, touchdown, `COMPLETE`, `ON_GROUND`, and disarm.
+  The closed UAV `.alog` records the gate becoming ready and
+  `UAV_PREC_LAND_RESULT=status=committed#reason=landing_gate_ready` before
+  touchdown. REAL targets were also generated and checked with custom vehicle,
+  peer, and shoreside addresses.
 - Historical three-computer dock SIM across shoreside, PEARL, and the UAV Pi
   used the original PEARL relay and Alfa link. A shore route command reached the
   UAV, both simulated vehicles moved, rendezvous session

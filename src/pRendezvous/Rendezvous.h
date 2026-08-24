@@ -41,6 +41,8 @@ class Rendezvous : public AppCastingMOOSApp
                         double& value_time);
   bool handleMailBool(const CMOOSMsg& msg, bool& value,
                       bool& value_set);
+  bool handleMailTimedBool(const CMOOSMsg& msg, bool& value,
+                           bool& value_set, double& value_time);
 
   void iterateUAV();
   void iteratePearl();
@@ -66,7 +68,9 @@ class Rendezvous : public AppCastingMOOSApp
   bool navIsFresh() const;
   bool peerReportIsFresh() const;
   bool landingTargetIsReady(std::string& reason) const;
+  bool landingPlatformIsReady(std::string& reason) const;
   bool uavIsReady(std::string& reason) const;
+  std::string recoveryPriority() const;
   bool mailIsTrue(const CMOOSMsg& msg) const;
   std::string makeSessionID() const;
   std::string pointString(double x, double y) const;
@@ -78,6 +82,11 @@ class Rendezvous : public AppCastingMOOSApp
   double m_uav_speed;
   double m_pearl_speed;
   double m_min_battery;
+  double m_critical_battery;
+  double m_battery_max_age;
+  double m_min_pearl_battery;
+  double m_max_landing_wind_speed;
+  double m_platform_data_max_age;
   double m_nav_stale_thresh;
   double m_request_timeout;
   double m_route_timeout;
@@ -98,6 +107,8 @@ class Rendezvous : public AppCastingMOOSApp
   bool m_require_battery;
   bool m_require_flight_state;
   bool m_require_landing_target;
+  bool m_require_platform_ready;
+  bool m_require_platform_health;
 
  private: // State variables
   std::string m_state;
@@ -114,6 +125,14 @@ class Rendezvous : public AppCastingMOOSApp
   double m_nav_y_time;
   double m_battery;
   double m_battery_time;
+  double m_battery_valid_time;
+  double m_pearl_battery;
+  double m_pearl_battery_time;
+  double m_pearl_battery_valid_time;
+  double m_pearl_wind_speed;
+  double m_pearl_wind_speed_time;
+  double m_pearl_wind_valid_time;
+  double m_platform_health_time;
   double m_target_x;
   double m_target_y;
   double m_peer_report_x;
@@ -142,6 +161,16 @@ class Rendezvous : public AppCastingMOOSApp
   bool m_nav_x_set;
   bool m_nav_y_set;
   bool m_battery_set;
+  bool m_battery_valid;
+  bool m_battery_valid_set;
+  bool m_pearl_battery_set;
+  bool m_pearl_battery_valid;
+  bool m_pearl_battery_valid_set;
+  bool m_pearl_wind_speed_set;
+  bool m_pearl_wind_valid;
+  bool m_pearl_wind_valid_set;
+  bool m_platform_health_ok;
+  bool m_platform_health_set;
   bool m_health_ok;
   bool m_health_set;
   bool m_uav_armed;

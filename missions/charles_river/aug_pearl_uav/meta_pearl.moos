@@ -58,6 +58,7 @@ ProcessConfig = pShare
   output = src_name=PEARL_BATTERY_DATA_VALID, route=$(UAV_IP):$(UAV_PSHARE)
   output = src_name=PEARL_WIND_SPEED, route=$(UAV_IP):$(UAV_PSHARE)
   output = src_name=PEARL_WIND_DATA_VALID, route=$(UAV_IP):$(UAV_PSHARE)
+  output = src_name=PROC_WATCH_ALL_OK, dest_name=PEARL_PROC_WATCH_ALL_OK, route=$(UAV_IP):$(UAV_PSHARE)
   output = src_name=NODE_REPORT_LOCAL, dest_name=NODE_REPORT, route=$(UAV_IP):$(UAV_PSHARE)
 #ifdef XMODE SIM
 #ifdef SIM_ATTACHMENT true
@@ -203,7 +204,9 @@ ProcessConfig = pRendezvous
   uav_speed       = 3
   pearl_speed     = $(SPEED)
   min_battery     = 25
-  require_battery = false
+  critical_battery = 15
+  battery_max_age = 3
+  require_battery = true
   require_health  = false
   require_flight_state = false
 
@@ -213,6 +216,15 @@ ProcessConfig = pRendezvous
   arrival_radius   = 5
   arrival_dwell    = 2
   max_peer_separation = 3
+#ifdef XMODE REAL
+  require_platform_ready  = true
+#else
+  require_platform_ready  = false
+#endif
+  require_platform_health = true
+  min_pearl_battery        = 15
+  max_landing_wind_speed   = 4
+  platform_data_max_age    = 3
   landing_target_acquire_timeout = 30
 }
 

@@ -27,6 +27,11 @@ Rendezvous::Rendezvous()
   m_uav_speed           = 3.0;
   m_pearl_speed         = 0.5;
   m_min_battery         = 25.0;
+  m_critical_battery    = 15.0;
+  m_battery_max_age     = 3.0;
+  m_min_pearl_battery   = 15.0;
+  m_max_landing_wind_speed = 4.0;
+  m_platform_data_max_age = 3.0;
   m_nav_stale_thresh    = 10.0;
   m_request_timeout     = 20.0;
   m_route_timeout       = 5.0;
@@ -47,6 +52,8 @@ Rendezvous::Rendezvous()
   m_require_battery     = false;
   m_require_flight_state = true;
   m_require_landing_target = true;
+  m_require_platform_ready = false;
+  m_require_platform_health = true;
 
   m_state                = "IDLE";
   m_reason               = "startup";
@@ -60,6 +67,14 @@ Rendezvous::Rendezvous()
   m_nav_y_time           = 0.0;
   m_battery              = 0.0;
   m_battery_time         = 0.0;
+  m_battery_valid_time   = 0.0;
+  m_pearl_battery        = 0.0;
+  m_pearl_battery_time   = 0.0;
+  m_pearl_battery_valid_time = 0.0;
+  m_pearl_wind_speed     = 0.0;
+  m_pearl_wind_speed_time = 0.0;
+  m_pearl_wind_valid_time = 0.0;
+  m_platform_health_time = 0.0;
   m_target_x             = 0.0;
   m_target_y             = 0.0;
   m_peer_report_x        = 0.0;
@@ -88,6 +103,16 @@ Rendezvous::Rendezvous()
   m_nav_x_set            = false;
   m_nav_y_set            = false;
   m_battery_set          = false;
+  m_battery_valid        = false;
+  m_battery_valid_set    = false;
+  m_pearl_battery_set    = false;
+  m_pearl_battery_valid  = false;
+  m_pearl_battery_valid_set = false;
+  m_pearl_wind_speed_set = false;
+  m_pearl_wind_valid     = false;
+  m_pearl_wind_valid_set = false;
+  m_platform_health_ok   = false;
+  m_platform_health_set  = false;
   m_health_ok            = false;
   m_health_set           = false;
   m_uav_armed            = false;
@@ -148,9 +173,13 @@ bool Rendezvous::OnNewMail(MOOSMSG_LIST &NewMail)
     else if(key == "NAV_Y")
       handled = handleMailDouble(msg, m_nav_y, m_nav_y_time) &&
                 (m_nav_y_set = true);
-    else if((m_role == "uav") && (key == "UAV_BATTERY_PERCENT"))
+    else if((m_role == "uav") && (key == "UAV_BATTERY_SOC"))
       handled = handleMailDouble(msg, m_battery, m_battery_time) &&
                 (m_battery_set = true);
+    else if((m_role == "uav") && (key == "UAV_BATTERY_DATA_VALID"))
+      handled = handleMailTimedBool(msg, m_battery_valid,
+                                    m_battery_valid_set,
+                                    m_battery_valid_time);
     else if((m_role == "uav") && (key == "UAV_HEALTH_ALL_OK"))
       handled = handleMailBool(msg, m_health_ok, m_health_set);
     else if((m_role == "uav") && (key == "UAV_IS_ARMED"))
@@ -164,6 +193,27 @@ bool Rendezvous::OnNewMail(MOOSMSG_LIST &NewMail)
         handled = true;
       }
     }
+    else if(key == "PEARL_BATTERY_SOC")
+      handled = handleMailDouble(msg, m_pearl_battery,
+                                 m_pearl_battery_time) &&
+                (m_pearl_battery_set = true);
+    else if(key == "PEARL_BATTERY_DATA_VALID")
+      handled = handleMailTimedBool(msg, m_pearl_battery_valid,
+                                    m_pearl_battery_valid_set,
+                                    m_pearl_battery_valid_time);
+    else if(key == "PEARL_WIND_SPEED")
+      handled = handleMailDouble(msg, m_pearl_wind_speed,
+                                 m_pearl_wind_speed_time) &&
+                (m_pearl_wind_speed_set = true);
+    else if(key == "PEARL_WIND_DATA_VALID")
+      handled = handleMailTimedBool(msg, m_pearl_wind_valid,
+                                    m_pearl_wind_valid_set,
+                                    m_pearl_wind_valid_time);
+    else if(((m_role == "uav") && (key == "PEARL_PROC_WATCH_ALL_OK")) ||
+            ((m_role == "pearl") && (key == "PROC_WATCH_ALL_OK")))
+      handled = handleMailTimedBool(msg, m_platform_health_ok,
+                                    m_platform_health_set,
+                                    m_platform_health_time);
     else if((m_role == "uav") &&
             (key == "UAV_LANDING_TARGET_AVAILABLE")) {
       m_landing_target_available = mailIsTrue(msg);
@@ -278,6 +328,18 @@ bool Rendezvous::OnStartUp()
     else if(param == "min_battery")
       handled = setNonNegDoubleOnString(m_min_battery, value) &&
                 (m_min_battery <= 100);
+    else if(param == "critical_battery")
+      handled = setNonNegDoubleOnString(m_critical_battery, value) &&
+                (m_critical_battery <= 100);
+    else if(param == "battery_max_age")
+      handled = setPosDoubleOnString(m_battery_max_age, value);
+    else if(param == "min_pearl_battery")
+      handled = setNonNegDoubleOnString(m_min_pearl_battery, value) &&
+                (m_min_pearl_battery <= 100);
+    else if(param == "max_landing_wind_speed")
+      handled = setNonNegDoubleOnString(m_max_landing_wind_speed, value);
+    else if(param == "platform_data_max_age")
+      handled = setPosDoubleOnString(m_platform_data_max_age, value);
     else if(param == "nav_stale_thresh")
       handled = setPosDoubleOnString(m_nav_stale_thresh, value);
     else if(param == "request_timeout")
@@ -323,6 +385,10 @@ bool Rendezvous::OnStartUp()
       handled = setBooleanOnString(m_require_flight_state, value);
     else if(param == "require_landing_target")
       handled = setBooleanOnString(m_require_landing_target, value);
+    else if(param == "require_platform_ready")
+      handled = setBooleanOnString(m_require_platform_ready, value);
+    else if(param == "require_platform_health")
+      handled = setBooleanOnString(m_require_platform_health, value);
 
     if(!handled)
       reportUnhandledConfigWarning(orig);
@@ -339,6 +405,10 @@ bool Rendezvous::OnStartUp()
     reportConfigWarning("peer_node is required");
     m_config_valid = false;
   }
+  if(m_critical_battery > m_min_battery) {
+    reportConfigWarning("critical_battery must not exceed min_battery");
+    m_config_valid = false;
+  }
 
   registerVariables();
   return(true);
@@ -353,13 +423,19 @@ void Rendezvous::registerVariables()
   Register("RENDEZVOUS_ABORT", 0);
   Register("NAV_X", 0);
   Register("NAV_Y", 0);
+  Register("PEARL_BATTERY_SOC", 0);
+  Register("PEARL_BATTERY_DATA_VALID", 0);
+  Register("PEARL_WIND_SPEED", 0);
+  Register("PEARL_WIND_DATA_VALID", 0);
 
   if(m_role == "uav") {
     Register("RENDEZVOUS_START", 0);
     Register("RENDEZVOUS_PROPOSAL", 0);
     Register("LANDING_CLEARANCE", 0);
     Register("ROUTE_BUFFER_VEHICLE_STATE", 0);
-    Register("UAV_BATTERY_PERCENT", 0);
+    Register("UAV_BATTERY_SOC", 0);
+    Register("UAV_BATTERY_DATA_VALID", 0);
+    Register("PEARL_PROC_WATCH_ALL_OK", 0);
     Register("UAV_HEALTH_ALL_OK", 0);
     Register("UAV_IS_ARMED", 0);
     Register("UAV_LANDED_STATE", 0);
@@ -379,6 +455,7 @@ void Rendezvous::registerVariables()
     Register("RENDEZVOUS_REQUEST", 0);
     Register("RENDEZVOUS_RESPONSE", 0);
     Register("PEARL_RENDEZVOUS_ARRIVED", 0);
+    Register("PROC_WATCH_ALL_OK", 0);
     Register("NODE_REPORT", 0);
   }
 }
@@ -572,6 +649,15 @@ bool Rendezvous::handleMailBool(const CMOOSMsg& msg, bool& value,
   return(true);
 }
 
+bool Rendezvous::handleMailTimedBool(const CMOOSMsg& msg, bool& value,
+                                     bool& value_set, double& value_time)
+{
+  if(!handleMailBool(msg, value, value_set))
+    return(false);
+  value_time = m_curr_time;
+  return(true);
+}
+
 //---------------------------------------------------------
 // Role logic
 
@@ -669,6 +755,8 @@ void Rendezvous::iteratePearl()
       gate_reason = "uav_outside_rendezvous";
     else if(peer_dist > m_max_peer_separation)
       gate_reason = "peer_separation_too_large";
+    else
+      gate_ready = landingPlatformIsReady(gate_reason);
     Notify("PEARL_UAV_SEPARATION", peer_dist);
     Notify("PEARL_LANDING_GATE_READY", gate_ready ? 1.0 : 0.0);
     Notify("PEARL_LANDING_GATE_REASON", gate_reason);
@@ -702,6 +790,13 @@ bool Rendezvous::beginRequest()
     reportRunWarning("Rendezvous rejected: " + reason);
     return(true);
   }
+  if(!landingPlatformIsReady(reason)) {
+    m_session_id = "";
+    m_target_set = false;
+    transitionTo("ABORT", reason);
+    reportRunWarning("Rendezvous rejected: " + reason);
+    return(true);
+  }
 
   m_session_id = makeSessionID();
   m_target_set = false;
@@ -717,12 +812,15 @@ bool Rendezvous::beginRequest()
   m_completion_sent = false;
 
   string battery = m_battery_set ? doubleToStringX(m_battery, 1) : "unknown";
+  string priority = recoveryPriority();
   string request = "id=" + m_session_id;
   request += "#x=" + doubleToStringX(m_nav_x, 2);
   request += "#y=" + doubleToStringX(m_nav_y, 2);
   request += "#speed=" + doubleToStringX(m_uav_speed, 2);
   request += "#battery=" + battery;
+  request += "#priority=" + priority;
   request += "#health=ok";
+  Notify("UAV_RECOVERY_PRIORITY", priority);
 
   if(!sendMessage(m_peer_node, "RENDEZVOUS_REQUEST", request))
     return(false);
@@ -739,19 +837,28 @@ bool Rendezvous::proposeRendezvous(const string& request)
   string sy = tokStringParse(request, "y", '#', '=');
   string sspeed = tokStringParse(request, "speed", '#', '=');
   string battery = tolower(tokStringParse(request, "battery", '#', '='));
+  string priority = tolower(tokStringParse(request, "priority", '#', '='));
   string health = tolower(tokStringParse(request, "health", '#', '='));
 
   string reject_reason;
+  string platform_reason;
   if(!navIsFresh())
     reject_reason = "pearl_navigation_stale";
+  else if(!landingPlatformIsReady(platform_reason))
+    reject_reason = platform_reason;
   else if(!isNumber(sx) || !isNumber(sy) || !isNumber(sspeed))
     reject_reason = "invalid_request";
   else if(health != "ok")
     reject_reason = "uav_unhealthy";
   else if(m_require_battery && !isNumber(battery))
     reject_reason = "battery_unknown";
-  else if(isNumber(battery) && (atof(battery.c_str()) < m_min_battery))
-    reject_reason = "battery_below_reserve";
+  else if(isNumber(battery) &&
+          ((atof(battery.c_str()) < 0) || (atof(battery.c_str()) > 100)))
+    reject_reason = "battery_invalid";
+  else if((priority != "") && (priority != "normal") &&
+          (priority != "urgent") && (priority != "emergency") &&
+          (priority != "unknown"))
+    reject_reason = "invalid_priority";
 
   if(reject_reason != "") {
     string response = "id=" + id + "#status=rejected#reason=" + reject_reason;
@@ -931,6 +1038,14 @@ void Rendezvous::updateTargetAcquisition()
     abortMission("landing_target_timeout");
     return;
   }
+  if(!landingPlatformIsReady(readiness_reason)) {
+    m_target_lock_start_time = 0;
+    m_landing_target_gate_ready = false;
+    Notify("UAV_LANDING_GATE_READY", 0.0);
+    Notify("UAV_LANDING_GATE_REASON", readiness_reason);
+    Notify("UAV_LANDING_TARGET_LOCK_AGE", 0.0);
+    return;
+  }
   if(!peerReportIsFresh()) {
     m_target_lock_start_time = 0;
     m_landing_target_gate_ready = false;
@@ -1079,6 +1194,8 @@ void Rendezvous::publishState(bool force)
                                             "PEARL_RENDEZVOUS_SESSION";
   Notify(phase_var, m_state);
   Notify(session_var, m_session_id);
+  if(m_role == "uav")
+    Notify("UAV_RECOVERY_PRIORITY", recoveryPriority());
   m_last_state_post_time = m_curr_time;
 }
 
@@ -1178,6 +1295,49 @@ bool Rendezvous::landingTargetIsReady(string& reason) const
   return(false);
 }
 
+bool Rendezvous::landingPlatformIsReady(string& reason) const
+{
+  if(!m_require_platform_ready) {
+    reason = "ready";
+    return(true);
+  }
+
+  if(m_require_platform_health && !m_platform_health_set)
+    reason = "pearl_health_unknown";
+  else if(m_require_platform_health && !m_platform_health_ok)
+    reason = "pearl_health_not_ready";
+  else if(!m_pearl_battery_set || !m_pearl_battery_valid_set)
+    reason = "pearl_battery_unknown";
+  else if(!m_pearl_battery_valid)
+    reason = "pearl_battery_invalid";
+  else if((m_curr_time - m_pearl_battery_time) > m_platform_data_max_age ||
+          (m_curr_time - m_pearl_battery_valid_time) >
+            m_platform_data_max_age)
+    reason = "pearl_battery_stale";
+  else if((m_pearl_battery < 0) || (m_pearl_battery > 100))
+    reason = "pearl_battery_invalid";
+  else if(m_pearl_battery < m_min_pearl_battery)
+    reason = "pearl_battery_below_reserve";
+  else if(!m_pearl_wind_speed_set || !m_pearl_wind_valid_set)
+    reason = "pearl_wind_unknown";
+  else if(!m_pearl_wind_valid)
+    reason = "pearl_wind_invalid";
+  else if((m_curr_time - m_pearl_wind_speed_time) >
+            m_platform_data_max_age ||
+          (m_curr_time - m_pearl_wind_valid_time) >
+            m_platform_data_max_age)
+    reason = "pearl_wind_stale";
+  else if(m_pearl_wind_speed < 0)
+    reason = "pearl_wind_invalid";
+  else if(m_pearl_wind_speed > m_max_landing_wind_speed)
+    reason = "landing_wind_high";
+  else {
+    reason = "ready";
+    return(true);
+  }
+  return(false);
+}
+
 bool Rendezvous::uavIsReady(string& reason) const
 {
   if(!navIsFresh())
@@ -1188,15 +1348,35 @@ bool Rendezvous::uavIsReady(string& reason) const
     reason = "not_armed";
   else if(m_require_flight_state && (!m_uav_landed_set || !m_uav_in_air))
     reason = "not_airborne";
-  else if(m_require_battery && !m_battery_set)
+  else if(m_require_battery && (!m_battery_set || !m_battery_valid_set))
     reason = "battery_unknown";
-  else if(m_battery_set && (m_battery < m_min_battery))
-    reason = "battery_below_reserve";
+  else if(m_require_battery && !m_battery_valid)
+    reason = "battery_invalid";
+  else if(m_require_battery &&
+          (((m_curr_time - m_battery_time) > m_battery_max_age) ||
+           ((m_curr_time - m_battery_valid_time) > m_battery_max_age)))
+    reason = "battery_stale";
+  else if(m_require_battery && ((m_battery < 0) || (m_battery > 100)))
+    reason = "battery_invalid";
   else {
     reason = "ready";
     return(true);
   }
   return(false);
+}
+
+string Rendezvous::recoveryPriority() const
+{
+  if(!m_battery_set || !m_battery_valid_set || !m_battery_valid ||
+     ((m_curr_time - m_battery_time) > m_battery_max_age) ||
+     ((m_curr_time - m_battery_valid_time) > m_battery_max_age) ||
+     (m_battery < 0) || (m_battery > 100))
+    return("UNKNOWN");
+  if(m_battery < m_critical_battery)
+    return("EMERGENCY");
+  if(m_battery < m_min_battery)
+    return("URGENT");
+  return("NORMAL");
 }
 
 bool Rendezvous::mailIsTrue(const CMOOSMsg& msg) const
@@ -1250,6 +1430,7 @@ bool Rendezvous::buildReport()
       m_msgs << doubleToStringX(m_battery, 1) << "%" << endl;
     else
       m_msgs << "unknown" << endl;
+    m_msgs << "Recovery priority:  " << recoveryPriority() << endl;
     m_msgs << "Route state:        " << m_route_state << endl;
     m_msgs << "At rendezvous:      " << boolToString(m_uav_arrived) << endl;
     m_msgs << "Clearance received: " << boolToString(m_clearance_received) << endl;
@@ -1270,6 +1451,13 @@ bool Rendezvous::buildReport()
     else
       m_msgs << "n/a" << endl;
   }
+
+  string platform_reason;
+  bool platform_ready = landingPlatformIsReady(platform_reason);
+  m_msgs << "PEARL platform:     " << boolToString(platform_ready)
+         << " (" << platform_reason << ")" << endl;
+  m_msgs << "PEARL battery/wind: " << doubleToStringX(m_pearl_battery, 1)
+         << "% / " << doubleToStringX(m_pearl_wind_speed, 1) << endl;
 
   ACTable table(2);
   table << "Event | Count";
