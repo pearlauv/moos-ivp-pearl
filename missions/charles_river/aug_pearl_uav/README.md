@@ -107,6 +107,26 @@ The normal sequence is:
 4. Let the coordinated workflow request precision landing, or press
    `RNDV ABORT` to hold both vehicles.
 
+## OAK camera viewer
+
+The UAV Pi's boot-managed OAK service is independent of the MOOS launchers.
+From an authorized Tailnet client, open `http://uav-pi-1:8082/` for the tiny
+four-view JPEG monitor. No helper or special browser context is required. The
+independently decodable MJPEG profile favors reliable late and reconnect
+viewing over motion smoothness. The health, snapshot, and Prometheus API is
+directly available at `http://uav-pi-1:9102/`. Rigging's
+`./.bin/oak-camera-viewer` is an optional localhost relay for TCP `8082` and
+`9102`; it is not part of the normal viewing path. See
+[`OAK_VIDEO.md`](OAK_VIDEO.md) for the operator workflow, stream profile,
+scene-dependent bitrate metrics, and observability boundary.
+
+The local helper uses direct Tailnet TCP and requires no SSH tunnel, PEARL
+proxy, Tailscale Serve, Funnel, or fixed deployed relay. The viewer does not
+currently publish the MOOS or MAVLink landing-target inputs used by the landing
+gate. Grafana is limited to camera health and performance metrics; live video
+remains in the browser monitor, and the dashboard viewer link uses the direct
+Tailnet URL.
+
 ## Landing assurance
 
 Landing is intentionally fail-closed. PEARL grants clearance only while both
@@ -263,7 +283,8 @@ Field operation uses the sublaunchers independently:
 The deployed Alfa topology is routed through Sherlock rather than attaching
 both radios directly to the two mission computers. See
 [`RADIO_BACKHAUL.md`](RADIO_BACKHAUL.md) for provisioning, routes, activation,
-and verification.
+and verification, and [`OAK_VIDEO.md`](OAK_VIDEO.md) for the independent
+Tailnet camera path.
 
 ```bash
 # Shoreside
@@ -353,6 +374,9 @@ The preferred traffic paths are:
 | UAV to/from PEARL mission traffic | `172.22.90.2` and `192.168.88.253` | Alfa to Sherlock to PEARL Ethernet; no Tailscale or internet required |
 | Shoreside mission traffic | Tailnet `100.x` addresses | Tailscale over the available underlay |
 | SSH and administration | Tailnet `100.x` addresses | Tailscale over the available underlay |
+| OAK four-view monitor | Direct `uav-pi-1:8082` or optional helper-local TCP `8082` | Tailscale to the UAV; no PEARL relay |
+| OAK snapshots and API | Direct `uav-pi-1:9102` or optional helper-local TCP `9102` | Tailscale to the UAV |
+| OAK metrics collection | OAK API to Telegraf to local Prometheus | UAV-local by default; external `remote_write` is disabled |
 
 A Tailscale address is a logical endpoint, not a guarantee that packets visit
 the public internet. Tailscale normally uses a direct UDP path when possible;
@@ -364,7 +388,8 @@ PEARL/UAV peer traffic does not.
 
 The retired PEARL UDP relays and their port `9300` path are removed by
 Rigging's `wifi_backhaul` role. Allow the ordinary mission UDP ports
-`9200`-`9202` and disable wireless client isolation.
+`9200`-`9202` and disable wireless client isolation. The OAK viewer uses
+Tailnet TCP `8082`, and its API uses TCP `9102`; neither is a mission UDP port.
 
 ## Validation performed
 

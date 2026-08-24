@@ -71,10 +71,23 @@ Starlink, remote shoreside, SSH, and other Tailscale traffic may cross
 Starlink. The explicit PEARL/UAV private-address path never needs Starlink or
 Tailscale.
 
+The OAK four-view JPEG monitor follows the same management path directly. An
+authorized Tailnet client opens `http://uav-pi-1:8082/`; health, snapshots, and
+metrics use the direct UAV Tailnet API on TCP `9102`. The independently
+decodable MJPEG profile favors reliable late and reconnect viewing over motion
+smoothness; its bitrate varies with scene content and is measured by camera
+metrics. Rigging's `./.bin/oak-camera-viewer` is an optional localhost relay for
+TCP `8082` and `9102`, not a required intermediate hop. PEARL does not proxy
+the video, and no SSH tunnel, Tailscale Serve, Funnel, or fixed deployed relay
+is used. See [`OAK_VIDEO.md`](OAK_VIDEO.md) for the operator workflow and
+deployed stream profile.
+
 Shoreside sends ordinary pShare traffic directly to the UAV's Tailnet address.
 PEARL does not relay shoreside traffic. Rigging retires and removes the old
 `wifi-backhaul-udp-relay-*` services and executable when its PEARL route role
-is applied. The only mission UDP listeners are ports `9200`-`9202`.
+is applied. The only mission UDP listeners are ports `9200`-`9202`. The camera
+viewer and API use direct Tailnet TCP and add no fixed UDP relay or mission
+listener.
 
 ## Bench-prepared state
 
@@ -149,6 +162,10 @@ getent hosts login.tailscale.com
 tailscale status
 tailscale ping 100.127.231.65
 
+# Shoreside Tailnet client
+tailscale ping uav-pi-1
+curl -fsS http://uav-pi-1:9102/readyz
+
 # PEARL
 ip route get 172.22.90.2
 ping -c 5 172.22.90.2
@@ -158,6 +175,16 @@ sudo /usr/sbin/iw dev wlan1 station dump
 sudo /usr/sbin/iw dev wlan1 info
 ip -s link show wlan1
 ```
+
+For the normal live camera check, open `http://uav-pi-1:8082/` directly. If a
+localhost alias is useful for troubleshooting, run this optional helper from
+the Rigging checkout:
+
+```sh
+./.bin/oak-camera-viewer
+```
+
+Then open `http://127.0.0.1:8082/` on shoreside.
 
 Confirm that the radios remain associated without recurring `mt7921u` timeouts:
 
@@ -222,8 +249,11 @@ link-down data, and pLogger recorded it.
 For the management-path qualification, retain direct Ethernet as recovery,
 associate Alfa, and temporarily disconnect the UAV's normal `wlan0` profile.
 Verify that the metric-2000 default route uses `wlan1`, Tailscale remains
-online at its existing address, and shore can SSH to that address. Reconnect
-normal Wi-Fi afterward. This test does not launch MOOS or arm the UAV.
+online at its existing address, and shore can SSH to that address. With the
+OAK connected, open `http://uav-pi-1:8082/` directly and verify direct
+`/readyz` and both snapshots while watching link signal, retries, inactive
+time, and packet loss. Reconnect normal Wi-Fi afterward. This management-path
+test does not launch MOOS or arm the UAV.
 
 ## Mission addresses
 
@@ -338,6 +368,9 @@ Before REAL operation:
    UAV/PEARL private routes without shoreside participation.
 6. Test a rendezvous with controlled packet loss on the direct vehicle path.
 7. Reboot all three Pis and repeat the route and association checks.
+8. Exercise the direct Tailnet OAK monitor while monitoring Alfa and mission
+   broker freshness, and verify that the added traffic does not degrade mission
+   delivery.
 
 The repository test proves parsing and stale-data behavior without the radios.
 The 2026-08-20 close-range REAL test now proves physical association, signal
