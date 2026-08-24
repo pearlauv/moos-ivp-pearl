@@ -5,6 +5,11 @@ Luxonis OAK device. Rigging's `oak_camera` role installs the DepthAI runtime,
 USB permissions, service configuration, and local telemetry integration. The
 MOOS mission does not start, stop, or supervise this service.
 
+The reproducible UAV Pi stack is currently published on rigging's
+`build-debugging` branch rather than its default `main` branch. Check out
+`build-debugging` before provisioning or updating the Pi. Use the role and
+targeted playbook documented below instead of copying the service by hand.
+
 The UAV Pi serves a small selectable JPEG monitor directly on its Tailnet
 address. From an authorized Tailnet client, open
 `http://uav-pi-1:8082/`. The page uses ordinary same-origin HTTP requests for
