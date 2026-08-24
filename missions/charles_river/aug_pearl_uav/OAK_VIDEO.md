@@ -17,8 +17,8 @@ transport.
 | Health, snapshots, and metrics | `http://uav-pi-1:9102/` | `http://127.0.0.1:9102/` |
 
 The monitor presents `rgb`, `left`, `right`, and `disparity` in a two-by-two
-grid. Each tile polls an independently decodable JPEG frame, so an ordinary
-browser can connect or reconnect without codec history.
+grid. The page updates the tiles from independently decodable JPEG frames, so
+an ordinary browser can connect or reconnect without codec history.
 
 ## Deployed remote profile
 
@@ -66,6 +66,31 @@ curl -fsS http://127.0.0.1:9102/readyz | jq
 After a reimage, reapply Rigging's targeted `oak_camera,telegraf` deployment;
 that recreates the runtime, service, USB permissions, configuration, and local
 metrics scrape. The MOOS mission launchers never own this service.
+
+## Tailnet name changes
+
+The current operator-facing MagicDNS name is `uav-pi-1`; the Linux hostname
+and Prometheus `host` label remain `uav-pi`. The camera service binds to the
+Pi's current Tailscale IP rather than either hostname, so changing the Tailnet
+name does not require changing or restarting the camera pipeline.
+
+On the UAV Pi, discover the actual control-plane DNS name or request a new one:
+
+```sh
+tailscale status --json | jq -r '.Self.DNSName | rtrimstr(".")'
+sudo tailscale set --hostname=<new-tailnet-name>
+tailscale status --json | jq -r '.Self.DNSName | rtrimstr(".")'
+```
+
+Tailscale may append a numeric suffix if another node still owns the requested
+name. For a replacement Pi, retire the old node in the Tailscale admin console
+or use the actual unique name returned above.
+
+After a rename, update Rigging's `uav_pi_tailscale_hostname`, UAV static
+inventory `ansible_host`/`tailscale_hostname`, operator bookmarks, and the
+Grafana dashboard's `OAK Tailnet host` variable. The optional helper needs no
+code change: pass `--host <actual-tailnet-name>` or set `OAK_CAMERA_HOST`.
+Rigging's `docs/uav-pi.md` is the authoritative rename and rebuild procedure.
 
 ## Operator checks
 
@@ -171,8 +196,9 @@ FPS, bitrate, frames, sequence gaps, last-frame age, snapshot age, OAK
 temperature, processor utilization, and memory use. Grafana is for these
 health and performance measurements; it does not transport or render the live
 video. The Rigging role contains an OAK dashboard definition, but dashboard
-publication is disabled by default. Its viewer link points directly to
-`http://uav-pi-1:8082/`; it does not require the optional localhost relay.
+publication is disabled by default. Its `OAK Tailnet host` variable controls
+the direct viewer link and defaults to `uav-pi-1`; it does not require the
+optional localhost relay.
 Prometheus `remote_write` is also disabled by default. Enabling either sends
 data or configuration to an external service and requires explicit approval
 plus the intended Grafana endpoint and credentials.
