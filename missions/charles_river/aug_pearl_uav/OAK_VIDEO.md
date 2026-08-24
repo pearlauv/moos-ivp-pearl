@@ -5,20 +5,21 @@ Luxonis OAK device. Rigging's `oak_camera` role installs the DepthAI runtime,
 USB permissions, service configuration, and local telemetry integration. The
 MOOS mission does not start, stop, or supervise this service.
 
-The UAV Pi serves a small four-view JPEG monitor directly on its Tailnet
+The UAV Pi serves a small selectable JPEG monitor directly on its Tailnet
 address. From an authorized Tailnet client, open
 `http://uav-pi-1:8082/`. The page uses ordinary same-origin HTTP requests for
-the latest RGB, left, right, and disparity JPEGs and needs no separate browser
+the selected RGB, left, right, or disparity JPEG and needs no separate browser
 transport.
 
 | Function | Direct Tailnet endpoint | Optional local relay |
 | --- | --- | --- |
-| Four-view JPEG monitor | `http://uav-pi-1:8082/` | `http://127.0.0.1:8082/` |
+| Selectable JPEG monitor | `http://uav-pi-1:8082/` | `http://127.0.0.1:8082/` |
 | Health, snapshots, and metrics | `http://uav-pi-1:9102/` | `http://127.0.0.1:9102/` |
 
-The monitor presents `rgb`, `left`, `right`, and `disparity` in a two-by-two
-grid. The page updates the tiles from independently decodable JPEG frames, so
-an ordinary browser can connect or reconnect without codec history.
+The monitor presents one large view, with `rgb` selected by default. Its
+dropdown can switch to `disparity`, `left`, or `right` without restarting the
+camera service. The page updates the view from independently decodable JPEG
+frames, so an ordinary browser can connect or reconnect without codec history.
 
 ## Deployed remote profile
 
@@ -38,11 +39,11 @@ link interruption can display the next frame without waiting for video-stream
 history. This profile favors reliable late and reconnect viewing over motion
 smoothness.
 
-The monitor retrieves one latest frame at a time in round-robin order. Slow
+The monitor retrieves one latest frame at a time for the selected view. Slow
 links therefore lower the visible refresh rate instead of accumulating
 concurrent requests. A timed-out request is skipped while its last good frame
-remains visible, and a stale-view guard reloads the page if a view stops
-advancing.
+remains visible, and a stale-view guard reloads the page if the selected view
+stops advancing. The three unselected views are not sent to that browser.
 
 MJPEG has no configured bitrate target. Its measured bitrate is
 scene-dependent and is reported by the camera metrics and Grafana dashboard
@@ -172,7 +173,8 @@ remote profile:
 1. `tailscale status` records whether the path is direct or DERP.
 2. `tailscale ping uav-pi-1`, the direct `/readyz`, and both snapshots remain
    usable.
-3. `http://uav-pi-1:8082/` shows all four views without the optional helper.
+3. `http://uav-pi-1:8082/` shows RGB by default and can switch among all four
+   views without the optional helper.
 4. Observed stream FPS, scene-dependent bitrate, last-frame age, and dropped
    frames remain acceptable for the available link.
 5. Alfa signal, inactive time, retries, packet loss, and mission broker
@@ -181,7 +183,7 @@ remote profile:
    interruption.
 
 Close the live viewer and use snapshots when the available link cannot sustain
-all four live views.
+the selected live view.
 
 ## Metrics and Grafana boundary
 
